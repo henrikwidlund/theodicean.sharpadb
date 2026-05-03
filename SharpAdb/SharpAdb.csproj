@@ -7,10 +7,19 @@
         <LangVersion>latest</LangVersion>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <InvariantGlobalization>true</InvariantGlobalization>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <WarningsAsErrors>true</WarningsAsErrors>
     </PropertyGroup>
 
     <ItemGroup>
-      <InternalsVisibleTo Include="SharpAdb.Tests" />
+        <InternalsVisibleTo Include="SharpAdb.Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Meziantou.Analyzer" Version="3.0.60">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
     </ItemGroup>
 
 </Project>
