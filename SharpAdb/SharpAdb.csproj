@@ -5,14 +5,34 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <InvariantGlobalization>true</InvariantGlobalization>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <WarningsAsErrors>true</WarningsAsErrors>
+
+        <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
+        <PackageId>Theodicean.SharpAdb</PackageId>
+        <Authors>Henrik Widlund</Authors>
+        <Copyright>© henrikwidlund</Copyright>
+        <Title>SharpADB</Title>
+        <Description>A .NET library for communicating with Android devices using the Android Debug Bridge (ADB) protocol.</Description>
+        <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+        <PackageReleaseNotes>https://github.com/henrikwidlund/theodicean.sharpadb/releases</PackageReleaseNotes>
+        <PackageTags>adb android</PackageTags>
+        <IncludeSymbols>True</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <PackageProjectUrl>https://github.com/henrikwidlund/theodicean.sharpadb</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/henrikwidlund/theodicean.sharpadb.git</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
     <ItemGroup>
         <InternalsVisibleTo Include="SharpAdb.Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\README.md" Pack="true" PackagePath="\" />
     </ItemGroup>
 
     <ItemGroup>
