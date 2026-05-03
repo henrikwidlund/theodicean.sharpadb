@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="SharpAdb/SharpAdb.csproj" />
+  <Project Path="SharpAdb.Tests/SharpAdb.Tests.csproj" />
+  <Project Path="SharpAdb.IntegrationTests/SharpAdb.IntegrationTests.csproj" />
+</Solution>
