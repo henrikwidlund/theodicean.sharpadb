@@ -24,8 +24,9 @@ internal static class AndroidPublicKey
 
     public static byte[] Encode(in RSAParameters p)
     {
-        ArgumentNullException.ThrowIfNull(p.Modulus);
-        ArgumentNullException.ThrowIfNull(p.Exponent);
+        if (p.Modulus is null || p.Exponent is null)
+            throw new ArgumentException("RSAParameters must include Modulus and Exponent", nameof(p));
+
         if (p.Modulus.Length != ModulusBytes)
             throw new ArgumentException($"Modulus must be {ModulusBytes} bytes", nameof(p));
 
