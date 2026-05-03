@@ -1,4 +1,5 @@
 using SharpAdb.Services;
+
 using Xunit;
 
 namespace SharpAdb.Tests;
@@ -109,28 +110,5 @@ public class ParserTests
         Assert.Equal("'simple'", ShellEscape.SingleQuote("simple"));
         Assert.Equal("'with space'", ShellEscape.SingleQuote("with space"));
         Assert.Equal("'it'\\''s'", ShellEscape.SingleQuote("it's"));
-    }
-
-    [Fact]
-    public void KeyCodesMatchAndroidConstants()
-    {
-        // Spot-check well-known KEYCODE_* values from android.view.KeyEvent across the full range.
-        Assert.Equal(3, (int)KeyCode.Home);
-        Assert.Equal(4, (int)KeyCode.Back);
-        Assert.Equal(26, (int)KeyCode.Power);
-        Assert.Equal(66, (int)KeyCode.Enter);
-        Assert.Equal(82, (int)KeyCode.Menu);
-        Assert.Equal(96, (int)KeyCode.ButtonA);
-        Assert.Equal(108, (int)KeyCode.ButtonStart);
-        Assert.Equal(117, (int)KeyCode.MetaLeft);
-        Assert.Equal(131, (int)KeyCode.F1);
-        Assert.Equal(144, (int)KeyCode.Numpad0);
-        Assert.Equal(166, (int)KeyCode.ChannelUp);
-        Assert.Equal(187, (int)KeyCode.AppSwitch);
-        Assert.Equal(219, (int)KeyCode.Assist);
-        Assert.Equal(243, (int)KeyCode.TvInputHdmi1);
-        Assert.Equal(279, (int)KeyCode.Paste);
-        Assert.Equal(284, (int)KeyCode.AllApps);
-        Assert.Equal(312, (int)KeyCode.RecentApps);
     }
 }

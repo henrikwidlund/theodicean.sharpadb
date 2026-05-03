@@ -1,11 +1,14 @@
 namespace SharpAdb.Services;
 
+/// <summary>
+/// Extension methods for capturing device screenshots.
+/// </summary>
 public static class ScreenExtensions
 {
     extension(AdbConnection connection)
     {
         /// <summary>
-        /// Capture a PNG screenshot via <c>screencap -p</c>. Uses the <c>exec:</c> service which,
+        /// Captures a PNG screenshot via <c>screencap -p</c>. Uses the <c>exec:</c> service which,
         /// unlike <c>shell:</c>, does not allocate a PTY — so binary output is not corrupted by
         /// LF→CRLF translation.
         /// </summary>
@@ -23,7 +26,9 @@ public static class ScreenExtensions
             return bytes;
         }
 
-        /// <summary>Capture a PNG screenshot and write to <paramref name="destination"/>.</summary>
+        /// <summary>
+        /// Captures a PNG screenshot and writes to <paramref name="destination"/>.
+        /// </summary>
         public async Task CaptureScreenAsync(Stream destination, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(destination);

@@ -1,5 +1,7 @@
 using System.Net.Sockets;
+
 using SharpAdb.Services;
+
 using Xunit;
 
 namespace SharpAdb.IntegrationTests;
@@ -87,7 +89,8 @@ public class HelperServicesIntegrationTests(AdbIntegrationFixture fixture) : ICl
         {
             await foreach (var _ in conn.LogcatRawAsync(dumpAndExit: true, cancellationToken: cts.Token))
             {
-                if (++count >= 5) break;
+                if (++count >= 5)
+                    break;
             }
         }
         catch (OperationCanceledException) { }

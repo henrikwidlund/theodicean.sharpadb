@@ -1,9 +1,11 @@
 using System.Security.Cryptography;
 using System.Text;
+
 using SharpAdb.Auth;
 using SharpAdb.Protocol;
 using SharpAdb.Services;
 using SharpAdb.Transport;
+
 using Xunit;
 
 namespace SharpAdb.Tests;
@@ -137,7 +139,7 @@ public class AdbConnectionTests
         {
             using (var pkt = await deviceTransport.ReadPacketAsync())
                 Assert.Equal(AdbCommand.Cnxn, pkt.Header.Command);
-            byte[] banner = "device::\0"u8.ToArray();
+            var banner = "device::\0"u8.ToArray();
             await deviceTransport.WritePacketAsync(
                 new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload, (uint)banner.Length, 0), banner);
 
@@ -149,7 +151,7 @@ public class AdbConnectionTests
                 new AdbHeader(AdbCommand.Okay, 1234, clientLocalId, 0, 0), ReadOnlyMemory<byte>.Empty);
 
             // Send a packet whose DataLength exceeds MaxPayload — transport should throw InvalidDataException.
-            byte[] hdr = new byte[AdbProtocolConstants.HeaderSize];
+            var hdr = new byte[AdbProtocolConstants.HeaderSize];
             new AdbHeader(AdbCommand.Wrte, 1234, clientLocalId, AdbProtocolConstants.MaxPayload + 1, 0).WriteTo(hdr);
             await deviceStream.WriteAsync(hdr);
         });
@@ -159,10 +161,10 @@ public class AdbConnectionTests
         await deviceTask;
 
         // Pending read on the stream should observe the fault (or 0/EOF) once the loop dies.
-        byte[] buf = new byte[1024];
+        var buf = new byte[1024];
         var ex = await Record.ExceptionAsync(async () =>
         {
-            int read = await stream.ReadAsync(buf).AsTask().WaitAsync(TimeSpan.FromSeconds(2));
+            var read = await stream.ReadAsync(buf).AsTask().WaitAsync(TimeSpan.FromSeconds(2));
             // If we got here, a graceful close happened — accept 0 too.
             Assert.Equal(0, read);
         });

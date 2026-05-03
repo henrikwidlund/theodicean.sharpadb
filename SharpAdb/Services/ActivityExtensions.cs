@@ -1,24 +1,33 @@
 namespace SharpAdb.Services;
 
+/// <summary>
+/// Extension methods for input injection (key/touch) and app/activity lifecycle via <c>input</c>, <c>am</c>, <c>monkey</c>, and <c>pm</c>.
+/// </summary>
 public static class ActivityExtensions
 {
     extension(AdbConnection connection)
     {
-        /// <summary>Send a single key event via <c>input keyevent</c>.</summary>
+        /// <summary>
+        /// Sends a single key event via <c>input keyevent</c>.
+        /// </summary>
         public Task SendKeyEventAsync(KeyCode key, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
             return connection.ExecuteAsync($"input keyevent {(int)key}", cancellationToken);
         }
 
-        /// <summary>Send a long-press key event via <c>input keyevent --longpress</c>.</summary>
+        /// <summary>
+        /// Sends a long-press key event via <c>input keyevent --longpress</c>.
+        /// </summary>
         public Task SendLongPressAsync(KeyCode key, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
             return connection.ExecuteAsync($"input keyevent --longpress {(int)key}", cancellationToken);
         }
 
-        /// <summary>Inject typed text via <c>input text</c>. Spaces become %s; quotes are escaped.</summary>
+        /// <summary>
+        /// Injects typed text via <c>input text</c>. Spaces become %s; quotes are escaped.
+        /// </summary>
         public Task SendTextAsync(string text, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
@@ -28,21 +37,27 @@ public static class ActivityExtensions
             return connection.ExecuteAsync($"input text {escaped}", cancellationToken);
         }
 
-        /// <summary>Inject a tap at screen coordinates.</summary>
+        /// <summary>
+        /// Injects a tap at screen coordinates.
+        /// </summary>
         public Task TapAsync(int x, int y, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
             return connection.ExecuteAsync($"input tap {x} {y}", cancellationToken);
         }
 
-        /// <summary>Inject a swipe.</summary>
+        /// <summary>
+        /// Injects a swipe.
+        /// </summary>
         public Task SwipeAsync(int x1, int y1, int x2, int y2, int durationMs = 300, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
             return connection.ExecuteAsync($"input swipe {x1} {y1} {x2} {y2} {durationMs}", cancellationToken);
         }
 
-        /// <summary>Launch the default activity for an installed package via monkey.</summary>
+        /// <summary>
+        /// Launches the default activity for an installed package via monkey.
+        /// </summary>
         public async Task StartAppAsync(string packageName, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
@@ -55,7 +70,9 @@ public static class ActivityExtensions
                 throw new InvalidOperationException($"No launcher activity for package '{packageName}'");
         }
 
-        /// <summary>Launch a specific activity. <paramref name="component"/> is "pkg/.Activity" or "pkg/full.Activity".</summary>
+        /// <summary>
+        /// Launches a specific activity. <paramref name="component"/> is "pkg/.Activity" or "pkg/full.Activity".
+        /// </summary>
         public async Task StartActivityAsync(string component, string? action = null, string? data = null,
             IReadOnlyDictionary<string, string>? extras = null, CancellationToken cancellationToken = default)
         {
@@ -90,7 +107,9 @@ public static class ActivityExtensions
                 throw new InvalidOperationException($"am start failed: {result.Trim()}");
         }
 
-        /// <summary>Force-stop an app: equivalent to <c>am force-stop</c>.</summary>
+        /// <summary>
+        /// Force-stops an app: equivalent to <c>am force-stop</c>.
+        /// </summary>
         public Task StopAppAsync(string packageName, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
@@ -99,7 +118,9 @@ public static class ActivityExtensions
             return connection.ExecuteAsync($"am force-stop {packageName}", cancellationToken);
         }
 
-        /// <summary>Clear app data: equivalent to <c>pm clear</c>.</summary>
+        /// <summary>
+        /// Clears app data: equivalent to <c>pm clear</c>.
+        /// </summary>
         public async Task ClearAppDataAsync(string packageName, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);

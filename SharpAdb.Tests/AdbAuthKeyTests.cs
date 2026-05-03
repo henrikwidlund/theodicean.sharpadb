@@ -1,7 +1,9 @@
 using System.Security.Cryptography;
 using System.Text;
+
 using SharpAdb.Auth;
 using SharpAdb.Protocol;
+
 using Xunit;
 
 namespace SharpAdb.Tests;

@@ -1,17 +1,33 @@
 namespace SharpAdb.Services;
 
+/// <summary>
+/// Information about an installed package returned by <c>pm list packages</c>.
+/// </summary>
+/// <param name="PackageName">Application id (e.g. <c>com.example.app</c>).</param>
+/// <param name="Path">APK path on device, populated only when listed with <c>includePath: <see langword="true"/></c>.</param>
 public sealed record AdbPackageInfo(string PackageName, string? Path = null);
 
+/// <summary>
+/// Thrown when <c>pm install</c> or <c>pm uninstall</c> reports a non-success result.
+/// </summary>
 public sealed class AdbPackageException : Exception
 {
+    /// <summary>
+    /// Initializes a new instance with the given diagnostic message.
+    /// </summary>
     public AdbPackageException(string message) : base(message) { }
 }
 
+/// <summary>
+/// Extension methods for installing, removing, and listing packages on a device.
+/// </summary>
 public static class PackageExtensions
 {
     extension(AdbConnection connection)
     {
-        /// <summary>Install an APK by streaming it to /data/local/tmp and invoking <c>pm install</c>.</summary>
+        /// <summary>
+        /// Installs an APK by streaming it to /data/local/tmp and invoking <c>pm install</c>.
+        /// </summary>
         public async Task InstallAsync(Stream apk, bool replaceExisting = true, bool grantAllPermissions = false,
             CancellationToken cancellationToken = default)
         {
@@ -50,7 +66,9 @@ public static class PackageExtensions
             }
         }
 
-        /// <summary>Install an APK from a local file path.</summary>
+        /// <summary>
+        /// Installs an APK from a local file path.
+        /// </summary>
         public async Task InstallAsync(string apkPath, bool replaceExisting = true, bool grantAllPermissions = false,
             CancellationToken cancellationToken = default)
         {
@@ -59,6 +77,9 @@ public static class PackageExtensions
             await connection.InstallAsync(fs, replaceExisting, grantAllPermissions, cancellationToken).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Uninstalls a package by id. Set <paramref name="keepData"/> to preserve the app's data directory.
+        /// </summary>
         public async Task UninstallAsync(string packageName, bool keepData = false, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
@@ -71,6 +92,9 @@ public static class PackageExtensions
                 throw new AdbPackageException($"pm uninstall failed: {result.Trim()}");
         }
 
+        /// <summary>
+        /// Lists installed packages. Set <paramref name="includePath"/> to also populate <see cref="AdbPackageInfo.Path"/>.
+        /// </summary>
         public async Task<IReadOnlyList<AdbPackageInfo>> ListPackagesAsync(bool includePath = false, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
@@ -79,6 +103,9 @@ public static class PackageExtensions
             return PackageParser.Parse(output);
         }
 
+        /// <summary>
+        /// Returns <see langword="true"/> when a package with this exact id is installed on the device.
+        /// </summary>
         public async Task<bool> IsInstalledAsync(string packageName, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);

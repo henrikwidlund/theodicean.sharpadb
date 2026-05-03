@@ -3,11 +3,16 @@ using System.Text;
 
 namespace SharpAdb.Services;
 
+/// <summary>
+/// Extension methods for running shell commands on an <see cref="AdbConnection"/>.
+/// </summary>
 public static class ShellExtensions
 {
     extension(AdbConnection connection)
     {
-        /// <summary>Run a shell command and capture combined stdout/stderr as a string.</summary>
+        /// <summary>
+        /// Runs a shell command and captures combined stdout/stderr as a string.
+        /// </summary>
         public async Task<string> ExecuteAsync(string command, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
@@ -19,7 +24,9 @@ public static class ShellExtensions
             return Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length);
         }
 
-        /// <summary>Open an interactive shell stream for streaming I/O.</summary>
+        /// <summary>
+        /// Opens an interactive shell stream for streaming I/O.
+        /// </summary>
         public Task<AdbStream> OpenShellAsync(string? command = null, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
@@ -27,7 +34,9 @@ public static class ShellExtensions
             return connection.OpenAsync(svc, cancellationToken);
         }
 
-        /// <summary>Run a shell command and pipe output bytes to <paramref name="destination"/>.</summary>
+        /// <summary>
+        /// Runs a shell command and pipes output bytes to <paramref name="destination"/>.
+        /// </summary>
         public async Task ExecuteAsync(string command, Stream destination, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
@@ -38,7 +47,9 @@ public static class ShellExtensions
             await stream.CopyToAsync(destination, cancellationToken).ConfigureAwait(false);
         }
 
-        /// <summary>Run a shell command and yield each output line. Lines are split on LF; trailing CR is stripped.</summary>
+        /// <summary>
+        /// Runs a shell command and yields each output line. Lines are split on LF; trailing CR is stripped.
+        /// </summary>
         public async IAsyncEnumerable<string> ExecuteLinesAsync(string command,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {

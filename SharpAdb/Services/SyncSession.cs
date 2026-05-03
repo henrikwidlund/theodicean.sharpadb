@@ -17,6 +17,9 @@ public sealed class SyncSession : IAsyncDisposable
 
     private SyncSession(AdbStream stream) => _stream = stream;
 
+    /// <summary>
+    /// Opens a new sync session over the given <paramref name="connection"/>.
+    /// </summary>
     public static async Task<SyncSession> OpenAsync(AdbConnection connection, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(connection);
@@ -24,6 +27,9 @@ public sealed class SyncSession : IAsyncDisposable
         return new SyncSession(stream);
     }
 
+    /// <summary>
+    /// Returns metadata for a remote path. Returns a zero-mode <see cref="AdbFileStat"/> if the file does not exist.
+    /// </summary>
     public async Task<AdbFileStat> StatAsync(string remotePath, CancellationToken cancellationToken = default)
     {
         await SendCommandAsync(SyncProtocol.Stat, remotePath, cancellationToken).ConfigureAwait(false);
@@ -49,6 +55,9 @@ public sealed class SyncSession : IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// Enumerates the entries of a remote directory.
+    /// </summary>
     public async IAsyncEnumerable<AdbDirectoryEntry> ListAsync(string remotePath,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
@@ -98,6 +107,9 @@ public sealed class SyncSession : IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// Pulls <paramref name="remotePath"/> from the device, writing its bytes to <paramref name="destination"/>.
+    /// </summary>
     public async Task PullAsync(string remotePath, Stream destination, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(destination);
@@ -135,7 +147,9 @@ public sealed class SyncSession : IAsyncDisposable
         }
     }
 
-    /// <summary>Push a stream to <paramref name="remotePath"/>. Mode is the POSIX file mode (e.g. 0o644 = 0x1A4).</summary>
+    /// <summary>
+    /// Pushes a stream to <paramref name="remotePath"/>. Mode is the POSIX file mode (e.g. 0o644 = 0x1A4).
+    /// </summary>
     public async Task PushAsync(Stream source, string remotePath, uint mode = 0x1A4,
         DateTimeOffset? modifiedTime = null, CancellationToken cancellationToken = default)
     {
@@ -226,6 +240,9 @@ public sealed class SyncSession : IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// Sends QUIT and closes the underlying stream.
+    /// </summary>
     public async ValueTask DisposeAsync()
     {
         if (Interlocked.Exchange(ref _disposed, 1) != 0)

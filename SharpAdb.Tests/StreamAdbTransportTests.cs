@@ -1,5 +1,6 @@
 using SharpAdb.Protocol;
 using SharpAdb.Transport;
+
 using Xunit;
 
 namespace SharpAdb.Tests;
@@ -30,7 +31,7 @@ public class StreamAdbTransportTests
         await using var sender = new StreamAdbTransport(a);
         await using var receiver = new StreamAdbTransport(b);
 
-        byte[] payload = [..Enumerable.Range(0, 5000).Select(static i => (byte)(i & 0xFF))];
+        byte[] payload = [.. Enumerable.Range(0, 5000).Select(static i => (byte)(i & 0xFF))];
         var header = new AdbHeader(AdbCommand.Wrte, 11, 22, (uint)payload.Length,
             AdbHeader.ComputeChecksum(payload));
         await sender.WritePacketAsync(header, payload);
@@ -166,7 +167,8 @@ internal sealed class BlockingMemoryStream : Stream
 
     protected override void Dispose(bool disposing)
     {
-        lock (_gate) _writerClosed = true;
+        lock (_gate)
+            _writerClosed = true;
         base.Dispose(disposing);
     }
 }

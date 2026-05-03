@@ -1,5 +1,7 @@
 using System.Security.Cryptography;
+
 using SharpAdb.Services;
+
 using Xunit;
 
 namespace SharpAdb.IntegrationTests;

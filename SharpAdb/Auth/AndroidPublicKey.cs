@@ -20,7 +20,7 @@ internal static class AndroidPublicKey
 {
     private const int ModulusBytes = AdbAuthKey.ModulusBytes;
     private const int ModulusWords = AdbAuthKey.ModulusWords;
-    public const int EncodedSize = 4 + 4 + ModulusBytes + ModulusBytes + 4;
+    private const int EncodedSize = 4 + 4 + ModulusBytes + ModulusBytes + 4;
 
     public static byte[] Encode(in RSAParameters p)
     {

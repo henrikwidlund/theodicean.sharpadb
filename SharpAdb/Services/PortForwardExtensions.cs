@@ -16,6 +16,9 @@ public sealed class AdbPortForward : IAsyncDisposable
     private readonly CancellationTokenSource _cts = new();
     private readonly Task _acceptLoop;
 
+    /// <summary>
+    /// Local port the forwarder is listening on. Useful when <c>localPort: 0</c> was passed (auto-assigned).
+    /// </summary>
     public int LocalPort { get; }
 
     private AdbPortForward(AdbConnection connection, TcpListener listener, in int remotePort)
@@ -27,7 +30,9 @@ public sealed class AdbPortForward : IAsyncDisposable
         _acceptLoop = Task.Run(AcceptLoopAsync);
     }
 
-    /// <summary>Forward a local TCP port to a port on the device. Pass <paramref name="localPort"/>=0 to auto-assign.</summary>
+    /// <summary>
+    /// Forwards a local TCP port to a port on the device. Pass <paramref name="localPort"/>=0 to auto-assign.
+    /// </summary>
     public static Task<AdbPortForward> StartAsync(AdbConnection connection, int localPort, int remotePort,
         IPAddress? bindAddress = null)
     {
@@ -72,6 +77,9 @@ public sealed class AdbPortForward : IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// Stops the local listener, drops in-flight relay tasks, and releases resources.
+    /// </summary>
     public async ValueTask DisposeAsync()
     {
         await _cts.CancelAsync().ConfigureAwait(false);
@@ -85,11 +93,16 @@ public sealed class AdbPortForward : IAsyncDisposable
     }
 }
 
+/// <summary>
+/// Extension methods for opening a local-to-device TCP port forward.
+/// </summary>
 public static class PortForwardExtensions
 {
     extension(AdbConnection connection)
     {
-        /// <summary>Forward a local TCP port to a TCP port on the device.</summary>
+        /// <summary>
+        /// Forwards a local TCP port to a TCP port on the device.
+        /// </summary>
         public Task<AdbPortForward> ForwardPortAsync(int localPort, int remotePort, IPAddress? bindAddress = null)
             => AdbPortForward.StartAsync(connection, localPort, remotePort, bindAddress);
     }

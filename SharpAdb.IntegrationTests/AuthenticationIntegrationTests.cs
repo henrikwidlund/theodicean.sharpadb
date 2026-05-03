@@ -1,5 +1,6 @@
 using SharpAdb.Auth;
 using SharpAdb.Services;
+
 using Xunit;
 
 namespace SharpAdb.IntegrationTests;

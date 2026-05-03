@@ -1,11 +1,10 @@
 namespace SharpAdb.Services;
 
 /// <summary>
-/// Android <c>KeyEvent</c> key codes. Numeric values match
-/// <c>frameworks/base/core/java/android/view/KeyEvent.java</c>.
-/// Identifier names follow .NET PascalCase; underlying integers are wire-compatible
-/// with <c>android.view.KeyEvent.KEYCODE_*</c>.
+/// Android <c>KeyEvent</c> key codes.
+/// See https://developer.android.com/reference/android/view/KeyEvent
 /// </summary>
+#pragma warning disable CS1591
 public enum KeyCode
 {
     Unknown = 0,
@@ -298,3 +297,4 @@ public enum KeyCode
     DictateEnd = 320,
     NewNote = 321
 }
+#pragma warning restore CS1591

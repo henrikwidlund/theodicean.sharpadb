@@ -2,18 +2,68 @@ using System.Runtime.CompilerServices;
 
 namespace SharpAdb.Services;
 
+/// <summary>
+/// Android log priority. Mirrors the single-letter codes used by <c>logcat -v threadtime</c>.
+/// </summary>
 public enum LogcatPriority
 {
-    Verbose, Debug, Info, Warn, Error, Fatal, Silent
+    /// <summary>
+    /// Verbose ("V"). Most detailed.
+    /// </summary>
+    Verbose,
+
+    /// <summary>
+    /// Debug ("D"). Developer-facing diagnostics.
+    /// </summary>
+    Debug,
+
+    /// <summary>
+    /// Info ("I"). General informational messages.
+    /// </summary>
+    Info,
+
+    /// <summary>
+    /// Warning ("W"). Recoverable issues.
+    /// </summary>
+    Warn,
+
+    /// <summary>
+    /// Error ("E"). Functional failures.
+    /// </summary>
+    Error,
+
+    /// <summary>
+    /// Fatal ("F"). Crashing or aborting.
+    /// </summary>
+    Fatal,
+
+    /// <summary>
+    /// Silent ("S"). Used as a filter level to suppress output.
+    /// </summary>
+    Silent
 }
 
+/// <summary>
+/// One parsed entry from <c>logcat -v threadtime</c>
+/// .</summary>
+/// <param name="Priority">Log level.</param>
+/// <param name="Tag">Source tag set by the writer.</param>
+/// <param name="Pid">Process id that emitted the message.</param>
+/// <param name="Tid">Thread id that emitted the message.</param>
+/// <param name="Message">The log message body (after the ":" separator).</param>
+/// <param name="Raw">The original unparsed line (kept for diagnostics).</param>
 public sealed record LogcatEntry(in LogcatPriority Priority, string Tag, in int Pid, in int Tid, string Message, string Raw);
 
+/// <summary>
+/// Extension methods for streaming raw or parsed logcat output from a device.
+/// </summary>
 public static class LogcatExtensions
 {
     extension(AdbConnection connection)
     {
-        /// <summary>Stream raw logcat lines until canceled.</summary>
+        /// <summary>
+        /// Streams raw logcat lines until canceled.
+        /// </summary>
         public IAsyncEnumerable<string> LogcatRawAsync(string? filterSpec = null, bool dumpAndExit = false,
             CancellationToken cancellationToken = default)
         {
@@ -35,7 +85,9 @@ public static class LogcatExtensions
             return connection.ExecuteLinesAsync(string.Join(' ', args), cancellationToken);
         }
 
-        /// <summary>Stream parsed logcat entries (threadtime format) until cancelled.</summary>
+        /// <summary>
+        /// Streams parsed logcat entries (threadtime format) until canceled.
+        /// </summary>
         public async IAsyncEnumerable<LogcatEntry> LogcatAsync(string? filterSpec = null, bool dumpAndExit = false,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
@@ -115,7 +167,7 @@ internal static class LogcatParser
             return false;
         }
 
-        var ok = int.TryParse(s[..end], out value);
+        var ok = int.TryParse(s[..end], System.Globalization.CultureInfo.InvariantCulture, out value);
         s = s[end..];
         return ok;
     }

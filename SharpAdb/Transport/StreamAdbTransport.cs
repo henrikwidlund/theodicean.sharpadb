@@ -2,6 +2,7 @@ using System.Buffers;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
+
 using SharpAdb.Protocol;
 
 namespace SharpAdb.Transport;
@@ -21,8 +22,17 @@ public sealed class StreamAdbTransport : IAdbTransport
     private int _disposed;
     private bool _isTls;
 
+    /// <summary>
+    /// <see langword="true"/> after a successful <see cref="UpgradeToTlsAsync"/>.
+    /// </summary>
     public bool IsTls => _isTls;
 
+    /// <summary>
+    /// Initializes a new instance that wraps an existing duplex stream as an ADB transport.
+    /// </summary>
+    /// <param name="stream">Stream to read/write ADB packets on.</param>
+    /// <param name="ownsStream">When <see langword="true"/>, disposing this transport disposes the inner stream.</param>
+    /// <param name="verifyChecksum">When <see langword="true"/>, validate the legacy sum-of-bytes checksum on inbound payloads.</param>
     public StreamAdbTransport(Stream stream, in bool ownsStream = true, in bool verifyChecksum = false)
     {
         _stream = stream ?? throw new ArgumentNullException(nameof(stream));
@@ -30,6 +40,9 @@ public sealed class StreamAdbTransport : IAdbTransport
         _verifyChecksum = verifyChecksum;
     }
 
+    /// <summary>
+    /// Builds a transport over a connected TCP socket. Disables Nagle's algorithm.
+    /// </summary>
     public static StreamAdbTransport CreateTcp(Socket socket, in bool verifyChecksum = false)
     {
         socket.NoDelay = true;
@@ -72,6 +85,7 @@ public sealed class StreamAdbTransport : IAdbTransport
         }
     }
 
+    /// <inheritdoc/>
     public async ValueTask<AdbPacket> ReadPacketAsync(CancellationToken cancellationToken = default)
     {
         try
@@ -118,6 +132,7 @@ public sealed class StreamAdbTransport : IAdbTransport
         return new AdbPacket(header, rented, len);
     }
 
+    /// <inheritdoc/>
     public async ValueTask WritePacketAsync(AdbHeader header, ReadOnlyMemory<byte> payload, CancellationToken cancellationToken = default)
     {
         if (payload.Length != header.DataLength)
@@ -137,9 +152,11 @@ public sealed class StreamAdbTransport : IAdbTransport
         }
     }
 
+    /// <inheritdoc/>
     public ValueTask FlushAsync(CancellationToken cancellationToken = default) =>
         new(_stream.FlushAsync(cancellationToken));
 
+    /// <inheritdoc/>
     public async ValueTask DisposeAsync()
     {
         if (Interlocked.Exchange(ref _disposed, 1) != 0)

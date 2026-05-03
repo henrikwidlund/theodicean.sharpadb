@@ -1,10 +1,15 @@
 namespace SharpAdb.Services;
 
+/// <summary>
+/// Extension methods for reading and writing Android system properties via <c>getprop</c>/<c>setprop</c>.
+/// </summary>
 public static class PropertiesExtensions
 {
     extension(AdbConnection connection)
     {
-        /// <summary>Get a single property value, or null if missing/empty.</summary>
+        /// <summary>
+        /// Gets a single property value, or null if missing/empty.
+        /// </summary>
         public async Task<string?> GetPropertyAsync(string name, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
@@ -15,7 +20,9 @@ public static class PropertiesExtensions
             return string.IsNullOrEmpty(output) ? null : output;
         }
 
-        /// <summary>Set a property via setprop. Requires appropriate device permissions for the prop.</summary>
+        /// <summary>
+        /// Sets a property via setprop. Requires appropriate device permissions for the prop.
+        /// </summary>
         public Task SetPropertyAsync(string name, string value, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
@@ -27,7 +34,9 @@ public static class PropertiesExtensions
             return connection.ExecuteAsync($"setprop {name} {escaped}", cancellationToken);
         }
 
-        /// <summary>Read all device properties via <c>getprop</c>.</summary>
+        /// <summary>
+        /// Reads all device properties via <c>getprop</c>.
+        /// </summary>
         public async Task<IReadOnlyDictionary<string, string>> GetAllPropertiesAsync(CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
@@ -84,7 +93,9 @@ internal static class PropertiesParser
 
 internal static class ShellEscape
 {
-    /// <summary>Wrap a string in single quotes for safe inclusion in a shell command.</summary>
+    /// <summary>
+    /// Wraps a string in single quotes for safe inclusion in a shell command.
+    /// </summary>
     public static string SingleQuote(string value)
     {
         // POSIX trick: close-quote, escaped single quote, reopen-quote.

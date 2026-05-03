@@ -1,4 +1,5 @@
 using SharpAdb.Protocol;
+
 using Xunit;
 
 namespace SharpAdb.Tests;
