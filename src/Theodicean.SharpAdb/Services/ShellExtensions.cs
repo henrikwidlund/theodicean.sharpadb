@@ -25,16 +25,6 @@ public static class ShellExtensions
         }
 
         /// <summary>
-        /// Opens an interactive shell stream for streaming I/O.
-        /// </summary>
-        public Task<AdbStream> OpenShellAsync(string? command = null, CancellationToken cancellationToken = default)
-        {
-            ArgumentNullException.ThrowIfNull(connection);
-            var svc = string.IsNullOrEmpty(command) ? "shell:" : $"shell:{command}";
-            return connection.OpenAsync(svc, cancellationToken);
-        }
-
-        /// <summary>
         /// Runs a shell command and pipes output bytes to <paramref name="destination"/>.
         /// </summary>
         public async Task ExecuteAsync(string command, Stream destination, CancellationToken cancellationToken = default)
@@ -48,18 +38,32 @@ public static class ShellExtensions
         }
 
         /// <summary>
+        /// Opens an interactive shell stream for streaming I/O.
+        /// </summary>
+        public Task<AdbStream> OpenShellAsync(string? command = null, CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(connection);
+            var svc = string.IsNullOrEmpty(command) ? "shell:" : $"shell:{command}";
+            return connection.OpenAsync(svc, cancellationToken);
+        }
+
+        /// <summary>
         /// Runs a shell command and yields each output line. Lines are split on LF; trailing CR is stripped.
         /// </summary>
-        public async IAsyncEnumerable<string> ExecuteLinesAsync(string command,
-            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public IAsyncEnumerable<string> ExecuteLinesAsync(string command, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
             ArgumentException.ThrowIfNullOrEmpty(command);
 
-            await using var stream = await connection.OpenAsync($"shell:{command}", cancellationToken).ConfigureAwait(false);
-            using var reader = new StreamReader(stream, Encoding.UTF8, leaveOpen: true);
-            while (await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false) is { } line)
-                yield return line;
+            return ExecuteLines(connection, command, cancellationToken);
+
+            static async IAsyncEnumerable<string> ExecuteLines(AdbConnection connection, string command, [EnumeratorCancellation] CancellationToken cancellationToken)
+            {
+                await using var stream = await connection.OpenAsync($"shell:{command}", cancellationToken).ConfigureAwait(false);
+                using var reader = new StreamReader(stream, Encoding.UTF8, leaveOpen: true);
+                while (await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false) is { } line)
+                    yield return line;
+            }
         }
     }
 }

@@ -52,9 +52,18 @@ public sealed class AdbPortForward : IAsyncDisposable
                 _ = HandleAsync(sock);
             }
         }
-        catch (OperationCanceledException) { }
-        catch (ObjectDisposedException) { }
-        catch (SocketException) { }
+        catch (OperationCanceledException)
+        {
+            // Ignore
+        }
+        catch (ObjectDisposedException)
+        {
+            // Ignore
+        }
+        catch (SocketException)
+        {
+            // Ignore
+        }
     }
 
     private async Task HandleAsync(Socket socket)

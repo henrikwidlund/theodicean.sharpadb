@@ -84,22 +84,22 @@ public sealed record AdbDeviceInfo(string SystemType, string Serial, string Bann
     /// <summary>
     /// Value of <c>ro.product.name</c> if present.
     /// </summary>
-    public string? Product => Properties.GetValueOrDefault("ro.product.name");
+    public string? Product => field ??= Properties.GetValueOrDefault("ro.product.name");
 
     /// <summary>
     /// Value of <c>ro.product.model</c> if present.
     /// </summary>
-    public string? Model => Properties.GetValueOrDefault("ro.product.model");
+    public string? Model => field ??= Properties.GetValueOrDefault("ro.product.model");
 
     /// <summary>
     /// Value of <c>ro.product.device</c> if present.
     /// </summary>
-    public string? Device => Properties.GetValueOrDefault("ro.product.device");
+    public string? Device => field ??= Properties.GetValueOrDefault("ro.product.device");
 
     /// <summary>
     /// Set of feature flags advertised by the device (parsed from the comma-separated <c>features</c> property).
     /// </summary>
-    public IReadOnlySet<string> Features => Properties.TryGetValue("features", out var v)
+    public IReadOnlySet<string> Features => field ??= Properties.TryGetValue("features", out var v)
         ? new HashSet<string>(v.Split(','), StringComparer.Ordinal)
         : new HashSet<string>(StringComparer.Ordinal);
 }
@@ -397,8 +397,14 @@ public sealed class AdbConnection : IAsyncDisposable
                 await DispatchAsync(pkt).ConfigureAwait(false);
             }
         }
-        catch (OperationCanceledException) { }
-        catch (EndOfStreamException) { }
+        catch (OperationCanceledException)
+        {
+            // Ignore
+        }
+        catch (EndOfStreamException)
+        {
+            // Ignore
+        }
         catch (Exception ex)
         {
             fault = ex;

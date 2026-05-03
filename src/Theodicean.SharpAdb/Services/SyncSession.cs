@@ -34,7 +34,6 @@ public sealed class SyncSession : IAsyncDisposable
     {
         await SendCommandAsync(SyncProtocol.Stat, remotePath, cancellationToken).ConfigureAwait(false);
 
-        Span<byte> hdr = stackalloc byte[16];
         await ReadExactAsync(_frameBuf.AsMemory(0, 4), cancellationToken).ConfigureAwait(false);
         var tag = BinaryPrimitives.ReadUInt32LittleEndian(_frameBuf);
         if (tag != SyncProtocol.Stat)

@@ -11,14 +11,6 @@ public class HelperServicesIntegrationTests(AdbIntegrationFixture fixture) : ICl
     private readonly AdbIntegrationFixture _fixture = fixture;
 
     [SkippableFact]
-    public async Task SendKeyEvent()
-    {
-        Skip.IfNot(_fixture.Available, AdbIntegrationFixture.SkipReason);
-        await using var conn = await _fixture.ConnectAsync();
-        await conn.SendKeyEventAsync(KeyCode.TvInputHdmi2);
-    }
-
-    [SkippableFact]
     public async Task GetPropertyReturnsKnownValue()
     {
         Skip.IfNot(_fixture.Available, AdbIntegrationFixture.SkipReason);

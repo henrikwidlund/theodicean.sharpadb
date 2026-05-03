@@ -69,11 +69,22 @@ public static class RebootExtensions
             try
             {
                 while (await stream.ReadAsync(buf, cancellationToken).ConfigureAwait(false) > 0)
-                { }
+                {
+                    // Loop while we get data back
+                }
             }
-            catch (IOException) { }
-            catch (ObjectDisposedException) { }
-            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) { }
+            catch (IOException)
+            {
+                // Ignore
+            }
+            catch (ObjectDisposedException)
+            {
+                // Ignore
+            }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                // Ignore
+            }
         }
     }
 }
