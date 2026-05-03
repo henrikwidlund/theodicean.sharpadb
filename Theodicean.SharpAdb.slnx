@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Theodicean.SharpAdb/Theodicean.SharpAdb.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Theodicean.SharpAdb.IntegrationTests/Theodicean.SharpAdb.IntegrationTests.csproj" />
+    <Project Path="tests/Theodicean.SharpAdb.Tests/Theodicean.SharpAdb.Tests.csproj" />
+  </Folder>
+</Solution>
