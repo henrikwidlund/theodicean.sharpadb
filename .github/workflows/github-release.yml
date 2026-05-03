@@ -1,0 +1,84 @@
+name: Publish to GitHub Packages
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build_and_publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore ./Theodicean.SharpAdb.slnx --use-lock-file --locked-mode
+
+      - name: Build
+        run: dotnet build ./Theodicean.SharpAdb.slnx --configuration Release --no-restore
+
+      - name: Compute package version from release tag
+        shell: bash
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          VERSION=${TAG#v}
+          if [[ -z "$VERSION" ]]; then
+            echo "Release tag name is empty" >&2
+            exit 1
+          fi
+          echo "PACKAGE_VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Pack libraries
+        run: |
+          dotnet pack ./src/Theodicean.SharpAdb/Theodicean.SharpAdb.csproj --configuration Release --no-build --output ./artifacts -p:Version=$PACKAGE_VERSION
+
+      - name: Publish to nuget.org
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_PAT }}
+        shell: bash
+        run: |
+          if [[ -z "$NUGET_API_KEY" ]]; then
+            echo "NUGET_PAT secret is not set" >&2
+            exit 1
+          fi
+          dotnet nuget push "./artifacts/*.nupkg" --source https://api.nuget.org/v3/index.json \
+            --api-key "$NUGET_API_KEY" \
+            --skip-duplicate
+
+      - name: Publish
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda
+        with:
+          files: |
+            ./artifacts/*.nupkg
+            ./artifacts/*.snupkg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Attest build provenance
+        uses: actions/attest@v4.1.0
+        with:
+          subject-path: |
+            ./artifacts/*.nupkg
+            ./artifacts/*.snupkg
