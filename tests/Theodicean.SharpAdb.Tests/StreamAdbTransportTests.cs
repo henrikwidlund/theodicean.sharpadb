@@ -1,16 +1,14 @@
 using Theodicean.SharpAdb.Protocol;
 using Theodicean.SharpAdb.Transport;
 
-using Xunit;
-
 namespace Theodicean.SharpAdb.Tests;
 
 public class StreamAdbTransportTests
 {
-    [Fact]
+    [Test]
     public async Task RoundTripsHeaderOnlyPacket()
     {
-        var (a, b) = CreateDuplexPair();
+        (Stream a, Stream b) = CreateDuplexPair();
         await using var sender = new StreamAdbTransport(a);
         await using var receiver = new StreamAdbTransport(b);
 
@@ -18,16 +16,16 @@ public class StreamAdbTransportTests
         await sender.WritePacketAsync(header, ReadOnlyMemory<byte>.Empty);
 
         using var received = await receiver.ReadPacketAsync();
-        Assert.Equal(AdbCommand.Okay, received.Header.Command);
-        Assert.Equal(1u, received.Header.Arg0);
-        Assert.Equal(2u, received.Header.Arg1);
-        Assert.True(received.PayloadSpan.IsEmpty);
+        await Assert.That(received.Header.Command).IsEqualTo(AdbCommand.Okay);
+        await Assert.That(received.Header.Arg0).IsEqualTo(1u);
+        await Assert.That(received.Header.Arg1).IsEqualTo(2u);
+        await Assert.That(received.PayloadSpan.IsEmpty).IsTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task RoundTripsPacketWithPayload()
     {
-        var (a, b) = CreateDuplexPair();
+        (Stream a, Stream b) = CreateDuplexPair();
         await using var sender = new StreamAdbTransport(a);
         await using var receiver = new StreamAdbTransport(b);
 
@@ -37,17 +35,17 @@ public class StreamAdbTransportTests
         await sender.WritePacketAsync(header, payload);
 
         using var received = await receiver.ReadPacketAsync();
-        Assert.Equal(AdbCommand.Wrte, received.Header.Command);
-        Assert.Equal(11u, received.Header.Arg0);
-        Assert.Equal(22u, received.Header.Arg1);
-        Assert.Equal(payload.Length, received.PayloadSpan.Length);
-        Assert.True(payload.AsSpan().SequenceEqual(received.PayloadSpan));
+        await Assert.That(received.Header.Command).IsEqualTo(AdbCommand.Wrte);
+        await Assert.That(received.Header.Arg0).IsEqualTo(11u);
+        await Assert.That(received.Header.Arg1).IsEqualTo(22u);
+        await Assert.That(received.PayloadSpan.Length).IsEqualTo(payload.Length);
+        await Assert.That(payload.AsSpan().SequenceEqual(received.PayloadSpan)).IsTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task ChecksumMismatchThrowsWhenVerifyEnabled()
     {
-        var (a, b) = CreateDuplexPair();
+        (Stream a, Stream b) = CreateDuplexPair();
         await using var sender = new StreamAdbTransport(a);
         await using var receiver = new StreamAdbTransport(b, verifyChecksum: true);
 
@@ -56,19 +54,19 @@ public class StreamAdbTransportTests
         var header = new AdbHeader(AdbCommand.Wrte, 0, 0, 4, 0xDEADBEEF);
         await sender.WritePacketAsync(header, payload);
 
-        await Assert.ThrowsAsync<InvalidDataException>(async () => await receiver.ReadPacketAsync());
+        await Assert.That(async () => await receiver.ReadPacketAsync()).ThrowsExactly<InvalidDataException>();
     }
 
-    [Fact]
+    [Test]
     public async Task ReadEofThrows()
     {
-        var (a, b) = CreateDuplexPair();
+        (Stream a, Stream b) = CreateDuplexPair();
         await using var sender = new StreamAdbTransport(a);
         await using var receiver = new StreamAdbTransport(b);
         // ReSharper disable once DisposeOnUsingVariable
         await sender.DisposeAsync();
 
-        await Assert.ThrowsAsync<EndOfStreamException>(async () => await receiver.ReadPacketAsync());
+        await Assert.That(async () => await receiver.ReadPacketAsync()).ThrowsExactly<EndOfStreamException>();
     }
 
     private static (Stream A, Stream B) CreateDuplexPair()

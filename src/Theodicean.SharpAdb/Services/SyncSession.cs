@@ -120,7 +120,7 @@ public sealed class SyncSession : IAsyncDisposable
             while (true)
             {
                 await ReadExactAsync(_frameBuf.AsMemory(0, SyncProtocol.FrameHeaderSize), cancellationToken).ConfigureAwait(false);
-                var (tag, length) = SyncProtocol.ReadFrameHeader(_frameBuf);
+                (uint tag, uint length) = SyncProtocol.ReadFrameHeader(_frameBuf);
                 if (tag == SyncProtocol.Done)
                     return;
 
@@ -180,7 +180,7 @@ public sealed class SyncSession : IAsyncDisposable
 
             // Expect OKAY or FAIL.
             await ReadExactAsync(_frameBuf.AsMemory(0, SyncProtocol.FrameHeaderSize), cancellationToken).ConfigureAwait(false);
-            var (tag, length) = SyncProtocol.ReadFrameHeader(_frameBuf);
+            (uint tag, uint length) = SyncProtocol.ReadFrameHeader(_frameBuf);
             if (tag == SyncProtocol.Okay)
                 return;
 

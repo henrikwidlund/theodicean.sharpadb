@@ -1,25 +1,23 @@
 using Theodicean.SharpAdb.Auth;
 using Theodicean.SharpAdb.Services;
 
-using Xunit;
-
 namespace Theodicean.SharpAdb.IntegrationTests;
 
-public class AuthenticationIntegrationTests(AdbIntegrationFixture fixture) : IClassFixture<AdbIntegrationFixture>
+public class AuthenticationIntegrationTests
 {
-    private readonly AdbIntegrationFixture _fixture = fixture;
+    [ClassDataSource<AdbIntegrationFixture>(Shared = SharedType.PerClass)]
+    public required AdbIntegrationFixture Fixture { get; init; }
 
     /// <summary>
     /// One-time bootstrap: pushes the configured key to the device so the user can tap "Allow" +
     /// "Always allow from this computer". After this passes once, all other auth tests will
     /// succeed via the signature path. Skipped from CI by default — set ADB_RUN_BOOTSTRAP=1 to opt in.
     /// </summary>
-    [SkippableFact]
+    [Test]
     public async Task BootstrapKeyOnDevice()
     {
-        Skip.IfNot(_fixture.Available, AdbIntegrationFixture.SkipReason);
-        // Skip.IfNot(Environment.GetEnvironmentVariable("ADB_RUN_BOOTSTRAP") == "1",
-        //     "Set ADB_RUN_BOOTSTRAP=1 to run the one-time on-device key authorization. Tap 'Always allow' on device when prompted.");
+        if (!Fixture.Available)
+            Skip.Test(AdbIntegrationFixture.SkipReason);
 
         var opts = new AdbConnectOptions
         {
@@ -27,46 +25,48 @@ public class AuthenticationIntegrationTests(AdbIntegrationFixture fixture) : ICl
             AuthTimeout = TimeSpan.FromMinutes(2) // user has to tap Allow
         };
 
-        await using var conn = await _fixture.ConnectWithAsync([_fixture.Key!], opts);
+        await using var conn = await Fixture.ConnectWithAsync([Fixture.Key!], opts);
 
         // Either the device already trusted the key (Signature) or the user just tapped Allow (PublicKey).
-        Assert.Contains(conn.AuthenticationMethod, new[]
-        {
+        await Assert.That([
             AdbAuthenticationMethod.Signature,
             AdbAuthenticationMethod.PublicKey
-        });
+        ]).Contains(conn.AuthenticationMethod);
     }
 
-    [SkippableFact]
+    [Test]
     public async Task ConfiguredKeyAuthenticatesViaSignature()
     {
-        Skip.IfNot(_fixture.Available, AdbIntegrationFixture.SkipReason);
+        if (!Fixture.Available)
+            Skip.Test(AdbIntegrationFixture.SkipReason);
 
         // SendPublicKeyOnAuthFailure=false guarantees that a successful connect proves the device
         // recognized our key and accepted the AUTH(SIGNATURE) packet — not that it fell back to a
         // user-prompt + RSAPUBLICKEY add. Distinguishes "really authenticated" from "user tapped Allow".
         var opts = new AdbConnectOptions { SendPublicKeyOnAuthFailure = false };
-        await using var conn = await _fixture.ConnectWithAsync([_fixture.Key!], opts);
+        await using var conn = await Fixture.ConnectWithAsync([Fixture.Key!], opts);
 
-        Assert.Equal(AdbAuthenticationMethod.Signature, conn.AuthenticationMethod);
-        Assert.Equal("device", conn.DeviceInfo.SystemType);
+        await Assert.That(conn.AuthenticationMethod).IsEqualTo(AdbAuthenticationMethod.Signature);
+        await Assert.That(conn.DeviceInfo.SystemType).IsEqualTo("device");
     }
 
-    [SkippableFact]
+    [Test]
     public async Task ConnectWithNoKeysThrowsAuthenticationException()
     {
-        Skip.IfNot(_fixture.Available, AdbIntegrationFixture.SkipReason);
+        if (!Fixture.Available)
+            Skip.Test(AdbIntegrationFixture.SkipReason);
 
-        await Assert.ThrowsAsync<AdbAuthenticationException>(async () =>
+        await Assert.That(async () =>
         {
-            await using var conn = await _fixture.ConnectWithAsync([]);
-        });
+            await using var conn = await Fixture.ConnectWithAsync([]);
+        }).ThrowsExactly<AdbAuthenticationException>();
     }
 
-    [SkippableFact]
+    [Test]
     public async Task ConnectWithUnknownKeyFailsWhenPubkeyPushDisabled()
     {
-        Skip.IfNot(_fixture.Available, AdbIntegrationFixture.SkipReason);
+        if (!Fixture.Available)
+            Skip.Test(AdbIntegrationFixture.SkipReason);
 
         // Fresh ephemeral key the device has never seen. Without pubkey push, the device will keep
         // sending AUTH(TOKEN) and we abort after the single signature attempt is rejected.
@@ -77,23 +77,24 @@ public class AuthenticationIntegrationTests(AdbIntegrationFixture fixture) : ICl
             AuthTimeout = TimeSpan.FromSeconds(10)
         };
 
-        await Assert.ThrowsAnyAsync<Exception>(async () =>
+        await Assert.That(async () =>
         {
-            await using var conn = await _fixture.ConnectWithAsync([stranger], opts);
-        });
+            await using var conn = await Fixture.ConnectWithAsync([stranger], opts);
+        }).Throws<Exception>();
     }
 
-    [SkippableFact]
+    [Test]
     public async Task PostAuthShellRoundtripWorks()
     {
-        Skip.IfNot(_fixture.Available, AdbIntegrationFixture.SkipReason);
+        if (!Fixture.Available)
+            Skip.Test(AdbIntegrationFixture.SkipReason);
 
         // Confirms the auth path produced a usable session, not just a banner read.
         var opts = new AdbConnectOptions { SendPublicKeyOnAuthFailure = false };
-        await using var conn = await _fixture.ConnectWithAsync([_fixture.Key!], opts);
+        await using var conn = await Fixture.ConnectWithAsync([Fixture.Key!], opts);
 
-        Assert.Equal(AdbAuthenticationMethod.Signature, conn.AuthenticationMethod);
+        await Assert.That(conn.AuthenticationMethod).IsEqualTo(AdbAuthenticationMethod.Signature);
         var output = await conn.ExecuteAsync("id -u");
-        Assert.False(string.IsNullOrWhiteSpace(output));
+        await Assert.That(output).IsNullOrWhiteSpace();
     }
 }

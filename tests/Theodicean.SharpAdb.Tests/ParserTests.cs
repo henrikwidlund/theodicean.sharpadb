@@ -1,13 +1,11 @@
 using Theodicean.SharpAdb.Services;
 
-using Xunit;
-
 namespace Theodicean.SharpAdb.Tests;
 
 public class ParserTests
 {
-    [Fact]
-    public void PropertiesParserHandlesStandardFormat()
+    [Test]
+    public async Task PropertiesParserHandlesStandardFormat()
     {
         const string input = """
             [ro.product.model]: [Pixel 7]
@@ -15,13 +13,13 @@ public class ParserTests
             [persist.sys.locale]: [en-US]
             """;
         var dict = PropertiesParser.Parse(input);
-        Assert.Equal("Pixel 7", dict["ro.product.model"]);
-        Assert.Equal("panther", dict["ro.product.name"]);
-        Assert.Equal("en-US", dict["persist.sys.locale"]);
+        await Assert.That(dict).ContainsKeyWithValue("ro.product.model", "Pixel 7");
+        await Assert.That(dict).ContainsKeyWithValue("ro.product.name", "panther");
+        await Assert.That(dict).ContainsKeyWithValue("persist.sys.locale", "en-US");
     }
 
-    [Fact]
-    public void PropertiesParserSkipsMalformedLines()
+    [Test]
+    public async Task PropertiesParserSkipsMalformedLines()
     {
         const string input = """
             garbage line
@@ -30,32 +28,32 @@ public class ParserTests
             [no closing bracket
             """;
         var dict = PropertiesParser.Parse(input);
-        Assert.Single(dict);
-        Assert.Equal("value", dict["ok"]);
+        await Assert.That(dict).HasSingleItem();
+        await Assert.That(dict).ContainsKeyWithValue("ok", "value");
     }
 
-    [Fact]
-    public void PackageParserParsesNamesOnly()
+    [Test]
+    public async Task PackageParserParsesNamesOnly()
     {
         const string input = "package:com.android.settings\npackage:com.example.app\n";
         var packages = PackageParser.Parse(input);
-        Assert.Equal(2, packages.Count);
-        Assert.Equal("com.android.settings", packages[0].PackageName);
-        Assert.Null(packages[0].Path);
+        await Assert.That(packages).Count().IsEqualTo(2);
+        await Assert.That(packages[0].PackageName).IsEqualTo("com.android.settings");
+        await Assert.That(packages[0].Path).IsNull();
     }
 
-    [Fact]
-    public void PackageParserParsesPathFormat()
+    [Test]
+    public async Task PackageParserParsesPathFormat()
     {
         const string input = "package:/data/app/com.foo-1/base.apk=com.foo\npackage:/system/priv-app/Settings/Settings.apk=com.android.settings\n";
         var packages = PackageParser.Parse(input);
-        Assert.Equal(2, packages.Count);
-        Assert.Equal("com.foo", packages[0].PackageName);
-        Assert.Equal("/data/app/com.foo-1/base.apk", packages[0].Path);
+        await Assert.That(packages).Count().IsEqualTo(2);
+        await Assert.That(packages[0].PackageName).IsEqualTo("com.foo");
+        await Assert.That(packages[0].Path).IsEqualTo("/data/app/com.foo-1/base.apk");
     }
 
-    [Fact]
-    public void ProcessParserHandlesHeaderAndRows()
+    [Test]
+    public async Task ProcessParserHandlesHeaderAndRows()
     {
         const string input = """
             USER         PID  PPID NAME
@@ -63,52 +61,52 @@ public class ParserTests
             shell      12345  1234 com.example.app
             """;
         var processes = ProcessParser.Parse(input);
-        Assert.Equal(2, processes.Count);
-        Assert.Equal(1, processes[0].Pid);
-        Assert.Equal(0, processes[0].Ppid);
-        Assert.Equal("init", processes[0].Name);
-        Assert.Equal(12345, processes[1].Pid);
-        Assert.Equal("com.example.app", processes[1].Name);
+        await Assert.That(processes).Count().IsEqualTo(2);
+        await Assert.That(processes[0].Pid).IsEqualTo(1);
+        await Assert.That(processes[0].Ppid).IsEqualTo(0);
+        await Assert.That(processes[0].Name).IsEqualTo("init");
+        await Assert.That(processes[1].Pid).IsEqualTo(12345);
+        await Assert.That(processes[1].Name).IsEqualTo("com.example.app");
     }
 
-    [Fact]
-    public void LogcatParserParsesThreadtimeFormat()
+    [Test]
+    public async Task LogcatParserParsesThreadtimeFormat()
     {
         const string line = "01-15 12:34:56.789  1234  5678 I MyTag: Hello, world!";
-        Assert.True(LogcatParser.TryParseThreadTime(line, out var entry));
-        Assert.Equal(LogcatPriority.Info, entry.Priority);
-        Assert.Equal("MyTag", entry.Tag);
-        Assert.Equal(1234, entry.Pid);
-        Assert.Equal(5678, entry.Tid);
-        Assert.Equal("Hello, world!", entry.Message);
+        await Assert.That(LogcatParser.TryParseThreadTime(line, out var entry)).IsTrue();
+        await Assert.That(entry.Priority).IsEqualTo(LogcatPriority.Info);
+        await Assert.That(entry.Tag).IsEqualTo("MyTag");
+        await Assert.That(entry.Pid).IsEqualTo(1234);
+        await Assert.That(entry.Tid).IsEqualTo(5678);
+        await Assert.That(entry.Message).IsEqualTo("Hello, world!");
     }
 
-    [Theory]
-    [InlineData('V', LogcatPriority.Verbose)]
-    [InlineData('D', LogcatPriority.Debug)]
-    [InlineData('I', LogcatPriority.Info)]
-    [InlineData('W', LogcatPriority.Warn)]
-    [InlineData('E', LogcatPriority.Error)]
-    [InlineData('F', LogcatPriority.Fatal)]
-    public void LogcatParserMapsPriorities(char prio, LogcatPriority expected)
+    [Test]
+    [Arguments('V', LogcatPriority.Verbose)]
+    [Arguments('D', LogcatPriority.Debug)]
+    [Arguments('I', LogcatPriority.Info)]
+    [Arguments('W', LogcatPriority.Warn)]
+    [Arguments('E', LogcatPriority.Error)]
+    [Arguments('F', LogcatPriority.Fatal)]
+    public async Task LogcatParserMapsPriorities(char prio, LogcatPriority expected)
     {
         var line = $"01-15 12:34:56.789  1   2 {prio} Tag: msg";
-        Assert.True(LogcatParser.TryParseThreadTime(line, out var entry));
-        Assert.Equal(expected, entry.Priority);
+        await Assert.That(LogcatParser.TryParseThreadTime(line, out var entry)).IsTrue();
+        await Assert.That(entry.Priority).IsEqualTo(expected);
     }
 
-    [Fact]
-    public void LogcatParserRejectsMalformed()
+    [Test]
+    public async Task LogcatParserRejectsMalformed()
     {
-        Assert.False(LogcatParser.TryParseThreadTime("", out _));
-        Assert.False(LogcatParser.TryParseThreadTime("not a logcat line", out _));
+        await Assert.That(LogcatParser.TryParseThreadTime("", out _)).IsFalse();
+        await Assert.That(LogcatParser.TryParseThreadTime("not a logcat line", out _)).IsFalse();
     }
 
-    [Fact]
-    public void ShellEscapeWrapsValueInSingleQuotes()
+    [Test]
+    public async Task ShellEscapeWrapsValueInSingleQuotes()
     {
-        Assert.Equal("'simple'", ShellEscape.SingleQuote("simple"));
-        Assert.Equal("'with space'", ShellEscape.SingleQuote("with space"));
-        Assert.Equal("'it'\\''s'", ShellEscape.SingleQuote("it's"));
+        await Assert.That(ShellEscape.SingleQuote("simple")).IsEqualTo("'simple'");
+        await Assert.That(ShellEscape.SingleQuote("with space")).IsEqualTo("'with space'");
+        await Assert.That(ShellEscape.SingleQuote("it's")).IsEqualTo("'it'\\''s'");
     }
 }

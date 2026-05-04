@@ -2,65 +2,68 @@ using System.Security.Cryptography;
 
 using Theodicean.SharpAdb.Services;
 
-using Xunit;
-
 namespace Theodicean.SharpAdb.IntegrationTests;
 
-public class SyncIntegrationTests(AdbIntegrationFixture fixture) : IClassFixture<AdbIntegrationFixture>
+public class SyncIntegrationTests
 {
-    private readonly AdbIntegrationFixture _fixture = fixture;
+    [ClassDataSource<AdbIntegrationFixture>(Shared = SharedType.PerClass)]
+    public required AdbIntegrationFixture Fixture { get; init; }
 
-    [SkippableFact]
+    [Test]
     public async Task StatOnExistingDirectoryReturnsDirMode()
     {
-        Skip.IfNot(_fixture.Available, AdbIntegrationFixture.SkipReason);
+        if (!Fixture.Available)
+            Skip.Test(AdbIntegrationFixture.SkipReason);
 
-        await using var conn = await _fixture.ConnectAsync();
+        await using var conn = await Fixture.ConnectAsync();
         await using var sync = await SyncSession.OpenAsync(conn);
 
         var stat = await sync.StatAsync("/data/local/tmp");
-        Assert.True(stat.Exists);
-        Assert.True(stat.IsDirectory, $"expected dir, mode=0x{stat.Mode:X}");
+        await Assert.That(stat.Exists).IsTrue();
+        await Assert.That(stat.IsDirectory).IsTrue();
     }
 
-    [SkippableFact]
+    [Test]
     public async Task StatOnMissingPathReturnsZeroMode()
     {
-        Skip.IfNot(_fixture.Available, AdbIntegrationFixture.SkipReason);
+        if (!Fixture.Available)
+            Skip.Test(AdbIntegrationFixture.SkipReason);
 
-        await using var conn = await _fixture.ConnectAsync();
+        await using var conn = await Fixture.ConnectAsync();
         await using var sync = await SyncSession.OpenAsync(conn);
 
         var stat = await sync.StatAsync("/data/local/tmp/__sharpadb_definitely_missing__");
-        Assert.False(stat.Exists);
+        await Assert.That(stat.Exists).IsFalse();
     }
 
-    [SkippableFact]
+    [Test]
     public async Task ListDirectoryEnumeratesEntries()
     {
-        Skip.IfNot(_fixture.Available, AdbIntegrationFixture.SkipReason);
+        if (!Fixture.Available)
+            Skip.Test(AdbIntegrationFixture.SkipReason);
 
-        await using var conn = await _fixture.ConnectAsync();
+        await using var conn = await Fixture.ConnectAsync();
         await using var sync = await SyncSession.OpenAsync(conn);
 
         var count = 0;
         await foreach (var entry in sync.ListAsync("/system"))
         {
-            Assert.False(string.IsNullOrEmpty(entry.Name));
+            await Assert.That(entry.Name).IsNotNullOrWhiteSpace();
             count++;
         }
-        Assert.True(count > 1, $"expected /system to contain multiple entries, got {count}");
+        await Assert.That(count).IsGreaterThan(1);
     }
 
-    [SkippableFact]
+    [Test]
     public async Task PushPullRoundTripPreservesBytes()
     {
-        Skip.IfNot(_fixture.Available, AdbIntegrationFixture.SkipReason);
+        if (!Fixture.Available)
+            Skip.Test(AdbIntegrationFixture.SkipReason);
 
         var payload = RandomNumberGenerator.GetBytes(192 * 1024);
         var remotePath = $"/data/local/tmp/sharpadb_rt_{Guid.NewGuid():N}.bin";
 
-        await using var conn = await _fixture.ConnectAsync();
+        await using var conn = await Fixture.ConnectAsync();
         await using (var sync = await SyncSession.OpenAsync(conn))
         {
             using var src = new MemoryStream(payload);
@@ -70,35 +73,36 @@ public class SyncIntegrationTests(AdbIntegrationFixture fixture) : IClassFixture
         await using (var sync = await SyncSession.OpenAsync(conn))
         {
             var stat = await sync.StatAsync(remotePath);
-            Assert.True(stat.Exists);
-            Assert.Equal((uint)payload.Length, stat.Size);
+            await Assert.That(stat.Exists).IsTrue();
+            await Assert.That(stat.Size).IsEqualTo((uint)payload.Length);
         }
 
-        byte[] roundtripped;
+        byte[] roundTripped;
         await using (var sync = await SyncSession.OpenAsync(conn))
         {
             using var dst = new MemoryStream(payload.Length);
             await sync.PullAsync(remotePath, dst);
-            roundtripped = dst.ToArray();
+            roundTripped = dst.ToArray();
         }
 
-        Assert.Equal(payload.Length, roundtripped.Length);
-        Assert.True(payload.AsSpan().SequenceEqual(roundtripped));
+        await Assert.That(roundTripped).Count().IsEqualTo(payload.Length);
+        await Assert.That(payload.AsSpan().SequenceEqual(roundTripped)).IsTrue();
 
         // Cleanup.
         await conn.ExecuteAsync($"rm -f {remotePath}");
     }
 
-    [SkippableFact]
+    [Test]
     public async Task PullOfMissingFileFails()
     {
-        Skip.IfNot(_fixture.Available, AdbIntegrationFixture.SkipReason);
+        if (!Fixture.Available)
+            Skip.Test(AdbIntegrationFixture.SkipReason);
 
-        await using var conn = await _fixture.ConnectAsync();
+        await using var conn = await Fixture.ConnectAsync();
         await using var sync = await SyncSession.OpenAsync(conn);
 
         using var dst = new MemoryStream();
-        await Assert.ThrowsAsync<IOException>(async () =>
-            await sync.PullAsync("/data/local/tmp/__sharpadb_missing__", dst));
+        await Assert.That(async () =>
+            await sync.PullAsync("/data/local/tmp/__sharpadb_missing__", dst)).ThrowsExactly<IOException>();
     }
 }

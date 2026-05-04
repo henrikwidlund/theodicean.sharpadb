@@ -7,13 +7,11 @@ using Theodicean.SharpAdb.Auth;
 using Theodicean.SharpAdb.Protocol;
 using Theodicean.SharpAdb.Transport;
 
-using Xunit;
-
 namespace Theodicean.SharpAdb.Tests;
 
 public class StlsUpgradeTests
 {
-    [Fact]
+    [Test]
     public async Task ConnectNegotiatesStlsAndContinuesEncrypted()
     {
         // Real-loopback TCP because SslStream needs a bidirectional stream that supports proper
@@ -30,14 +28,14 @@ public class StlsUpgradeTests
 
             // Expect CNXN.
             using (var pkt = await deviceTransport.ReadPacketAsync())
-                Assert.Equal(AdbCommand.Cnxn, pkt.Header.Command);
+                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);
 
             // Send STLS.
             await deviceTransport.WritePacketAsync(new AdbHeader(AdbCommand.Stls, 1, 0, 0, 0), ReadOnlyMemory<byte>.Empty);
 
             // Expect STLS reply.
             using (var pkt = await deviceTransport.ReadPacketAsync())
-                Assert.Equal(AdbCommand.Stls, pkt.Header.Command);
+                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Stls);
 
             // Server-side TLS handshake.
             using var serverKey = AdbAuthKey.Generate("device@host");
@@ -62,24 +60,31 @@ public class StlsUpgradeTests
                 banner);
 
             // Hold open until client closes.
-            try { await encryptedTransport.ReadPacketAsync(); } catch { }
+            try
+            {
+                await encryptedTransport.ReadPacketAsync();
+            }
+            catch
+            {
+                // Ignore
+            }
         });
 
         using var clientKey = AdbAuthKey.Generate("client@host");
         var conn = await AdbConnection.ConnectTcpAsync("127.0.0.1", port, [clientKey]);
-        Assert.Equal("tlsdev", conn.DeviceInfo.Product);
+        await Assert.That(conn.DeviceInfo.Product).IsEqualTo("tlsdev");
         await conn.DisposeAsync();
 
         await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
     }
 
-    [Fact]
-    public void GeneratedCertificateContainsPublicKey()
+    [Test]
+    public async Task GeneratedCertificateContainsPublicKey()
     {
         using var key = AdbAuthKey.Generate();
         using var cert = key.CreateSelfSignedCertificate("CN=test");
-        Assert.True(cert.HasPrivateKey);
-        Assert.NotNull(cert.GetRSAPublicKey());
-        Assert.Equal(AdbAuthKey.KeySizeBits, cert.GetRSAPublicKey()!.KeySize);
+        await Assert.That(cert.HasPrivateKey).IsTrue();
+        await Assert.That(cert.GetRSAPublicKey()).IsNotNull();
+        await Assert.That(cert.GetRSAPublicKey()!.KeySize).IsEqualTo(AdbAuthKey.KeySizeBits);
     }
 }

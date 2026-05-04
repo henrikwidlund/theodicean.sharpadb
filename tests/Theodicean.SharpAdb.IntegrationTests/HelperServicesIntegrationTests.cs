@@ -2,78 +2,91 @@ using System.Net.Sockets;
 
 using Theodicean.SharpAdb.Services;
 
-using Xunit;
-
 namespace Theodicean.SharpAdb.IntegrationTests;
 
-public class HelperServicesIntegrationTests(AdbIntegrationFixture fixture) : IClassFixture<AdbIntegrationFixture>
+public class HelperServicesIntegrationTests
 {
-    private readonly AdbIntegrationFixture _fixture = fixture;
+    [ClassDataSource<AdbIntegrationFixture>(Shared = SharedType.PerClass)]
+    public required AdbIntegrationFixture Fixture { get; init; }
 
-    [SkippableFact]
+    [Test]
     public async Task GetPropertyReturnsKnownValue()
     {
-        Skip.IfNot(_fixture.Available, AdbIntegrationFixture.SkipReason);
-        await using var conn = await _fixture.ConnectAsync();
+        if (!Fixture.Available)
+            Skip.Test(AdbIntegrationFixture.SkipReason);
+
+        await using var conn = await Fixture.ConnectAsync();
         var sdk = await conn.GetPropertyAsync("ro.build.version.sdk");
-        Assert.False(string.IsNullOrEmpty(sdk));
-        Assert.True(int.TryParse(sdk, out var sdkInt) && sdkInt > 20, $"unexpected sdk={sdk}");
+        await Assert.That(sdk).IsNotNullOrWhiteSpace();
+        await Assert.That(int.TryParse(sdk, out var sdkInt) && sdkInt > 20).IsTrue();
     }
 
-    [SkippableFact]
+    [Test]
     public async Task GetAllPropertiesReturnsManyEntries()
     {
-        Skip.IfNot(_fixture.Available, AdbIntegrationFixture.SkipReason);
-        await using var conn = await _fixture.ConnectAsync();
+        if (!Fixture.Available)
+            Skip.Test(AdbIntegrationFixture.SkipReason);
+
+        await using var conn = await Fixture.ConnectAsync();
         var props = await conn.GetAllPropertiesAsync();
-        Assert.True(props.Count > 50, $"expected >50 props, got {props.Count}");
-        Assert.True(props.ContainsKey("ro.build.version.sdk"));
+        await Assert.That(props).Count().IsGreaterThan(50);
+        await Assert.That(props).ContainsKey("ro.build.version.sdk");
     }
 
-    [SkippableFact]
+    [Test]
     public async Task GetProcessesIncludesInit()
     {
-        Skip.IfNot(_fixture.Available, AdbIntegrationFixture.SkipReason);
-        await using var conn = await _fixture.ConnectAsync();
+        if (!Fixture.Available)
+            Skip.Test(AdbIntegrationFixture.SkipReason);
+
+        await using var conn = await Fixture.ConnectAsync();
         var procs = await conn.GetProcessesAsync();
-        Assert.Contains(procs, static p => p.Pid == 1);
+        await Assert.That(procs).Contains(static p => p.Pid == 1);
     }
 
-    [SkippableFact]
+    [Test]
     public async Task ListPackagesReturnsAtLeastOnePackage()
     {
-        Skip.IfNot(_fixture.Available, AdbIntegrationFixture.SkipReason);
-        await using var conn = await _fixture.ConnectAsync();
+        if (!Fixture.Available)
+            Skip.Test(AdbIntegrationFixture.SkipReason);
+
+        await using var conn = await Fixture.ConnectAsync();
         var packages = await conn.ListPackagesAsync();
-        Assert.True(packages.Count > 5, $"expected several packages, got {packages.Count}");
+        await Assert.That(packages).Count().IsGreaterThan(5);
         // 'android' is the framework package — present on every Android device.
-        Assert.Contains(packages, static p => p.PackageName == "android");
+        await Assert.That(packages).Contains(static p => p.PackageName == "android");
     }
 
-    [SkippableFact]
+    [Test]
     public async Task IsInstalledHandlesPresentAndAbsent()
     {
-        Skip.IfNot(_fixture.Available, AdbIntegrationFixture.SkipReason);
-        await using var conn = await _fixture.ConnectAsync();
-        Assert.True(await conn.IsInstalledAsync("android"));
-        Assert.False(await conn.IsInstalledAsync("com.example.never.installed.deadbeef"));
+        if (!Fixture.Available)
+            Skip.Test(AdbIntegrationFixture.SkipReason);
+
+        await using var conn = await Fixture.ConnectAsync();
+        await Assert.That(await conn.IsInstalledAsync("android")).IsTrue();
+        await Assert.That(await conn.IsInstalledAsync("com.example.never.installed.deadbeef")).IsFalse();
     }
 
-    [SkippableFact]
+    [Test]
     public async Task CaptureScreenReturnsPngWithSignature()
     {
-        Skip.IfNot(_fixture.Available, AdbIntegrationFixture.SkipReason);
-        await using var conn = await _fixture.ConnectAsync();
+        if (!Fixture.Available)
+            Skip.Test(AdbIntegrationFixture.SkipReason);
+
+        await using var conn = await Fixture.ConnectAsync();
         var png = await conn.CaptureScreenAsync();
-        Assert.True(png.Length > 1000);
-        Assert.Equal(new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A }, png[..8]);
+        await Assert.That(png).Count().IsGreaterThan(1000);
+        await Assert.That(png[..8]).IsEquivalentTo(new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A });
     }
 
-    [SkippableFact]
+    [Test]
     public async Task LogcatRawReadsAtLeastOneLine()
     {
-        Skip.IfNot(_fixture.Available, AdbIntegrationFixture.SkipReason);
-        await using var conn = await _fixture.ConnectAsync();
+        if (!Fixture.Available)
+            Skip.Test(AdbIntegrationFixture.SkipReason);
+
+        await using var conn = await Fixture.ConnectAsync();
 
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
         var count = 0;
@@ -87,23 +100,27 @@ public class HelperServicesIntegrationTests(AdbIntegrationFixture fixture) : ICl
         }
         catch (OperationCanceledException) { }
 
-        Assert.True(count > 0, "expected at least one logcat line");
+        await Assert.That(count).IsPositive();
     }
 
-    [SkippableFact]
+    [Test]
     public async Task SendKeyEventHomeReturnsHomeScreen()
     {
-        Skip.IfNot(_fixture.Available, AdbIntegrationFixture.SkipReason);
-        await using var conn = await _fixture.ConnectAsync();
+        if (!Fixture.Available)
+            Skip.Test(AdbIntegrationFixture.SkipReason);
+
+        await using var conn = await Fixture.ConnectAsync();
         // Idempotent + side effect on screen; verify command completes without throwing.
-        await conn.SendKeyEventAsync(KeyCode.Home);
+        await Assert.That(async () => await conn.SendKeyEventAsync(KeyCode.Home)).ThrowsNothing();
     }
 
-    [SkippableFact]
+    [Test]
     public async Task StartAppLaunchesAnInstalledLauncherActivity()
     {
-        Skip.IfNot(_fixture.Available, AdbIntegrationFixture.SkipReason);
-        await using var conn = await _fixture.ConnectAsync();
+        if (!Fixture.Available)
+            Skip.Test(AdbIntegrationFixture.SkipReason);
+
+        await using var conn = await Fixture.ConnectAsync();
 
         // Find any installed package with a LAUNCHER intent. Fall back to skipping if none found.
         string? candidate = null;
@@ -119,18 +136,24 @@ public class HelperServicesIntegrationTests(AdbIntegrationFixture fixture) : ICl
             }
         }
 
-        Skip.If(candidate is null, "no package with a LAUNCHER activity found on this device");
+        if (candidate is null)
+            Skip.Test("no package with a LAUNCHER activity found on this device");
 
-        await conn.StartAppAsync(candidate);
-        await Task.Delay(500);
-        await conn.StopAppAsync(candidate);
+        await Assert.That(async () =>
+        {
+            await conn.StartAppAsync(candidate);
+            await Task.Delay(500);
+            await conn.StopAppAsync(candidate);
+        }).ThrowsNothing();
     }
 
-    [SkippableFact]
+    [Test]
     public async Task PortForwardConnectsToDevicePort()
     {
-        Skip.IfNot(_fixture.Available, AdbIntegrationFixture.SkipReason);
-        await using var conn = await _fixture.ConnectAsync();
+        if (!Fixture.Available)
+            Skip.Test(AdbIntegrationFixture.SkipReason);
+
+        await using var conn = await Fixture.ConnectAsync();
 
         // Run a one-shot listener on the device (ncat may not exist; try toybox 'nc').
         // Instead, forward to adbd's own port (5555) is unreliable; pick something that always exists:
@@ -141,6 +164,6 @@ public class HelperServicesIntegrationTests(AdbIntegrationFixture fixture) : ICl
 
         using var client = new TcpClient();
         await client.ConnectAsync("127.0.0.1", fwd.LocalPort);
-        Assert.True(client.Connected);
+        await Assert.That(client.Connected).IsTrue();
     }
 }

@@ -6,16 +6,14 @@ using Theodicean.SharpAdb.Protocol;
 using Theodicean.SharpAdb.Services;
 using Theodicean.SharpAdb.Transport;
 
-using Xunit;
-
 namespace Theodicean.SharpAdb.Tests;
 
 public class AdbConnectionTests
 {
-    [Fact]
+    [Test]
     public async Task HandshakeWithoutAuthSucceeds()
     {
-        var (clientStream, deviceStream) = CreateDuplexPair();
+        (Stream clientStream, Stream deviceStream) = CreateDuplexPair();
         var clientTransport = new StreamAdbTransport(clientStream);
         await using var deviceTransport = new StreamAdbTransport(deviceStream);
 
@@ -23,7 +21,7 @@ public class AdbConnectionTests
         var deviceTask = Task.Run(async () =>
         {
             using var pkt = await deviceTransport.ReadPacketAsync();
-            Assert.Equal(AdbCommand.Cnxn, pkt.Header.Command);
+            await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);
 
             var banner = "device::ro.product.name=test;ro.product.model=Pixel\0"u8.ToArray();
             await deviceTransport.WritePacketAsync(
@@ -34,15 +32,15 @@ public class AdbConnectionTests
         await using var conn = await AdbConnection.ConnectAsync(clientTransport, [], new AdbConnectOptions());
         await deviceTask;
 
-        Assert.Equal("device", conn.DeviceInfo.SystemType);
-        Assert.Equal("test", conn.DeviceInfo.Product);
-        Assert.Equal("Pixel", conn.DeviceInfo.Model);
+        await Assert.That(conn.DeviceInfo.SystemType).IsEqualTo("device");
+        await Assert.That(conn.DeviceInfo.Product).IsEqualTo("test");
+        await Assert.That(conn.DeviceInfo.Model).IsEqualTo("Pixel");
     }
 
-    [Fact]
+    [Test]
     public async Task HandshakeWithAuthChallengeAndSignature()
     {
-        var (clientStream, deviceStream) = CreateDuplexPair();
+        (Stream clientStream, Stream deviceStream) = CreateDuplexPair();
         var clientTransport = new StreamAdbTransport(clientStream);
         await using var deviceTransport = new StreamAdbTransport(deviceStream);
         using var key = AdbAuthKey.Generate();
@@ -50,7 +48,7 @@ public class AdbConnectionTests
         var deviceTask = Task.Run(async () =>
         {
             using (var pkt = await deviceTransport.ReadPacketAsync())
-                Assert.Equal(AdbCommand.Cnxn, pkt.Header.Command);
+                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);
 
             var token = RandomNumberGenerator.GetBytes(AdbProtocolConstants.AuthTokenSize);
             await deviceTransport.WritePacketAsync(
@@ -58,13 +56,13 @@ public class AdbConnectionTests
 
             using (var pkt = await deviceTransport.ReadPacketAsync())
             {
-                Assert.Equal(AdbCommand.Auth, pkt.Header.Command);
-                Assert.Equal((uint)AdbAuthType.Signature, pkt.Header.Arg0);
+                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Auth);
+                await Assert.That(pkt.Header.Arg0).IsEqualTo((uint)AdbAuthType.Signature);
 
                 using var pub = RSA.Create();
                 pub.ImportFromPem(key.ExportPrivateKeyPem());
-                Assert.True(pub.VerifyHash(token, pkt.PayloadSpan.ToArray(),
-                    HashAlgorithmName.SHA1, RSASignaturePadding.Pkcs1));
+                await Assert.That(pub.VerifyHash(token, pkt.PayloadSpan.ToArray(),
+                    HashAlgorithmName.SHA1, RSASignaturePadding.Pkcs1)).IsTrue();
             }
 
             var banner = "device::\0"u8.ToArray();
@@ -77,17 +75,17 @@ public class AdbConnectionTests
         await deviceTask;
     }
 
-    [Fact]
+    [Test]
     public async Task OpenStreamRoundTripsData()
     {
-        var (clientStream, deviceStream) = CreateDuplexPair();
+        (Stream clientStream, Stream deviceStream) = CreateDuplexPair();
         var clientTransport = new StreamAdbTransport(clientStream);
         await using var deviceTransport = new StreamAdbTransport(deviceStream);
 
         var deviceTask = Task.Run(async () =>
         {
             using (var pkt = await deviceTransport.ReadPacketAsync())
-                Assert.Equal(AdbCommand.Cnxn, pkt.Header.Command);
+                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);
             var banner = "device::\0"u8.ToArray();
             await deviceTransport.WritePacketAsync(
                 new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload, (uint)banner.Length, 0), banner);
@@ -96,8 +94,8 @@ public class AdbConnectionTests
             uint clientLocalId;
             using (var pkt = await deviceTransport.ReadPacketAsync())
             {
-                Assert.Equal(AdbCommand.Open, pkt.Header.Command);
-                Assert.Equal("shell:echo hi\0", Encoding.UTF8.GetString(pkt.PayloadSpan));
+                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Open);
+                await Assert.That(Encoding.UTF8.GetString(pkt.PayloadSpan)).IsEqualTo("shell:echo hi\0");
                 clientLocalId = pkt.Header.Arg0;
             }
 
@@ -112,9 +110,9 @@ public class AdbConnectionTests
             // Expect OKAY ack.
             using (var ack = await deviceTransport.ReadPacketAsync())
             {
-                Assert.Equal(AdbCommand.Okay, ack.Header.Command);
-                Assert.Equal(clientLocalId, ack.Header.Arg0);
-                Assert.Equal(deviceLocalId, ack.Header.Arg1);
+                await Assert.That(ack.Header.Command).IsEqualTo(AdbCommand.Okay);
+                await Assert.That(ack.Header.Arg0).IsEqualTo(clientLocalId);
+                await Assert.That(ack.Header.Arg1).IsEqualTo(deviceLocalId);
             }
 
             await deviceTransport.WritePacketAsync(
@@ -124,13 +122,13 @@ public class AdbConnectionTests
         await using var conn = await AdbConnection.ConnectAsync(clientTransport, [], new AdbConnectOptions());
         var output = await conn.ExecuteAsync("echo hi");
         await deviceTask;
-        Assert.Equal("hi\n", output);
+        await Assert.That(output).IsEqualTo("hi\n");
     }
 
-    [Fact]
+    [Test]
     public async Task ReadLoopFaultPropagatesToOpenStreams()
     {
-        var (clientStream, deviceStream) = CreateDuplexPair();
+        (Stream clientStream, Stream deviceStream) = CreateDuplexPair();
         var clientTransport = new StreamAdbTransport(clientStream);
         await using var deviceTransport = new StreamAdbTransport(deviceStream);
 
@@ -138,7 +136,7 @@ public class AdbConnectionTests
         var deviceTask = Task.Run(async () =>
         {
             using (var pkt = await deviceTransport.ReadPacketAsync())
-                Assert.Equal(AdbCommand.Cnxn, pkt.Header.Command);
+                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);
             var banner = "device::\0"u8.ToArray();
             await deviceTransport.WritePacketAsync(
                 new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload, (uint)banner.Length, 0), banner);
@@ -162,19 +160,24 @@ public class AdbConnectionTests
 
         // Pending read on the stream should observe the fault (or 0/EOF) once the loop dies.
         var buf = new byte[1024];
-        var ex = await Record.ExceptionAsync(async () =>
+        Exception? ex = null;
+        try
         {
             var read = await stream.ReadAsync(buf).AsTask().WaitAsync(TimeSpan.FromSeconds(2));
             // If we got here, a graceful close happened — accept 0 too.
-            Assert.Equal(0, read);
-        });
+            await Assert.That(read).IsZero();
+        }
+        catch (Exception e)
+        {
+            ex = e;
+        }
 
         // Either a fault propagated (exception from pipe) or graceful EOF (0 bytes). Both acceptable.
-        Assert.True(ex is null or InvalidDataException or IOException, $"unexpected: {ex}");
+        await Assert.That(ex is null or InvalidDataException or IOException).IsTrue();
 
         // Subsequent OpenAsync must surface the recorded fault.
-        Assert.NotNull(conn.FaultException);
-        await Assert.ThrowsAsync<IOException>(async () => await conn.OpenAsync("shell:noop"));
+        await Assert.That(conn.FaultException).IsNotNull();
+        await Assert.That(async () => await conn.OpenAsync("shell:noop")).ThrowsExactly<IOException>();
     }
 
     private static (Stream A, Stream B) CreateDuplexPair()

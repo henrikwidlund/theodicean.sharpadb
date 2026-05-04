@@ -4,67 +4,65 @@ using System.Text;
 using Theodicean.SharpAdb.Auth;
 using Theodicean.SharpAdb.Protocol;
 
-using Xunit;
-
 namespace Theodicean.SharpAdb.Tests;
 
 public class AdbAuthKeyTests
 {
-    [Fact]
-    public void GenerateProduces2048BitKey()
+    [Test]
+    public async Task GenerateProduces2048BitKey()
     {
         using var key = AdbAuthKey.Generate();
         var pem = key.ExportPrivateKeyPem();
-        Assert.Contains("BEGIN RSA PRIVATE KEY", pem);
+        await Assert.That(pem).Contains("BEGIN RSA PRIVATE KEY");
     }
 
-    [Fact]
-    public void RejectsWrongKeySize()
+    [Test]
+    public async Task RejectsWrongKeySize()
     {
         using var rsa = RSA.Create(1024);
-        Assert.Throws<ArgumentException>(() => new AdbAuthKey(rsa));
+        await Assert.That(() => new AdbAuthKey(rsa)).ThrowsExactly<ArgumentException>();
     }
 
-    [Fact]
-    public void SignTokenRejectsWrongLength()
+    [Test]
+    public async Task SignTokenRejectsWrongLength()
     {
         using var key = AdbAuthKey.Generate();
-        Assert.Throws<ArgumentException>(() => key.SignToken(new byte[10]));
+        await Assert.That(() => key.SignToken(new byte[10])).ThrowsExactly<ArgumentException>();
     }
 
-    [Fact]
-    public void SignTokenProducesVerifiablePkcs1Signature()
+    [Test]
+    public async Task SignTokenProducesVerifiablePkcs1Signature()
     {
         using var key = AdbAuthKey.Generate();
         var token = RandomNumberGenerator.GetBytes(AdbProtocolConstants.AuthTokenSize);
         var sig = key.SignToken(token);
 
-        Assert.Equal(AdbAuthKey.ModulusBytes, sig.Length);
+        await Assert.That(sig).Count().IsEqualTo(AdbAuthKey.ModulusBytes);
 
         using var pub = RSA.Create();
         pub.ImportFromPem(key.ExportPrivateKeyPem());
-        Assert.True(pub.VerifyHash(token, sig, HashAlgorithmName.SHA1, RSASignaturePadding.Pkcs1));
+        await Assert.That(pub.VerifyHash(token, sig, HashAlgorithmName.SHA1, RSASignaturePadding.Pkcs1)).IsTrue();
     }
 
-    [Fact]
-    public void EncodedPublicKeyEndsWithSpaceUserHostNul()
+    [Test]
+    public async Task EncodedPublicKeyEndsWithSpaceUserHostNul()
     {
         using var key = AdbAuthKey.Generate("alice@host");
         var encoded = key.EncodeAndroidPublicKey();
 
-        Assert.Equal(0, encoded[^1]);
+        await Assert.That(encoded[^1]).IsEqualTo((byte)0);
         var spaceIdx = Array.IndexOf(encoded, (byte)' ');
-        Assert.True(spaceIdx > 0);
+        await Assert.That(spaceIdx).IsGreaterThan(0);
         var userHost = Encoding.UTF8.GetString(encoded.AsSpan(spaceIdx + 1, encoded.Length - spaceIdx - 2));
-        Assert.Equal("alice@host", userHost);
+        await Assert.That(userHost).IsEqualTo("alice@host");
 
         // Base64 portion should decode to mincrypt blob: 4 + 4 + 256 + 256 + 4 = 524 bytes.
         var blob = Convert.FromBase64String(Encoding.ASCII.GetString(encoded, 0, spaceIdx));
-        Assert.Equal(524, blob.Length);
+        await Assert.That(blob).Count().IsEqualTo(524);
     }
 
-    [Fact]
-    public void EncodedPublicKeyContainsCorrectModulusWordCount()
+    [Test]
+    public async Task EncodedPublicKeyContainsCorrectModulusWordCount()
     {
         using var key = AdbAuthKey.Generate();
         var encoded = key.EncodeAndroidPublicKey();
@@ -72,12 +70,12 @@ public class AdbAuthKeyTests
         var blob = Convert.FromBase64String(Encoding.ASCII.GetString(encoded, 0, spaceIdx));
 
         var words = BitConverter.ToUInt32(blob, 0);
-        Assert.Equal((uint)AdbAuthKey.ModulusWords, words);
+        await Assert.That(words).IsEqualTo((uint)AdbAuthKey.ModulusWords);
 
         // n0inv: ((-1 / N[0]) mod 2^32). With N[0] (least-significant word) being any odd value
         // (RSA modulus is odd), we should have (n0inv * N[0]) mod 2^32 == (2^32 - 1) i.e. -1.
         var n0Inv = BitConverter.ToUInt32(blob, 4);
         var n0 = BitConverter.ToUInt32(blob, 8);
-        Assert.Equal(0xFFFFFFFFu, unchecked(n0Inv * n0));
+        await Assert.That(unchecked(n0Inv * n0)).IsEqualTo(0xFFFFFFFFu);
     }
 }

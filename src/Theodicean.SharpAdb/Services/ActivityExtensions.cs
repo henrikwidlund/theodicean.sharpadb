@@ -94,7 +94,7 @@ public static class ActivityExtensions
 
             if (extras is not null)
             {
-                foreach (var (k, v) in extras)
+                foreach ((string k, string v) in extras)
                 {
                     args.Add("--es");
                     args.Add(ShellEscape.SingleQuote(k));

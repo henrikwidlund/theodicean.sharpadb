@@ -1,39 +1,37 @@
 using Theodicean.SharpAdb.Services;
 
-using Xunit;
-
 namespace Theodicean.SharpAdb.Tests;
 
 public class SyncProtocolTests
 {
-    [Fact]
-    public void TagsMatchAsciiLittleEndian()
+    [Test]
+    public async Task TagsMatchAsciiLittleEndian()
     {
-        Assert.Equal('L' | ((uint)'I' << 8) | ((uint)'S' << 16) | ((uint)'T' << 24), SyncProtocol.List);
-        Assert.Equal('D' | ((uint)'A' << 8) | ((uint)'T' << 16) | ((uint)'A' << 24), SyncProtocol.Data);
-        Assert.Equal('D' | ((uint)'O' << 8) | ((uint)'N' << 16) | ((uint)'E' << 24), SyncProtocol.Done);
-        Assert.Equal('F' | ((uint)'A' << 8) | ((uint)'I' << 16) | ((uint)'L' << 24), SyncProtocol.Fail);
+        await Assert.That(BitConverter.ToUInt32("LIST"u8)).IsEqualTo(SyncProtocol.List);
+        await Assert.That(BitConverter.ToUInt32("DATA"u8)).IsEqualTo(SyncProtocol.Data);
+        await Assert.That(BitConverter.ToUInt32("DONE"u8)).IsEqualTo(SyncProtocol.Done);
+        await Assert.That(BitConverter.ToUInt32("FAIL"u8)).IsEqualTo(SyncProtocol.Fail);
     }
 
-    [Fact]
-    public void FrameHeaderRoundTrips()
+    [Test]
+    public async Task FrameHeaderRoundTrips()
     {
-        Span<byte> buf = stackalloc byte[8];
+        var buf = new byte[8];
         SyncProtocol.WriteFrameHeader(buf, SyncProtocol.Send, 0xCAFE);
-        var (tag, arg) = SyncProtocol.ReadFrameHeader(buf);
-        Assert.Equal(SyncProtocol.Send, tag);
-        Assert.Equal(0xCAFEu, arg);
+        (uint tag, uint arg) = SyncProtocol.ReadFrameHeader(buf);
+        await Assert.That(tag).IsEqualTo(SyncProtocol.Send);
+        await Assert.That(arg).IsEqualTo(0xCAFEu);
     }
 
-    [Theory]
-    [InlineData(0x4000u, true, false, false)]   // dir
-    [InlineData(0x8000u, false, true, false)]   // regular
-    [InlineData(0xA000u, false, false, true)]   // symlink
-    public void FileStatModeBits(uint mode, bool dir, bool reg, bool sym)
+    [Test]
+    [Arguments(0x4000u, true, false, false)]   // dir
+    [Arguments(0x8000u, false, true, false)]   // regular
+    [Arguments(0xA000u, false, false, true)]   // symlink
+    public async Task FileStatModeBits(uint mode, bool dir, bool reg, bool sym)
     {
         var s = new AdbFileStat(mode, 0, DateTimeOffset.UnixEpoch);
-        Assert.Equal(dir, s.IsDirectory);
-        Assert.Equal(reg, s.IsRegularFile);
-        Assert.Equal(sym, s.IsSymlink);
+        await Assert.That(s.IsDirectory).IsEqualTo(dir);
+        await Assert.That(s.IsRegularFile).IsEqualTo(reg);
+        await Assert.That(s.IsSymlink).IsEqualTo(sym);
     }
 }

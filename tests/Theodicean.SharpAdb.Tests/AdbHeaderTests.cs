@@ -1,64 +1,61 @@
 using Theodicean.SharpAdb.Protocol;
 
-using Xunit;
-
 namespace Theodicean.SharpAdb.Tests;
 
 public class AdbHeaderTests
 {
-    [Fact]
-    public void RoundTripsThroughBuffer()
+    [Test]
+    public async Task RoundTripsThroughBuffer()
     {
         var header = new AdbHeader(AdbCommand.Open, 42, 7, 16, 0xCAFEBABE);
-        Span<byte> buf = stackalloc byte[AdbProtocolConstants.HeaderSize];
+        var buf = new byte[AdbProtocolConstants.HeaderSize];
         header.WriteTo(buf);
 
         var decoded = AdbHeader.Read(buf);
 
-        Assert.Equal(AdbCommand.Open, decoded.Command);
-        Assert.Equal(42u, decoded.Arg0);
-        Assert.Equal(7u, decoded.Arg1);
-        Assert.Equal(16u, decoded.DataLength);
-        Assert.Equal(0xCAFEBABEu, decoded.DataChecksum);
-        Assert.True(decoded.IsMagicValid);
+        await Assert.That(decoded.Command).IsEqualTo(AdbCommand.Open);
+        await Assert.That(decoded.Arg0).IsEqualTo(42u);
+        await Assert.That(decoded.Arg1).IsEqualTo(7u);
+        await Assert.That(decoded.DataLength).IsEqualTo(16u);
+        await Assert.That(decoded.DataChecksum).IsEqualTo(0xCAFEBABEu);
+        await Assert.That(decoded.IsMagicValid).IsTrue();
     }
 
-    [Theory]
-    [InlineData(AdbCommand.Cnxn, 0x4e584e43u)]
-    [InlineData(AdbCommand.Auth, 0x48545541u)]
-    [InlineData(AdbCommand.Open, 0x4e45504fu)]
-    [InlineData(AdbCommand.Okay, 0x59414b4fu)]
-    [InlineData(AdbCommand.Clse, 0x45534c43u)]
-    [InlineData(AdbCommand.Wrte, 0x45545257u)]
-    public void CommandValuesMatchAsciiTags(AdbCommand cmd, uint expected) =>
-        Assert.Equal(expected, (uint)cmd);
+    [Test]
+    [Arguments(AdbCommand.Cnxn, 0x4e584e43u)]
+    [Arguments(AdbCommand.Auth, 0x48545541u)]
+    [Arguments(AdbCommand.Open, 0x4e45504fu)]
+    [Arguments(AdbCommand.Okay, 0x59414b4fu)]
+    [Arguments(AdbCommand.Clse, 0x45534c43u)]
+    [Arguments(AdbCommand.Wrte, 0x45545257u)]
+    public async Task CommandValuesMatchAsciiTags(AdbCommand cmd, uint expected) =>
+        await Assert.That((uint)cmd).IsEqualTo(expected);
 
-    [Fact]
-    public void MagicIsCommandXorMax()
+    [Test]
+    public async Task MagicIsCommandXorMax()
     {
         var header = new AdbHeader(AdbCommand.Cnxn, 1, 2, 3, 4);
-        Assert.Equal((uint)AdbCommand.Cnxn ^ 0xFFFFFFFFu, header.Magic);
+        await Assert.That(header.Magic).IsEqualTo((uint)AdbCommand.Cnxn ^ 0xFFFFFFFFu);
     }
 
-    [Fact]
-    public void DecodingWithBadMagicThrows()
+    [Test]
+    public async Task DecodingWithBadMagicThrows()
     {
-        Span<byte> buf = stackalloc byte[AdbProtocolConstants.HeaderSize];
+        var buf = new byte[AdbProtocolConstants.HeaderSize];
         new AdbHeader(AdbCommand.Cnxn, 0, 0, 0, 0).WriteTo(buf);
         // Corrupt magic
         buf[20] ^= 0xFF;
-        var arr = buf.ToArray();
-        Assert.Throws<InvalidDataException>(() => AdbHeader.Read(arr));
+        await Assert.That(() => AdbHeader.Read(buf)).ThrowsExactly<InvalidDataException>();
     }
 
-    [Fact]
-    public void ChecksumIsSumOfBytes()
+    [Test]
+    public async Task ChecksumIsSumOfBytes()
     {
         ReadOnlySpan<byte> data = [1, 2, 3, 250];
-        Assert.Equal(256u, AdbHeader.ComputeChecksum(data));
+        await Assert.That(AdbHeader.ComputeChecksum(data)).IsEqualTo(256u);
     }
 
-    [Fact]
-    public void ChecksumOnEmptyIsZero() =>
-        Assert.Equal(0u, AdbHeader.ComputeChecksum(ReadOnlySpan<byte>.Empty));
+    [Test]
+    public async Task ChecksumOnEmptyIsZero() =>
+        await Assert.That(AdbHeader.ComputeChecksum(ReadOnlySpan<byte>.Empty)).IsEqualTo(0u);
 }
