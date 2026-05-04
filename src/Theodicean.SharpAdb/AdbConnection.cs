@@ -157,6 +157,62 @@ public sealed class AdbConnection : IAsyncDisposable
     /// <summary>
     /// Opens a TCP socket to <paramref name="host"/>:<paramref name="port"/> and performs the ADB handshake.
     /// </summary>
+    /// <remarks>This method will generate a private key if one doesn't already exist.</remarks>
+    /// <param name="host">DNS name or IP of the device.</param>
+    /// <param name="port">TCP port adbd is listening on (typically 5555 for <c>adb tcpip</c>).</param>
+    /// <param name="options">Optional handshake settings.</param>
+    /// <param name="cancellationToken">Cancellation for the connect + handshake.</param>
+    /// <exception cref="AdbAuthenticationException">Device rejected all keys or required STLS without a key.</exception>
+    public static async ValueTask<AdbConnection> ConnectTcpAsync(
+        string host, int port,
+        AdbConnectOptions? options = null, CancellationToken cancellationToken = default)
+    {
+        var defaultPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".android", "adbkey");
+        if (!Directory.Exists(defaultPath))
+            Directory.CreateDirectory(defaultPath);
+
+        var keyPath = Environment.GetEnvironmentVariable("ADB_KEY_PATH") ?? Path.Combine(defaultPath, "sharpadb-test-key.pem");
+
+        AdbAuthKey key;
+        if (File.Exists(keyPath))
+        {
+            key = AdbAuthKey.LoadFromPem(await File.ReadAllTextAsync(keyPath, cancellationToken));
+        }
+        else
+        {
+            key = AdbAuthKey.Generate();
+            await File.WriteAllTextAsync(keyPath, key.ExportPrivateKeyPem(), cancellationToken);
+            if (!OperatingSystem.IsWindows())
+                File.SetUnixFileMode(keyPath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+        }
+
+        var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+        try
+        {
+            await socket.ConnectAsync(host, port, cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            socket.Dispose();
+            throw;
+        }
+
+        var transport = StreamAdbTransport.CreateTcp(socket, options?.VerifyChecksum ?? false);
+        try
+        {
+            return await ConnectAsync(transport, [key], options, cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            await transport.DisposeAsync().ConfigureAwait(false);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Opens a TCP socket to <paramref name="host"/>:<paramref name="port"/> and performs the ADB handshake.
+    /// </summary>
     /// <param name="host">DNS name or IP of the device.</param>
     /// <param name="port">TCP port adbd is listening on (typically 5555 for <c>adb tcpip</c>).</param>
     /// <param name="keys">RSA keys to try for AUTH; the first key is also used for STLS / public-key push if needed.</param>
