@@ -32,5 +32,4 @@ jobs:
         run: dotnet build --no-restore
 
       - name: Run Unit Tests
-        run: dotnet test tests/Theodicean.SharpAdb.Tests/Theodicean.SharpAdb.Tests.csproj --no-build --no-restore --verbosity normal --coverage --coverage-output-format cobertura
-
+        run: dotnet test --project tests/Theodicean.SharpAdb.Tests/Theodicean.SharpAdb.Tests.csproj --no-build --no-restore --verbosity normal --coverage --coverage-output-format cobertura
