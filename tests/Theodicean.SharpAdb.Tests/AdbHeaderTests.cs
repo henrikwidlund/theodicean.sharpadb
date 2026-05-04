@@ -58,4 +58,19 @@ public class AdbHeaderTests
     [Test]
     public async Task ChecksumOnEmptyIsZero() =>
         await Assert.That(AdbHeader.ComputeChecksum(ReadOnlySpan<byte>.Empty)).IsEqualTo(0u);
+
+    [Test]
+    public async Task WriteToWithUndersizedBufferThrows()
+    {
+        var header = new AdbHeader(AdbCommand.Cnxn, 0, 0, 0, 0);
+        var buf = new byte[AdbProtocolConstants.HeaderSize - 1];
+        await Assert.That(() => header.WriteTo(buf)).ThrowsExactly<ArgumentException>();
+    }
+
+    [Test]
+    public async Task ReadWithUndersizedBufferThrows()
+    {
+        var buf = new byte[AdbProtocolConstants.HeaderSize - 1];
+        await Assert.That(() => AdbHeader.Read(buf)).ThrowsExactly<ArgumentException>();
+    }
 }

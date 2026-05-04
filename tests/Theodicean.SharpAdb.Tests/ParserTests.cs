@@ -109,4 +109,87 @@ public class ParserTests
         await Assert.That(ShellEscape.SingleQuote("with space")).IsEqualTo("'with space'");
         await Assert.That(ShellEscape.SingleQuote("it's")).IsEqualTo("'it'\\''s'");
     }
+
+    [Test]
+    public async Task ShellEscapeHandlesEmptyString() =>
+        await Assert.That(ShellEscape.SingleQuote("")).IsEqualTo("''");
+
+    [Test]
+    public async Task PropertiesParserSkipsLineWithMissingClosingBracket()
+    {
+        const string input = "[key]: [no closing bracket";
+        var dict = PropertiesParser.Parse(input);
+        await Assert.That(dict).IsEmpty();
+    }
+
+    [Test]
+    public async Task PropertiesParserHandlesEmptyKey()
+    {
+        const string input = "[]: [value]";
+        var dict = PropertiesParser.Parse(input);
+        await Assert.That(dict).ContainsKeyWithValue("", "value");
+    }
+
+    [Test]
+    public async Task PackageParserHandlesPackageLineWithoutName()
+    {
+        const string input = "package:\n";
+        var packages = PackageParser.Parse(input);
+        await Assert.That(packages).Count().IsEqualTo(1);
+        await Assert.That(packages[0].PackageName).IsEqualTo("");
+        await Assert.That(packages[0].Path).IsNull();
+    }
+
+    [Test]
+    public async Task PackageParserHandlesPathWithEmptyName()
+    {
+        const string input = "package:/data/app/foo.apk=\n";
+        var packages = PackageParser.Parse(input);
+        await Assert.That(packages).Count().IsEqualTo(1);
+        await Assert.That(packages[0].PackageName).IsEqualTo("");
+        await Assert.That(packages[0].Path).IsEqualTo("/data/app/foo.apk");
+    }
+
+    [Test]
+    public async Task ProcessParserHandlesNonNumericPpid()
+    {
+        const string input = """
+            USER         PID  PPID NAME
+            root           1   xxx init
+            """;
+        var processes = ProcessParser.Parse(input);
+        await Assert.That(processes).Count().IsEqualTo(1);
+        await Assert.That(processes[0].Pid).IsEqualTo(1);
+        await Assert.That(processes[0].Ppid).IsNull();
+        await Assert.That(processes[0].Name).IsEqualTo("init");
+    }
+
+    [Test]
+    public async Task ProcessParserSkipsRowsWithNonNumericPid()
+    {
+        const string input = """
+            USER         PID  PPID NAME
+            root         abc     0 init
+            shell          5     1 ok
+            """;
+        var processes = ProcessParser.Parse(input);
+        await Assert.That(processes).Count().IsEqualTo(1);
+        await Assert.That(processes[0].Pid).IsEqualTo(5);
+    }
+
+    [Test]
+    public async Task LogcatParserMapsSilentPriority()
+    {
+        const string line = "01-15 12:34:56.789  1   2 S Tag: msg";
+        await Assert.That(LogcatParser.TryParseThreadTime(line, out var entry)).IsTrue();
+        await Assert.That(entry.Priority).IsEqualTo(LogcatPriority.Silent);
+    }
+
+    [Test]
+    public async Task LogcatParserUnknownPriorityDefaultsToVerbose()
+    {
+        const string line = "01-15 12:34:56.789  1   2 X Tag: msg";
+        await Assert.That(LogcatParser.TryParseThreadTime(line, out var entry)).IsTrue();
+        await Assert.That(entry.Priority).IsEqualTo(LogcatPriority.Verbose);
+    }
 }

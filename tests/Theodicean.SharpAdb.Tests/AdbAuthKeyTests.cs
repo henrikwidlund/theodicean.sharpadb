@@ -62,6 +62,10 @@ public class AdbAuthKeyTests
     }
 
     [Test]
+    public async Task LoadFromPemRejectsInvalidInput() =>
+        await Assert.That(() => AdbAuthKey.LoadFromPem("not-a-pem-key")).Throws<ArgumentException>();
+
+    [Test]
     public async Task EncodedPublicKeyContainsCorrectModulusWordCount()
     {
         using var key = AdbAuthKey.Generate();

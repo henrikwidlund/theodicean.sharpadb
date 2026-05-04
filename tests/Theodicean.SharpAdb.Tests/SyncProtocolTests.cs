@@ -34,4 +34,11 @@ public class SyncProtocolTests
         await Assert.That(s.IsRegularFile).IsEqualTo(reg);
         await Assert.That(s.IsSymlink).IsEqualTo(sym);
     }
+
+    [Test]
+    public async Task WriteFrameHeaderUndersizedBufferThrows()
+    {
+        var buf = new byte[SyncProtocol.FrameHeaderSize - 1];
+        await Assert.That(() => SyncProtocol.WriteFrameHeader(buf, SyncProtocol.Send, 0)).ThrowsExactly<ArgumentOutOfRangeException>();
+    }
 }
