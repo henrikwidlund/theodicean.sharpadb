@@ -63,8 +63,8 @@ internal static class ProcessParser
             // Whitespace-separated columns: USER PID PPID NAME[...]
             var parts = line.Split([' ', '\t'], 4, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length < 4) continue;
-            if (!int.TryParse(parts[1], System.Globalization.CultureInfo.InvariantCulture, out var pid)) continue;
-            int? ppid = int.TryParse(parts[2], System.Globalization.CultureInfo.InvariantCulture, out var p) ? p : null;
+            if (!int.TryParse(parts[1], CultureInfo.InvariantCulture, out var pid)) continue;
+            int? ppid = int.TryParse(parts[2], CultureInfo.InvariantCulture, out var p) ? p : null;
             list.Add(new AdbProcess(pid, ppid, parts[0], parts[3]));
         }
         return list;
