@@ -64,14 +64,14 @@ public static class RebootExtensions
                 _ => throw new ArgumentOutOfRangeException(nameof(mode))
             };
 
-            await using var stream = await connection.OpenAsync($"reboot:{suffix}", cancellationToken).ConfigureAwait(false);
+            await using var stream = await connection.OpenAsync($"reboot:{suffix}", cancellationToken);
             // Drain anything the device sends before it goes down. Any of these is expected when
             // the device tears the connection down: pipe completion (IOException), already-disposed
             // stream during shutdown (ObjectDisposedException), or caller-driven cancellation.
             var buf = new byte[64];
             try
             {
-                while (await stream.ReadAsync(buf, cancellationToken).ConfigureAwait(false) > 0)
+                while (await stream.ReadAsync(buf, cancellationToken) > 0)
                 {
                     // Loop while we get data back
                 }

@@ -16,9 +16,9 @@ public static class ScreenExtensions
         {
             ArgumentNullException.ThrowIfNull(connection);
 
-            await using var stream = await connection.OpenAsync("exec:screencap -p", cancellationToken).ConfigureAwait(false);
+            await using var stream = await connection.OpenAsync("exec:screencap -p", cancellationToken);
             using var ms = new MemoryStream();
-            await stream.CopyToAsync(ms, cancellationToken).ConfigureAwait(false);
+            await stream.CopyToAsync(ms, cancellationToken);
 
             var bytes = ms.ToArray();
             if (bytes.Length < 8 || bytes[0] != 0x89 || bytes[1] != 0x50 || bytes[2] != 0x4E || bytes[3] != 0x47)
@@ -33,8 +33,8 @@ public static class ScreenExtensions
         public async Task CaptureScreenAsync(Stream destination, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(destination);
-            var png = await connection.CaptureScreenAsync(cancellationToken).ConfigureAwait(false);
-            await destination.WriteAsync(png, cancellationToken).ConfigureAwait(false);
+            var png = await connection.CaptureScreenAsync(cancellationToken);
+            await destination.WriteAsync(png, cancellationToken);
         }
     }
 }

@@ -48,7 +48,7 @@ public sealed class AdbStream : Stream
     internal async ValueTask OnDataAsync(ReadOnlyMemory<byte> data, CancellationToken cancellationToken)
     {
         if (Volatile.Read(ref _closed) != 0) return;
-        await _inboundPipe.Writer.WriteAsync(data, cancellationToken).ConfigureAwait(false);
+        await _inboundPipe.Writer.WriteAsync(data, cancellationToken);
     }
 
     internal void OnAck() => TryReleaseWriteAck();
@@ -125,7 +125,7 @@ public sealed class AdbStream : Stream
     /// </summary>
     public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
     {
-        var result = await _inboundPipe.Reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+        var result = await _inboundPipe.Reader.ReadAsync(cancellationToken);
         var seq = result.Buffer;
         if (seq.IsEmpty)
         {
@@ -162,13 +162,13 @@ public sealed class AdbStream : Stream
             var chunk = Math.Min(remaining.Length, max);
             var slice = remaining[..chunk];
 
-            await _writeAck.WaitAsync(cancellationToken).ConfigureAwait(false);
+            await _writeAck.WaitAsync(cancellationToken);
             if (Volatile.Read(ref _closed) != 0)
                 throw StreamClosedException();
 
             var checksum = _connection.WriteChecksum ? AdbHeader.ComputeChecksum(slice.Span) : 0u;
             var header = new AdbHeader(AdbCommand.Wrte, LocalId, RemoteId, (uint)slice.Length, checksum);
-            await _connection.SendAsync(header, slice, cancellationToken).ConfigureAwait(false);
+            await _connection.SendAsync(header, slice, cancellationToken);
 
             remaining = remaining[chunk..];
         }
@@ -194,9 +194,9 @@ public sealed class AdbStream : Stream
     {
         if (Interlocked.Exchange(ref _closed, 1) == 0)
         {
-            await _connection.CloseStreamAsync(this).ConfigureAwait(false);
-            await _inboundPipe.Writer.CompleteAsync().ConfigureAwait(false);
+            await _connection.CloseStreamAsync(this);
+            await _inboundPipe.Writer.CompleteAsync();
         }
-        await base.DisposeAsync().ConfigureAwait(false);
+        await base.DisposeAsync();
     }
 }

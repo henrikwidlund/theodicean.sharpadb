@@ -198,7 +198,7 @@ public sealed class AdbConnection : IAsyncDisposable
         var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
         try
         {
-            await socket.ConnectAsync(host, port, cancellationToken).ConfigureAwait(false);
+            await socket.ConnectAsync(host, port, cancellationToken);
         }
         catch
         {
@@ -209,11 +209,11 @@ public sealed class AdbConnection : IAsyncDisposable
         var transport = StreamAdbTransport.CreateTcp(socket, options?.VerifyChecksum ?? false);
         try
         {
-            return await ConnectAsync(transport, [key], options, cancellationToken).ConfigureAwait(false);
+            return await ConnectAsync(transport, [key], options, cancellationToken);
         }
         catch
         {
-            await transport.DisposeAsync().ConfigureAwait(false);
+            await transport.DisposeAsync();
             throw;
         }
     }
@@ -234,7 +234,7 @@ public sealed class AdbConnection : IAsyncDisposable
         var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
         try
         {
-            await socket.ConnectAsync(host, port, cancellationToken).ConfigureAwait(false);
+            await socket.ConnectAsync(host, port, cancellationToken);
         }
         catch
         {
@@ -245,11 +245,11 @@ public sealed class AdbConnection : IAsyncDisposable
         var transport = StreamAdbTransport.CreateTcp(socket, options?.VerifyChecksum ?? false);
         try
         {
-            return await ConnectAsync(transport, keys, options, cancellationToken).ConfigureAwait(false);
+            return await ConnectAsync(transport, keys, options, cancellationToken);
         }
         catch
         {
-            await transport.DisposeAsync().ConfigureAwait(false);
+            await transport.DisposeAsync();
             throw;
         }
     }
@@ -275,7 +275,7 @@ public sealed class AdbConnection : IAsyncDisposable
         await transport.WritePacketAsync(
             new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, options.MaxPayload,
                 (uint)bannerBytes.Length, options.WriteChecksum ? AdbHeader.ComputeChecksum(bannerBytes) : 0u),
-            bannerBytes, cancellationToken).ConfigureAwait(false);
+            bannerBytes, cancellationToken);
 
         var keyIndex = 0;
         var sentPubkey = false;
@@ -285,7 +285,7 @@ public sealed class AdbConnection : IAsyncDisposable
 
         while (true)
         {
-            using var pkt = await transport.ReadPacketAsync(authCts.Token).ConfigureAwait(false);
+            using var pkt = await transport.ReadPacketAsync(authCts.Token);
 
             switch (pkt.Header.Command)
             {
@@ -305,7 +305,7 @@ public sealed class AdbConnection : IAsyncDisposable
                             await transport.WritePacketAsync(
                                 new AdbHeader(AdbCommand.Auth, (uint)AdbAuthType.Signature, 0,
                                     (uint)sig.Length, options.WriteChecksum ? AdbHeader.ComputeChecksum(sig) : 0u),
-                                sig, authCts.Token).ConfigureAwait(false);
+                                sig, authCts.Token);
                         }
                         else if (!sentPubkey && keys.Count > 0 && options.SendPublicKeyOnAuthFailure)
                         {
@@ -315,7 +315,7 @@ public sealed class AdbConnection : IAsyncDisposable
                             await transport.WritePacketAsync(
                                 new AdbHeader(AdbCommand.Auth, (uint)AdbAuthType.RsaPublicKey, 0,
                                     (uint)pub.Length, options.WriteChecksum ? AdbHeader.ComputeChecksum(pub) : 0u),
-                                pub, authCts.Token).ConfigureAwait(false);
+                                pub, authCts.Token);
                         }
                         else
                         {
@@ -340,10 +340,10 @@ public sealed class AdbConnection : IAsyncDisposable
                         // Reply STLS to confirm we will upgrade.
                         await transport.WritePacketAsync(
                             new AdbHeader(AdbCommand.Stls, 1, 0, 0, 0),
-                            ReadOnlyMemory<byte>.Empty, authCts.Token).ConfigureAwait(false);
+                            ReadOnlyMemory<byte>.Empty, authCts.Token);
 
                         using var clientCert = keys[0].CreateSelfSignedCertificate();
-                        await tlsCapable.UpgradeToTlsAsync(clientCert, authCts.Token).ConfigureAwait(false);
+                        await tlsCapable.UpgradeToTlsAsync(clientCert, authCts.Token);
                         authMethod = AdbAuthenticationMethod.Tls;
 
                         // After TLS, device sends CNXN on the encrypted channel; AUTH is no longer required
@@ -424,9 +424,9 @@ public sealed class AdbConnection : IAsyncDisposable
 
         try
         {
-            await _transport.WritePacketAsync(header, payload, cancellationToken).ConfigureAwait(false);
+            await _transport.WritePacketAsync(header, payload, cancellationToken);
             using var openCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            var ok = await stream.OpenedTask.WaitAsync(openCts.Token).ConfigureAwait(false);
+            var ok = await stream.OpenedTask.WaitAsync(openCts.Token);
             return !ok ? throw new IOException($"ADB device rejected service: {service}") : stream;
         }
         catch
@@ -445,7 +445,7 @@ public sealed class AdbConnection : IAsyncDisposable
         try
         {
             var header = new AdbHeader(AdbCommand.Clse, stream.LocalId, stream.RemoteId, 0, 0);
-            await _transport.WritePacketAsync(header, ReadOnlyMemory<byte>.Empty, _shutdownCts.Token).ConfigureAwait(false);
+            await _transport.WritePacketAsync(header, ReadOnlyMemory<byte>.Empty, _shutdownCts.Token);
         }
         catch { /* connection may already be dead */ }
     }
@@ -457,8 +457,8 @@ public sealed class AdbConnection : IAsyncDisposable
         {
             while (!_shutdownCts.IsCancellationRequested)
             {
-                using var pkt = await _transport.ReadPacketAsync(_shutdownCts.Token).ConfigureAwait(false);
-                await DispatchAsync(pkt).ConfigureAwait(false);
+                using var pkt = await _transport.ReadPacketAsync(_shutdownCts.Token);
+                await DispatchAsync(pkt);
             }
         }
         catch (OperationCanceledException)
@@ -509,9 +509,9 @@ public sealed class AdbConnection : IAsyncDisposable
                     var ourLocalId = pkt.Header.Arg1;
                     if (_streams.TryGetValue(ourLocalId, out var s))
                     {
-                        await s.OnDataAsync(pkt.Payload, _shutdownCts.Token).ConfigureAwait(false);
+                        await s.OnDataAsync(pkt.Payload, _shutdownCts.Token);
                         var ack = new AdbHeader(AdbCommand.Okay, ourLocalId, remoteLocalId, 0, 0);
-                        await _transport.WritePacketAsync(ack, ReadOnlyMemory<byte>.Empty, _shutdownCts.Token).ConfigureAwait(false);
+                        await _transport.WritePacketAsync(ack, ReadOnlyMemory<byte>.Empty, _shutdownCts.Token);
                     }
                     break;
                 }
@@ -543,16 +543,16 @@ public sealed class AdbConnection : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         if (Interlocked.Exchange(ref _disposed, 1) != 0) return;
-        await _shutdownCts.CancelAsync().ConfigureAwait(false);
+        await _shutdownCts.CancelAsync();
         try
         {
-            await _readLoop.ConfigureAwait(false);
+            await _readLoop;
         }
         catch
         {
             // Don't throw in dispose
         }
-        await _transport.DisposeAsync().ConfigureAwait(false);
+        await _transport.DisposeAsync();
         _shutdownCts.Dispose();
     }
 }

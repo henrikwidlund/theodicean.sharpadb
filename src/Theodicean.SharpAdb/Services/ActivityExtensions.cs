@@ -70,8 +70,7 @@ public static class ActivityExtensions
             ArgumentException.ThrowIfNullOrEmpty(packageName);
             AdbConnection.ValidatePackage(packageName);
             var output = await connection.ExecuteAsync(
-                $"monkey -p {packageName} -c android.intent.category.LAUNCHER 1",
-                cancellationToken).ConfigureAwait(false);
+                $"monkey -p {packageName} -c android.intent.category.LAUNCHER 1", cancellationToken);
             if (output.Contains("No activities found", StringComparison.Ordinal))
                 throw new InvalidOperationException($"No launcher activity for package '{packageName}'");
         }
@@ -109,7 +108,7 @@ public static class ActivityExtensions
                 }
             }
 
-            var result = await connection.ExecuteAsync(string.Join(' ', args), cancellationToken).ConfigureAwait(false);
+            var result = await connection.ExecuteAsync(string.Join(' ', args), cancellationToken);
             if (result.Contains("Error:", StringComparison.Ordinal))
                 throw new InvalidOperationException($"am start failed: {result.Trim()}");
         }
@@ -134,7 +133,7 @@ public static class ActivityExtensions
             ArgumentNullException.ThrowIfNull(connection);
             ArgumentException.ThrowIfNullOrEmpty(packageName);
             AdbConnection.ValidatePackage(packageName);
-            var result = await connection.ExecuteAsync($"pm clear {packageName}", cancellationToken).ConfigureAwait(false);
+            var result = await connection.ExecuteAsync($"pm clear {packageName}", cancellationToken);
             if (!result.Contains("Success", StringComparison.Ordinal))
                 throw new InvalidOperationException($"pm clear failed: {result.Trim()}");
         }

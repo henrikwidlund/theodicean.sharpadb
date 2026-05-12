@@ -23,7 +23,7 @@ public sealed class SyncSession : IAsyncDisposable
     public static async Task<SyncSession> OpenAsync(AdbConnection connection, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(connection);
-        var stream = await connection.OpenAsync("sync:", cancellationToken).ConfigureAwait(false);
+        var stream = await connection.OpenAsync("sync:", cancellationToken);
         return new SyncSession(stream);
     }
 
@@ -32,9 +32,9 @@ public sealed class SyncSession : IAsyncDisposable
     /// </summary>
     public async Task<AdbFileStat> StatAsync(string remotePath, CancellationToken cancellationToken = default)
     {
-        await SendCommandAsync(SyncProtocol.Stat, remotePath, cancellationToken).ConfigureAwait(false);
+        await SendCommandAsync(SyncProtocol.Stat, remotePath, cancellationToken);
 
-        await ReadExactAsync(_frameBuf.AsMemory(0, 4), cancellationToken).ConfigureAwait(false);
+        await ReadExactAsync(_frameBuf.AsMemory(0, 4), cancellationToken);
         var tag = BinaryPrimitives.ReadUInt32LittleEndian(_frameBuf);
         if (tag != SyncProtocol.Stat)
             throw new IOException($"Expected STAT, got 0x{tag:X8}");
@@ -42,7 +42,7 @@ public sealed class SyncSession : IAsyncDisposable
         var tmp = ArrayPool<byte>.Shared.Rent(12);
         try
         {
-            await ReadExactAsync(tmp.AsMemory(0, 12), cancellationToken).ConfigureAwait(false);
+            await ReadExactAsync(tmp.AsMemory(0, 12), cancellationToken);
             var mode = BinaryPrimitives.ReadUInt32LittleEndian(tmp);
             var size = BinaryPrimitives.ReadUInt32LittleEndian(tmp.AsSpan(4));
             var mTime = BinaryPrimitives.ReadUInt32LittleEndian(tmp.AsSpan(8));
@@ -60,26 +60,26 @@ public sealed class SyncSession : IAsyncDisposable
     public async IAsyncEnumerable<AdbDirectoryEntry> ListAsync(string remotePath,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        await SendCommandAsync(SyncProtocol.List, remotePath, cancellationToken).ConfigureAwait(false);
+        await SendCommandAsync(SyncProtocol.List, remotePath, cancellationToken);
 
         var entryHdr = ArrayPool<byte>.Shared.Rent(16);
         try
         {
             while (true)
             {
-                await ReadExactAsync(_frameBuf.AsMemory(0, 4), cancellationToken).ConfigureAwait(false);
+                await ReadExactAsync(_frameBuf.AsMemory(0, 4), cancellationToken);
                 var tag = BinaryPrimitives.ReadUInt32LittleEndian(_frameBuf);
                 if (tag == SyncProtocol.Done)
                 {
                     // 16 bytes follow but are zero in the LIST terminator.
-                    await ReadExactAsync(entryHdr.AsMemory(0, 16), cancellationToken).ConfigureAwait(false);
+                    await ReadExactAsync(entryHdr.AsMemory(0, 16), cancellationToken);
                     yield break;
                 }
 
                 if (tag != SyncProtocol.Dent)
                     throw new IOException($"Unexpected sync tag during LIST: 0x{tag:X8}");
 
-                await ReadExactAsync(entryHdr.AsMemory(0, 16), cancellationToken).ConfigureAwait(false);
+                await ReadExactAsync(entryHdr.AsMemory(0, 16), cancellationToken);
                 var mode = BinaryPrimitives.ReadUInt32LittleEndian(entryHdr);
                 var size = BinaryPrimitives.ReadUInt32LittleEndian(entryHdr.AsSpan(4));
                 var mTime = BinaryPrimitives.ReadUInt32LittleEndian(entryHdr.AsSpan(8));
@@ -89,7 +89,7 @@ public sealed class SyncSession : IAsyncDisposable
                 string name;
                 try
                 {
-                    await ReadExactAsync(nameBuf.AsMemory(0, nameLen), cancellationToken).ConfigureAwait(false);
+                    await ReadExactAsync(nameBuf.AsMemory(0, nameLen), cancellationToken);
                     name = Encoding.UTF8.GetString(nameBuf, 0, nameLen);
                 }
                 finally
@@ -112,21 +112,21 @@ public sealed class SyncSession : IAsyncDisposable
     public async Task PullAsync(string remotePath, Stream destination, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(destination);
-        await SendCommandAsync(SyncProtocol.Recv, remotePath, cancellationToken).ConfigureAwait(false);
+        await SendCommandAsync(SyncProtocol.Recv, remotePath, cancellationToken);
 
         var buf = ArrayPool<byte>.Shared.Rent(SyncProtocol.MaxDataChunk);
         try
         {
             while (true)
             {
-                await ReadExactAsync(_frameBuf.AsMemory(0, SyncProtocol.FrameHeaderSize), cancellationToken).ConfigureAwait(false);
-                (uint tag, uint length) = SyncProtocol.ReadFrameHeader(_frameBuf);
+                await ReadExactAsync(_frameBuf.AsMemory(0, SyncProtocol.FrameHeaderSize), cancellationToken);
+                var (tag, length) = SyncProtocol.ReadFrameHeader(_frameBuf);
                 if (tag == SyncProtocol.Done)
                     return;
 
                 if (tag == SyncProtocol.Fail)
                 {
-                    var msg = await ReadFailMessageAsync(length, cancellationToken).ConfigureAwait(false);
+                    var msg = await ReadFailMessageAsync(length, cancellationToken);
                     throw new IOException($"adbd refused PULL of '{remotePath}': {msg}");
                 }
 
@@ -136,8 +136,8 @@ public sealed class SyncSession : IAsyncDisposable
                 if (length > SyncProtocol.MaxDataChunk)
                     throw new IOException($"Sync chunk exceeds {SyncProtocol.MaxDataChunk}: {length}");
 
-                await ReadExactAsync(buf.AsMemory(0, (int)length), cancellationToken).ConfigureAwait(false);
-                await destination.WriteAsync(buf.AsMemory(0, (int)length), cancellationToken).ConfigureAwait(false);
+                await ReadExactAsync(buf.AsMemory(0, (int)length), cancellationToken);
+                await destination.WriteAsync(buf.AsMemory(0, (int)length), cancellationToken);
             }
         }
         finally
@@ -156,7 +156,7 @@ public sealed class SyncSession : IAsyncDisposable
 
         // SEND path is "<path>,<mode>" as ASCII decimal mode.
         var sendPath = $"{remotePath},{mode}";
-        await SendCommandAsync(SyncProtocol.Send, sendPath, cancellationToken).ConfigureAwait(false);
+        await SendCommandAsync(SyncProtocol.Send, sendPath, cancellationToken);
 
         var buf = ArrayPool<byte>.Shared.Rent(SyncProtocol.MaxDataChunk + SyncProtocol.FrameHeaderSize);
         try
@@ -164,29 +164,28 @@ public sealed class SyncSession : IAsyncDisposable
             while (true)
             {
                 var read = await source.ReadAsync(
-                    buf.AsMemory(SyncProtocol.FrameHeaderSize, SyncProtocol.MaxDataChunk),
-                    cancellationToken).ConfigureAwait(false);
+                    buf.AsMemory(SyncProtocol.FrameHeaderSize, SyncProtocol.MaxDataChunk), cancellationToken);
 
                 if (read == 0)
                     break;
 
                 SyncProtocol.WriteFrameHeader(buf, SyncProtocol.Data, (uint)read);
-                await _stream.WriteAsync(buf.AsMemory(0, SyncProtocol.FrameHeaderSize + read), cancellationToken).ConfigureAwait(false);
+                await _stream.WriteAsync(buf.AsMemory(0, SyncProtocol.FrameHeaderSize + read), cancellationToken);
             }
 
             var mTime = (uint)(modifiedTime ?? DateTimeOffset.UtcNow).ToUnixTimeSeconds();
             SyncProtocol.WriteFrameHeader(buf, SyncProtocol.Done, mTime);
-            await _stream.WriteAsync(buf.AsMemory(0, SyncProtocol.FrameHeaderSize), cancellationToken).ConfigureAwait(false);
+            await _stream.WriteAsync(buf.AsMemory(0, SyncProtocol.FrameHeaderSize), cancellationToken);
 
             // Expect OKAY or FAIL.
-            await ReadExactAsync(_frameBuf.AsMemory(0, SyncProtocol.FrameHeaderSize), cancellationToken).ConfigureAwait(false);
+            await ReadExactAsync(_frameBuf.AsMemory(0, SyncProtocol.FrameHeaderSize), cancellationToken);
             (uint tag, uint length) = SyncProtocol.ReadFrameHeader(_frameBuf);
             if (tag == SyncProtocol.Okay)
                 return;
 
             if (tag == SyncProtocol.Fail)
             {
-                var msg = await ReadFailMessageAsync(length, cancellationToken).ConfigureAwait(false);
+                var msg = await ReadFailMessageAsync(length, cancellationToken);
                 throw new IOException($"adbd refused PUSH to '{remotePath}': {msg}");
             }
 
@@ -201,7 +200,7 @@ public sealed class SyncSession : IAsyncDisposable
         var buf = ArrayPool<byte>.Shared.Rent((int)length);
         try
         {
-            await ReadExactAsync(buf.AsMemory(0, (int)length), cancellationToken).ConfigureAwait(false);
+            await ReadExactAsync(buf.AsMemory(0, (int)length), cancellationToken);
             return Encoding.UTF8.GetString(buf, 0, (int)length);
         }
         finally
@@ -218,7 +217,7 @@ public sealed class SyncSession : IAsyncDisposable
         {
             SyncProtocol.WriteFrameHeader(buf, tag, (uint)pathLen);
             Encoding.UTF8.GetBytes(path, buf.AsSpan(SyncProtocol.FrameHeaderSize));
-            await _stream.WriteAsync(buf.AsMemory(0, SyncProtocol.FrameHeaderSize + pathLen), cancellationToken).ConfigureAwait(false);
+            await _stream.WriteAsync(buf.AsMemory(0, SyncProtocol.FrameHeaderSize + pathLen), cancellationToken);
         }
         finally
         {
@@ -231,7 +230,7 @@ public sealed class SyncSession : IAsyncDisposable
         var total = 0;
         while (total < destination.Length)
         {
-            var read = await _stream.ReadAsync(destination[total..], cancellationToken).ConfigureAwait(false);
+            var read = await _stream.ReadAsync(destination[total..], cancellationToken);
             if (read == 0)
                 throw new EndOfStreamException("ADB sync stream ended early");
 
@@ -250,12 +249,12 @@ public sealed class SyncSession : IAsyncDisposable
         try
         {
             SyncProtocol.WriteFrameHeader(_frameBuf, SyncProtocol.Quit, 0);
-            await _stream.WriteAsync(_frameBuf.AsMemory(0, SyncProtocol.FrameHeaderSize)).ConfigureAwait(false);
+            await _stream.WriteAsync(_frameBuf.AsMemory(0, SyncProtocol.FrameHeaderSize));
         }
         catch
         {
             // Don't throw in dispose
         }
-        await _stream.DisposeAsync().ConfigureAwait(false);
+        await _stream.DisposeAsync();
     }
 }

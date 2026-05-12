@@ -25,7 +25,7 @@ public static class ProcessExtensions
         public async Task<IReadOnlyList<AdbProcess>> GetProcessesAsync(CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
-            var output = await connection.ExecuteAsync("ps -A -o USER,PID,PPID,NAME", cancellationToken).ConfigureAwait(false);
+            var output = await connection.ExecuteAsync("ps -A -o USER,PID,PPID,NAME", cancellationToken);
             return ProcessParser.Parse(output);
         }
 
@@ -38,7 +38,7 @@ public static class ProcessExtensions
             ArgumentNullException.ThrowIfNull(connection);
             if (pid <= 1)
                 throw new ArgumentOutOfRangeException(nameof(pid), "pid must be > 1");
-            await connection.ExecuteAsync(string.Create(CultureInfo.InvariantCulture, $"kill -{signal} {pid}"), cancellationToken).ConfigureAwait(false);
+            await connection.ExecuteAsync(string.Create(CultureInfo.InvariantCulture, $"kill -{signal} {pid}"), cancellationToken);
         }
     }
 }

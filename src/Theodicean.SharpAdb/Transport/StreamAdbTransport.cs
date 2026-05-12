@@ -60,7 +60,7 @@ public sealed class StreamAdbTransport : IAdbTransport
         if (IsTls)
             throw new InvalidOperationException("Transport already upgraded to TLS");
 
-        await _writeLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await _writeLock.WaitAsync(cancellationToken);
         try
         {
             var ssl = new SslStream(_stream, leaveInnerStreamOpen: false);
@@ -74,7 +74,7 @@ public sealed class StreamAdbTransport : IAdbTransport
                 RemoteCertificateValidationCallback = static (_, _, _, _) => true /* device uses self-signed cert */
             };
 
-            await ssl.AuthenticateAsClientAsync(opts, cancellationToken).ConfigureAwait(false);
+            await ssl.AuthenticateAsClientAsync(opts, cancellationToken);
 
             _stream = ssl;
             IsTls = true;
@@ -90,7 +90,7 @@ public sealed class StreamAdbTransport : IAdbTransport
     {
         try
         {
-            await _stream.ReadExactlyAsync(_readHeaderBuffer.AsMemory(0, AdbProtocolConstants.HeaderSize), cancellationToken).ConfigureAwait(false);
+            await _stream.ReadExactlyAsync(_readHeaderBuffer.AsMemory(0, AdbProtocolConstants.HeaderSize), cancellationToken);
         }
         catch (EndOfStreamException)
         {
@@ -109,7 +109,7 @@ public sealed class StreamAdbTransport : IAdbTransport
         var rented = ArrayPool<byte>.Shared.Rent(len);
         try
         {
-            await _stream.ReadExactlyAsync(rented.AsMemory(0, len), cancellationToken).ConfigureAwait(false);
+            await _stream.ReadExactlyAsync(rented.AsMemory(0, len), cancellationToken);
 
             if (_verifyChecksum && header.DataChecksum != 0)
             {
@@ -138,13 +138,13 @@ public sealed class StreamAdbTransport : IAdbTransport
         if (payload.Length != header.DataLength)
             throw new ArgumentException($"Payload length {payload.Length} != header.DataLength {header.DataLength}", nameof(payload));
 
-        await _writeLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await _writeLock.WaitAsync(cancellationToken);
         try
         {
             header.WriteTo(_writeHeaderBuffer);
-            await _stream.WriteAsync(_writeHeaderBuffer.AsMemory(0, AdbProtocolConstants.HeaderSize), cancellationToken).ConfigureAwait(false);
+            await _stream.WriteAsync(_writeHeaderBuffer.AsMemory(0, AdbProtocolConstants.HeaderSize), cancellationToken);
             if (!payload.IsEmpty)
-                await _stream.WriteAsync(payload, cancellationToken).ConfigureAwait(false);
+                await _stream.WriteAsync(payload, cancellationToken);
         }
         finally
         {
@@ -163,7 +163,7 @@ public sealed class StreamAdbTransport : IAdbTransport
             return;
 
         if (_ownsStream)
-            await _stream.DisposeAsync().ConfigureAwait(false);
+            await _stream.DisposeAsync();
 
         _writeLock.Dispose();
     }

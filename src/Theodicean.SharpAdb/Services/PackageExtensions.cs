@@ -36,9 +36,9 @@ public static class PackageExtensions
             ArgumentNullException.ThrowIfNull(apk);
 
             var remotePath = $"/data/local/tmp/sharpadb_install_{Guid.NewGuid():N}.apk";
-            await using (var sync = await SyncSession.OpenAsync(connection, cancellationToken).ConfigureAwait(false))
+            await using (var sync = await SyncSession.OpenAsync(connection, cancellationToken))
             {
-                await sync.PushAsync(apk, remotePath, cancellationToken: cancellationToken).ConfigureAwait(false);
+                await sync.PushAsync(apk, remotePath, cancellationToken: cancellationToken);
             }
 
             try
@@ -52,7 +52,7 @@ public static class PackageExtensions
 
                 args.Add(remotePath);
 
-                var result = await connection.ExecuteAsync($"pm {string.Join(' ', args)}", cancellationToken).ConfigureAwait(false);
+                var result = await connection.ExecuteAsync($"pm {string.Join(' ', args)}", cancellationToken);
                 // pm install prints "Success" on a line; otherwise contains "Failure [REASON]".
                 if (!result.Contains("Success", StringComparison.Ordinal))
                     throw new AdbPackageException($"pm install failed: {result.Trim()}");
@@ -61,7 +61,7 @@ public static class PackageExtensions
             {
                 try
                 {
-                    await connection.ExecuteAsync($"rm -f {remotePath}", CancellationToken.None).ConfigureAwait(false);
+                    await connection.ExecuteAsync($"rm -f {remotePath}", CancellationToken.None);
                 }
                 catch { /* best effort */ }
             }
@@ -76,7 +76,7 @@ public static class PackageExtensions
         {
             ArgumentException.ThrowIfNullOrEmpty(apkPath);
             await using var fs = File.OpenRead(apkPath);
-            await connection.InstallAsync(fs, replaceExisting, grantAllPermissions, cancellationToken).ConfigureAwait(false);
+            await connection.InstallAsync(fs, replaceExisting, grantAllPermissions, cancellationToken);
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ public static class PackageExtensions
             AdbConnection.ValidatePackage(packageName);
 
             var flag = keepData ? "-k " : "";
-            var result = await connection.ExecuteAsync($"pm uninstall {flag}{packageName}", cancellationToken).ConfigureAwait(false);
+            var result = await connection.ExecuteAsync($"pm uninstall {flag}{packageName}", cancellationToken);
             if (!result.Contains("Success", StringComparison.Ordinal))
                 throw new AdbPackageException($"pm uninstall failed: {result.Trim()}");
         }
@@ -102,7 +102,7 @@ public static class PackageExtensions
         {
             ArgumentNullException.ThrowIfNull(connection);
             var args = includePath ? "list packages -f" : "list packages";
-            var output = await connection.ExecuteAsync($"pm {args}", cancellationToken).ConfigureAwait(false);
+            var output = await connection.ExecuteAsync($"pm {args}", cancellationToken);
             return PackageParser.Parse(output);
         }
 
@@ -114,7 +114,7 @@ public static class PackageExtensions
             ArgumentNullException.ThrowIfNull(connection);
             ArgumentException.ThrowIfNullOrEmpty(packageName);
             AdbConnection.ValidatePackage(packageName);
-            var output = await connection.ExecuteAsync($"pm list packages {packageName}", cancellationToken).ConfigureAwait(false);
+            var output = await connection.ExecuteAsync($"pm list packages {packageName}", cancellationToken);
             // Match "package:exact.name\n" anywhere in output.
             var needle = $"package:{packageName}";
             var outputSpan = output.AsSpan();

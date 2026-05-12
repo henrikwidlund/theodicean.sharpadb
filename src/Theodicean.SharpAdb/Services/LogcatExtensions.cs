@@ -93,7 +93,7 @@ public static class LogcatExtensions
         public async IAsyncEnumerable<LogcatEntry> LogcatAsync(string? filterSpec = null, bool dumpAndExit = false,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            await foreach (var line in connection.LogcatRawAsync(filterSpec, dumpAndExit, cancellationToken).ConfigureAwait(false))
+            await foreach (var line in connection.LogcatRawAsync(filterSpec, dumpAndExit, cancellationToken))
             {
                 if (LogcatParser.TryParseThreadTime(line, out var entry))
                     yield return entry;

@@ -49,7 +49,7 @@ public sealed class AdbPortForward : IAsyncDisposable
         {
             while (!_shutdownCts.IsCancellationRequested)
             {
-                var sock = await _listener.AcceptSocketAsync(_shutdownCts.Token).ConfigureAwait(false);
+                var sock = await _listener.AcceptSocketAsync(_shutdownCts.Token);
                 _ = HandleAsync(sock);
             }
         }
@@ -74,16 +74,16 @@ public sealed class AdbPortForward : IAsyncDisposable
         AdbStream? stream = null;
         try
         {
-            stream = await _connection.OpenAsync(string.Create(CultureInfo.InvariantCulture, $"tcp:{_remotePort}"), _shutdownCts.Token).ConfigureAwait(false);
+            stream = await _connection.OpenAsync(string.Create(CultureInfo.InvariantCulture, $"tcp:{_remotePort}"), _shutdownCts.Token);
             var t1 = stream.CopyToAsync(net, _shutdownCts.Token);
             var t2 = net.CopyToAsync(stream, _shutdownCts.Token);
-            await Task.WhenAny(t1, t2).ConfigureAwait(false);
+            await Task.WhenAny(t1, t2);
         }
         catch { /* peer disconnect, port unreachable, etc. */ }
         finally
         {
             if (stream is not null)
-                await stream.DisposeAsync().ConfigureAwait(false);
+                await stream.DisposeAsync();
         }
     }
 
@@ -92,9 +92,9 @@ public sealed class AdbPortForward : IAsyncDisposable
     /// </summary>
     public async ValueTask DisposeAsync()
     {
-        await _shutdownCts.CancelAsync().ConfigureAwait(false);
+        await _shutdownCts.CancelAsync();
         _listener.Stop();
-        try { await _acceptLoop.ConfigureAwait(false); }
+        try { await _acceptLoop; }
         catch
         {
             // don't throw in dispose

@@ -18,9 +18,9 @@ public static class ShellExtensions
             ArgumentNullException.ThrowIfNull(connection);
             ArgumentException.ThrowIfNullOrEmpty(command);
 
-            await using var stream = await connection.OpenAsync($"shell:{command}", cancellationToken).ConfigureAwait(false);
+            await using var stream = await connection.OpenAsync($"shell:{command}", cancellationToken);
             using var ms = new MemoryStream();
-            await stream.CopyToAsync(ms, cancellationToken).ConfigureAwait(false);
+            await stream.CopyToAsync(ms, cancellationToken);
             return Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length);
         }
 
@@ -34,8 +34,8 @@ public static class ShellExtensions
             ArgumentNullException.ThrowIfNull(destination);
             ArgumentException.ThrowIfNullOrEmpty(command);
 
-            await using var stream = await connection.OpenAsync($"shell:{command}", cancellationToken).ConfigureAwait(false);
-            await stream.CopyToAsync(destination, cancellationToken).ConfigureAwait(false);
+            await using var stream = await connection.OpenAsync($"shell:{command}", cancellationToken);
+            await stream.CopyToAsync(destination, cancellationToken);
         }
 
         /// <summary>
@@ -61,9 +61,9 @@ public static class ShellExtensions
 
             static async IAsyncEnumerable<string> ExecuteLines(AdbConnection connection, string command, [EnumeratorCancellation] CancellationToken cancellationToken)
             {
-                await using var stream = await connection.OpenAsync($"shell:{command}", cancellationToken).ConfigureAwait(false);
+                await using var stream = await connection.OpenAsync($"shell:{command}", cancellationToken);
                 using var reader = new StreamReader(stream, Encoding.UTF8, leaveOpen: true);
-                while (await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false) is { } line)
+                while (await reader.ReadLineAsync(cancellationToken) is { } line)
                     yield return line;
             }
         }

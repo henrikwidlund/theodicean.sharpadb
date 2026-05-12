@@ -146,7 +146,7 @@ internal sealed class BlockingMemoryStream : Stream
                 }
                 if (_writerClosed) return 0;
             }
-            await Task.Delay(2, cancellationToken).ConfigureAwait(false);
+            await Task.Delay(2, cancellationToken);
         }
     }
 

@@ -16,7 +16,7 @@ public static class PropertiesExtensions
             ArgumentException.ThrowIfNullOrEmpty(name);
 
             AdbConnection.ValidatePropName(name);
-            var output = (await connection.ExecuteAsync($"getprop {name}", cancellationToken).ConfigureAwait(false)).TrimEnd('\r', '\n');
+            var output = (await connection.ExecuteAsync($"getprop {name}", cancellationToken)).TrimEnd('\r', '\n');
             return string.IsNullOrEmpty(output) ? null : output;
         }
 
@@ -41,7 +41,7 @@ public static class PropertiesExtensions
         public async Task<IReadOnlyDictionary<string, string>> GetAllPropertiesAsync(CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
-            var output = await connection.ExecuteAsync("getprop", cancellationToken).ConfigureAwait(false);
+            var output = await connection.ExecuteAsync("getprop", cancellationToken);
             return PropertiesParser.Parse(output);
         }
 
