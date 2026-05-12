@@ -158,7 +158,7 @@ public sealed class AdbConnection : IAsyncDisposable
         WriteChecksum = writeChecksum;
         DeviceInfo = info;
         AuthenticationMethod = authMethod;
-        _readLoop = Task.Run(ReadLoopAsync);
+        _readLoop = Task.Run(ReadLoopAsync, _shutdownCts.Token);
     }
 
     /// <summary>
@@ -317,16 +317,16 @@ public sealed class AdbConnection : IAsyncDisposable
                                     (uint)pub.Length, options.WriteChecksum ? AdbHeader.ComputeChecksum(pub) : 0u),
                                 pub, authCts.Token).ConfigureAwait(false);
                         }
-                        else if (keys.Count == 0)
-                        {
-                            throw new AdbAuthenticationException("Device requested authentication but no keys were supplied");
-                        }
                         else
                         {
+                            if (keys.Count == 0)
+                                throw new AdbAuthenticationException("Device requested authentication but no keys were supplied");
+
                             throw new AdbAuthenticationException(sentPubkey
                                 ? "Device rejected the public key (user did not allow on device)"
                                 : "Device rejected all signatures and SendPublicKeyOnAuthFailure is disabled");
                         }
+
                         break;
                     }
                 case AdbCommand.Stls:
@@ -367,7 +367,7 @@ public sealed class AdbConnection : IAsyncDisposable
     private static AdbDeviceInfo ParseBanner(string banner)
     {
         // Format: "<systemtype>:<serial>:<key1=v1;key2=v2;...>"
-        var firstColon = banner.IndexOf(':');
+        var firstColon = banner.IndexOf(':', StringComparison.Ordinal);
         if (firstColon < 0)
             return new AdbDeviceInfo(banner, "", "", new Dictionary<string, string>(0, StringComparer.Ordinal));
 

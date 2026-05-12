@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 
@@ -13,7 +14,7 @@ public sealed class AdbPortForward : IAsyncDisposable
     private readonly AdbConnection _connection;
     private readonly TcpListener _listener;
     private readonly int _remotePort;
-    private readonly CancellationTokenSource _cts = new();
+    private readonly CancellationTokenSource _shutdownCts = new();
     private readonly Task _acceptLoop;
 
     /// <summary>
@@ -27,7 +28,7 @@ public sealed class AdbPortForward : IAsyncDisposable
         _listener = listener;
         _remotePort = remotePort;
         LocalPort = ((IPEndPoint)listener.LocalEndpoint).Port;
-        _acceptLoop = Task.Run(AcceptLoopAsync);
+        _acceptLoop = Task.Run(AcceptLoopAsync, _shutdownCts.Token);
     }
 
     /// <summary>
@@ -46,9 +47,9 @@ public sealed class AdbPortForward : IAsyncDisposable
     {
         try
         {
-            while (!_cts.IsCancellationRequested)
+            while (!_shutdownCts.IsCancellationRequested)
             {
-                var sock = await _listener.AcceptSocketAsync(_cts.Token).ConfigureAwait(false);
+                var sock = await _listener.AcceptSocketAsync(_shutdownCts.Token).ConfigureAwait(false);
                 _ = HandleAsync(sock);
             }
         }
@@ -73,9 +74,9 @@ public sealed class AdbPortForward : IAsyncDisposable
         AdbStream? stream = null;
         try
         {
-            stream = await _connection.OpenAsync($"tcp:{_remotePort}", _cts.Token).ConfigureAwait(false);
-            var t1 = stream.CopyToAsync(net, _cts.Token);
-            var t2 = net.CopyToAsync(stream, _cts.Token);
+            stream = await _connection.OpenAsync(string.Create(CultureInfo.InvariantCulture, $"tcp:{_remotePort}"), _shutdownCts.Token).ConfigureAwait(false);
+            var t1 = stream.CopyToAsync(net, _shutdownCts.Token);
+            var t2 = net.CopyToAsync(stream, _shutdownCts.Token);
             await Task.WhenAny(t1, t2).ConfigureAwait(false);
         }
         catch { /* peer disconnect, port unreachable, etc. */ }
@@ -91,14 +92,14 @@ public sealed class AdbPortForward : IAsyncDisposable
     /// </summary>
     public async ValueTask DisposeAsync()
     {
-        await _cts.CancelAsync().ConfigureAwait(false);
+        await _shutdownCts.CancelAsync().ConfigureAwait(false);
         _listener.Stop();
         try { await _acceptLoop.ConfigureAwait(false); }
         catch
         {
             // don't throw in dispose
         }
-        _cts.Dispose();
+        _shutdownCts.Dispose();
     }
 }
 

@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -40,7 +41,7 @@ public sealed class AdbAuthKey : IDisposable
     {
         ArgumentNullException.ThrowIfNull(rsa);
         if (rsa.KeySize != KeySizeBits)
-            throw new ArgumentException($"ADB requires {KeySizeBits}-bit RSA key, got {rsa.KeySize}", nameof(rsa));
+            throw new ArgumentException(string.Create(CultureInfo.InvariantCulture, $"ADB requires {KeySizeBits}-bit RSA key, got {rsa.KeySize}"), nameof(rsa));
         _rsa = rsa;
         _ownsRsa = ownsRsa;
         _userHost = userHost;

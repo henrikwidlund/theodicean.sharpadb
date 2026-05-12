@@ -100,6 +100,6 @@ internal static class ShellEscape
     public static string SingleQuote(string value)
     {
         // POSIX trick: close-quote, escaped single quote, reopen-quote.
-        return "'" + value.Replace("'", "'\\''") + "'";
+        return $"'{value.Replace("'", "'\\''", StringComparison.Ordinal)}'";
     }
 }

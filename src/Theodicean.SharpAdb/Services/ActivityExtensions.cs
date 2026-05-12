@@ -15,7 +15,7 @@ public static class ActivityExtensions
         public Task SendKeyEventAsync(KeyCode key, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
-            return connection.ExecuteAsync($"input keyevent {(int)key}", cancellationToken);
+            return connection.ExecuteAsync(string.Create(CultureInfo.InvariantCulture, $"input keyevent {(int)key}"), cancellationToken);
         }
 
         /// <summary>
@@ -25,7 +25,7 @@ public static class ActivityExtensions
         public Task SendLongPressAsync(KeyCode key, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
-            return connection.ExecuteAsync($"input keyevent --longpress {(int)key}", cancellationToken);
+            return connection.ExecuteAsync(string.Create(CultureInfo.InvariantCulture, $"input keyevent --longpress {(int)key}"), cancellationToken);
         }
 
         /// <summary>
