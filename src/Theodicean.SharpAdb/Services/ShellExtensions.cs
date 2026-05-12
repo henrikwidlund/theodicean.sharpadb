@@ -27,6 +27,7 @@ public static class ShellExtensions
         /// <summary>
         /// Runs a shell command and pipes output bytes to <paramref name="destination"/>.
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public async Task ExecuteAsync(string command, Stream destination, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
@@ -40,6 +41,7 @@ public static class ShellExtensions
         /// <summary>
         /// Opens an interactive shell stream for streaming I/O.
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public Task<AdbStream> OpenShellAsync(string? command = null, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);

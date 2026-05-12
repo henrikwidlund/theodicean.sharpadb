@@ -7,6 +7,8 @@ namespace Theodicean.SharpAdb.Services;
 #pragma warning disable CS1591
 public enum KeyCode
 {
+    // ReSharper disable UnusedMember.Global
+
     Unknown = 0,
     SoftLeft = 1,
     SoftRight = 2,
@@ -296,5 +298,7 @@ public enum KeyCode
     DictateBegin = 319,
     DictateEnd = 320,
     NewNote = 321
+
+    // ReSharper restore UnusedMember.Global
 }
 #pragma warning restore CS1591

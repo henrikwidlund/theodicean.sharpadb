@@ -52,6 +52,7 @@ public enum LogcatPriority
 /// <param name="Tid">Thread id that emitted the message.</param>
 /// <param name="Message">The log message body (after the ":" separator).</param>
 /// <param name="Raw">The original unparsed line (kept for diagnostics).</param>
+// ReSharper disable once NotAccessedPositionalProperty.Global
 public sealed record LogcatEntry(in LogcatPriority Priority, string Tag, in int Pid, in int Tid, string Message, string Raw);
 
 /// <summary>
@@ -88,6 +89,7 @@ public static class LogcatExtensions
         /// <summary>
         /// Streams parsed logcat entries (threadtime format) until canceled.
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public async IAsyncEnumerable<LogcatEntry> LogcatAsync(string? filterSpec = null, bool dumpAndExit = false,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {

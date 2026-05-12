@@ -20,12 +20,12 @@ public sealed class StreamAdbTransport : IAdbTransport
     private readonly byte[] _readHeaderBuffer = new byte[AdbProtocolConstants.HeaderSize];
     private readonly bool _verifyChecksum;
     private int _disposed;
-    private bool _isTls;
 
     /// <summary>
     /// <see langword="true"/> after a successful <see cref="UpgradeToTlsAsync"/>.
     /// </summary>
-    public bool IsTls => _isTls;
+    // ReSharper disable once MemberCanBePrivate.Global
+    public bool IsTls { get; private set; }
 
     /// <summary>
     /// Initializes a new instance that wraps an existing duplex stream as an ADB transport.
@@ -57,7 +57,7 @@ public sealed class StreamAdbTransport : IAdbTransport
     public async ValueTask UpgradeToTlsAsync(X509Certificate2 clientCertificate, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(clientCertificate);
-        if (_isTls)
+        if (IsTls)
             throw new InvalidOperationException("Transport already upgraded to TLS");
 
         await _writeLock.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -77,7 +77,7 @@ public sealed class StreamAdbTransport : IAdbTransport
             await ssl.AuthenticateAsClientAsync(opts, cancellationToken).ConfigureAwait(false);
 
             _stream = ssl;
-            _isTls = true;
+            IsTls = true;
         }
         finally
         {

@@ -28,6 +28,7 @@ public static class PackageExtensions
         /// <summary>
         /// Installs an APK by streaming it to /data/local/tmp and invoking <c>pm install</c>.
         /// </summary>
+        // ReSharper disable once MemberCanBePrivate.Global
         public async Task InstallAsync(Stream apk, bool replaceExisting = true, bool grantAllPermissions = false,
             CancellationToken cancellationToken = default)
         {
@@ -69,6 +70,7 @@ public static class PackageExtensions
         /// <summary>
         /// Installs an APK from a local file path.
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public async Task InstallAsync(string apkPath, bool replaceExisting = true, bool grantAllPermissions = false,
             CancellationToken cancellationToken = default)
         {
@@ -80,6 +82,7 @@ public static class PackageExtensions
         /// <summary>
         /// Uninstalls a package by id. Set <paramref name="keepData"/> to preserve the app's data directory.
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public async Task UninstallAsync(string packageName, bool keepData = false, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);

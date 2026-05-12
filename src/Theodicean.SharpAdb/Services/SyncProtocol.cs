@@ -43,6 +43,7 @@ internal static class SyncProtocol
 /// <param name="Size">File size in bytes. Capped at <see cref="uint.MaxValue"/> by the protocol.</param>
 /// <param name="ModifiedTime">Last-modified time.</param>
 [StructLayout(LayoutKind.Auto)]
+// ReSharper disable once NotAccessedPositionalProperty.Global
 public readonly record struct AdbFileStat(uint Mode, uint Size, DateTimeOffset ModifiedTime)
 {
     /// <summary>
@@ -73,20 +74,25 @@ public readonly record struct AdbFileStat(uint Mode, uint Size, DateTimeOffset M
 /// <param name="Mode">POSIX mode bits.</param>
 /// <param name="Size">Entry size in bytes.</param>
 /// <param name="ModifiedTime">Last-modified time.</param>
+// ReSharper disable NotAccessedPositionalProperty.Global
 public readonly record struct AdbDirectoryEntry(string Name, uint Mode, uint Size, DateTimeOffset ModifiedTime)
+// ReSharper restore NotAccessedPositionalProperty.Global
 {
     /// <summary>
     /// <see langword="true"/> for directories.
     /// </summary>
+    // ReSharper disable once UnusedMember.Global
     public bool IsDirectory => (Mode & 0xF000) == 0x4000;
 
     /// <summary>
     /// <see langword="true"/> for regular files.
     /// </summary>
+    // ReSharper disable once UnusedMember.Global
     public bool IsRegularFile => (Mode & 0xF000) == 0x8000;
 
     /// <summary>
     /// <see langword="true"/> for symlinks.
     /// </summary>
+    // ReSharper disable once UnusedMember.Global
     public bool IsSymlink => (Mode & 0xF000) == 0xA000;
 }

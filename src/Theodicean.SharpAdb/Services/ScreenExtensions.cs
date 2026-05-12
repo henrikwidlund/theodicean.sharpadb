@@ -29,6 +29,7 @@ public static class ScreenExtensions
         /// <summary>
         /// Captures a PNG screenshot and writes to <paramref name="destination"/>.
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public async Task CaptureScreenAsync(Stream destination, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(destination);

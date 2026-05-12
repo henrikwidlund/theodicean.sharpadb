@@ -39,13 +39,16 @@ public enum RebootMode
 /// <summary>
 /// Extension methods for rebooting a device via the <c>reboot:</c> service.
 /// </summary>
+// ReSharper disable once UnusedType.Global
 public static class RebootExtensions
 {
+    // ReSharper disable once UnusedType.Global
     extension(AdbConnection connection)
     {
         /// <summary>
         /// Reboots the device. Stream closes immediately; the device drops the connection while restarting.
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public async Task RebootAsync(RebootMode mode = RebootMode.Normal, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);

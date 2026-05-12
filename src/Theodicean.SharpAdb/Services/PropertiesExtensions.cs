@@ -23,6 +23,7 @@ public static class PropertiesExtensions
         /// <summary>
         /// Sets a property via setprop. Requires appropriate device permissions for the prop.
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public Task SetPropertyAsync(string name, string value, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);

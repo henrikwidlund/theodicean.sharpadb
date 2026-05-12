@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace Theodicean.SharpAdb.Services;
 
 /// <summary>
@@ -7,6 +9,7 @@ namespace Theodicean.SharpAdb.Services;
 /// <param name="Ppid">Parent process id, or null if the column couldn't be parsed.</param>
 /// <param name="User">Owning username as reported by <c>ps</c> (e.g. <c>root</c>, <c>system</c>, <c>u0_a123</c>).</param>
 /// <param name="Name">Process name (the <c>NAME</c> column from <c>ps</c>).</param>
+// ReSharper disable once NotAccessedPositionalProperty.Global
 public sealed record AdbProcess(int Pid, int? Ppid, string User, string Name);
 
 /// <summary>
@@ -29,12 +32,13 @@ public static class ProcessExtensions
         /// <summary>
         /// Sends signal <paramref name="signal"/> (default SIGKILL) to the given pid via <c>kill</c>.
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public async Task KillAsync(int pid, int signal = 9, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
             if (pid <= 1)
                 throw new ArgumentOutOfRangeException(nameof(pid), "pid must be > 1");
-            await connection.ExecuteAsync($"kill -{signal} {pid}", cancellationToken).ConfigureAwait(false);
+            await connection.ExecuteAsync(string.Create(CultureInfo.InvariantCulture, $"kill -{signal} {pid}"), cancellationToken).ConfigureAwait(false);
         }
     }
 }

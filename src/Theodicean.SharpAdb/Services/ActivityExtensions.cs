@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace Theodicean.SharpAdb.Services;
 
 /// <summary>
@@ -19,6 +21,7 @@ public static class ActivityExtensions
         /// <summary>
         /// Sends a long-press key event via <c>input keyevent --longpress</c>.
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public Task SendLongPressAsync(KeyCode key, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
@@ -28,31 +31,34 @@ public static class ActivityExtensions
         /// <summary>
         /// Injects typed text via <c>input text</c>. Spaces become %s; quotes are escaped.
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public Task SendTextAsync(string text, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
             ArgumentNullException.ThrowIfNull(text);
             // input text expects spaces encoded as %s.
-            var escaped = ShellEscape.SingleQuote(text.Replace(" ", "%s"));
+            var escaped = ShellEscape.SingleQuote(text.Replace(" ", "%s", StringComparison.Ordinal));
             return connection.ExecuteAsync($"input text {escaped}", cancellationToken);
         }
 
         /// <summary>
         /// Injects a tap at screen coordinates.
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public Task TapAsync(int x, int y, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
-            return connection.ExecuteAsync($"input tap {x} {y}", cancellationToken);
+            return connection.ExecuteAsync(string.Create(CultureInfo.InvariantCulture, $"input tap {x} {y}"), cancellationToken);
         }
 
         /// <summary>
         /// Injects a swipe.
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public Task SwipeAsync(int x1, int y1, int x2, int y2, int durationMs = 300, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
-            return connection.ExecuteAsync($"input swipe {x1} {y1} {x2} {y2} {durationMs}", cancellationToken);
+            return connection.ExecuteAsync(string.Create(CultureInfo.InvariantCulture, $"input swipe {x1} {y1} {x2} {y2} {durationMs}"), cancellationToken);
         }
 
         /// <summary>
@@ -73,6 +79,7 @@ public static class ActivityExtensions
         /// <summary>
         /// Launches a specific activity. <paramref name="component"/> is "pkg/.Activity" or "pkg/full.Activity".
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public async Task StartActivityAsync(string component, string? action = null, string? data = null,
             IReadOnlyDictionary<string, string>? extras = null, CancellationToken cancellationToken = default)
         {
@@ -121,6 +128,7 @@ public static class ActivityExtensions
         /// <summary>
         /// Clears app data: equivalent to <c>pm clear</c>.
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public async Task ClearAppDataAsync(string packageName, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);

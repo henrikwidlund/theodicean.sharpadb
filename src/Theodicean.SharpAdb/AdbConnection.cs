@@ -13,6 +13,8 @@ namespace Theodicean.SharpAdb;
 /// </summary>
 public sealed class AdbConnectOptions
 {
+    // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+
     /// <summary>
     /// Identity string sent in the CNXN packet. Format: <c>host::features=...</c>.
     /// </summary>
@@ -44,6 +46,8 @@ public sealed class AdbConnectOptions
     /// prove signature-based auth specifically (no on-device prompt).
     /// </summary>
     public bool SendPublicKeyOnAuthFailure { get; init; } = true;
+
+    // ReSharper restore AutoPropertyCanBeMadeGetOnly.Global
 }
 
 /// <summary>
@@ -79,6 +83,7 @@ public enum AdbAuthenticationMethod
 /// <param name="Serial">Device serial number from the banner. Often empty over TCP.</param>
 /// <param name="Banner">The full unparsed banner string for diagnostic purposes.</param>
 /// <param name="Properties">Key/value pairs the device advertised after its serial (e.g. <c>ro.product.model</c>, <c>features</c>).</param>
+// ReSharper disable once NotAccessedPositionalProperty.Global
 public sealed record AdbDeviceInfo(string SystemType, string Serial, string Banner, IReadOnlyDictionary<string, string> Properties)
 {
     /// <summary>
@@ -94,11 +99,13 @@ public sealed record AdbDeviceInfo(string SystemType, string Serial, string Bann
     /// <summary>
     /// Value of <c>ro.product.device</c> if present.
     /// </summary>
+    // ReSharper disable once UnusedMember.Global
     public string? Device => field ??= Properties.GetValueOrDefault("ro.product.device");
 
     /// <summary>
     /// Set of feature flags advertised by the device (parsed from the comma-separated <c>features</c> property).
     /// </summary>
+    // ReSharper disable once UnusedMember.Global
     public IReadOnlySet<string> Features => field ??= Properties.TryGetValue("features", out var v)
         ? new HashSet<string>(v.Split(','), StringComparer.Ordinal)
         : new HashSet<string>(StringComparer.Ordinal);
@@ -163,6 +170,7 @@ public sealed class AdbConnection : IAsyncDisposable
     /// <param name="options">Optional handshake settings.</param>
     /// <param name="cancellationToken">Cancellation for the connect + handshake.</param>
     /// <exception cref="AdbAuthenticationException">Device rejected all keys or required STLS without a key.</exception>
+    // ReSharper disable once UnusedMember.Global
     public static async ValueTask<AdbConnection> ConnectTcpAsync(
         string host, int port,
         AdbConnectOptions? options = null, CancellationToken cancellationToken = default)

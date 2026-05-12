@@ -20,5 +20,6 @@ public interface IAdbTransport : IAsyncDisposable
     /// <summary>
     /// Flushes any pending writes to the underlying transport.
     /// </summary>
+    // ReSharper disable once UnusedMember.Global
     ValueTask FlushAsync(CancellationToken cancellationToken = default);
 }
