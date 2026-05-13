@@ -37,7 +37,7 @@ jobs:
         run: dotnet restore ./Theodicean.SharpAdb.slnx --locked-mode
 
       - name: Build
-        run: dotnet build ./Theodicean.SharpAdb.slnx --configuration Release --no-restore
+        run: dotnet build ./Theodicean.SharpAdb.slnx --configuration Release --no-restore -p:ContinuousIntegrationBuild=true
 
       - name: Compute package version from release tag
         shell: bash
