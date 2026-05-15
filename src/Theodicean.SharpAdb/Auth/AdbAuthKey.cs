@@ -76,6 +76,7 @@ public sealed class AdbAuthKey : IDisposable
     /// Gets the SHA-256 fingerprint of the mincrypt-encoded public key, formatted as uppercase hex with colon separators.
     /// </summary>
     /// <example><c>3F:5A:1C:9E:7B:2D:4E:8F:9A:BC:DE:F0:12:34:56:78:9A:BC:DE:F0:12:34:56:78:9A:BC:DE:F0:12:34:56:78</c></example>
+    // ReSharper disable once UnusedMember.Global
     public string GetAdbFingerprint()
     {
         if (!string.IsNullOrEmpty(_fingerprint))

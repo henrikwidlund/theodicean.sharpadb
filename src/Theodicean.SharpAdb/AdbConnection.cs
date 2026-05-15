@@ -54,6 +54,7 @@ public sealed class AdbConnectOptions
     /// silently accepts. The callback receives the auth-handshake cancellation token, which
     /// fires on <see cref="AuthTimeout"/> or caller cancellation.
     /// </summary>
+    // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public Func<AdbAuthKey, CancellationToken, ValueTask>? OnBeforePublicKeyPush { get; init; }
 
     // ReSharper restore AutoPropertyCanBeMadeGetOnly.Global
