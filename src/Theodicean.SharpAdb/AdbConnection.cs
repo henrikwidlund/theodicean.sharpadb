@@ -2,6 +2,9 @@ using System.Collections.Concurrent;
 using System.Net.Sockets;
 using System.Text;
 
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+
 using Theodicean.SharpAdb.Auth;
 using Theodicean.SharpAdb.Protocol;
 using Theodicean.SharpAdb.Transport;
@@ -51,11 +54,17 @@ public sealed class AdbConnectOptions
     /// Invoked once, immediately before the first key's public key is written to the transport
     /// via <c>AUTH(RSAPUBLICKEY)</c>. This step typically causes the device to display its
     /// approval dialog, unless the key is already in <c>adb_keys</c>, in which case adbd
-    /// silently accepts. The callback receives the auth-handshake cancellation token, which
-    /// fires on <see cref="AuthTimeout"/> or caller cancellation.
+    /// silently accepts The callback receives the auth-handshake cancellation token,
+    /// which fires on <see cref="AuthTimeout"/> or caller cancellation.
     /// </summary>
     // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public Func<AdbAuthKey, CancellationToken, ValueTask>? OnBeforePublicKeyPush { get; init; }
+
+    /// <summary>
+    /// Logger used to emit diagnostic events during the connect handshake (CNXN/AUTH/STLS
+    /// transitions, signature attempts, public-key push, banner parse).
+    /// </summary>
+    public ILogger Logger { get; init; } = NullLogger.Instance;
 
     // ReSharper restore AutoPropertyCanBeMadeGetOnly.Global
 }
@@ -136,6 +145,8 @@ public sealed class AdbConnection : IAsyncDisposable
     private int _disposed;
     private Exception? _faultException;
 
+    internal ILogger Logger { get; }
+
     /// <summary>
     /// Set after the read loop terminates abnormally; surfaced on subsequent stream/connection calls.
     /// </summary>
@@ -161,13 +172,14 @@ public sealed class AdbConnection : IAsyncDisposable
     /// </summary>
     public AdbAuthenticationMethod AuthenticationMethod { get; }
 
-    private AdbConnection(IAdbTransport transport, AdbDeviceInfo info, in uint maxPayload, in bool writeChecksum, in AdbAuthenticationMethod authMethod)
+    private AdbConnection(IAdbTransport transport, AdbDeviceInfo info, in uint maxPayload, in bool writeChecksum, in AdbAuthenticationMethod authMethod, ILogger logger)
     {
         _transport = transport;
         MaxPayload = maxPayload;
         WriteChecksum = writeChecksum;
         DeviceInfo = info;
         AuthenticationMethod = authMethod;
+        Logger = logger;
         _readLoop = Task.Run(ReadLoopAsync, _shutdownCts.Token);
     }
 
@@ -286,6 +298,7 @@ public sealed class AdbConnection : IAsyncDisposable
             new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, options.MaxPayload,
                 (uint)bannerBytes.Length, options.WriteChecksum ? AdbHeader.ComputeChecksum(bannerBytes) : 0u),
             bannerBytes, cancellationToken);
+        options.Logger.CnxnSent(options.Banner, options.MaxPayload);
 
         var keyIndex = 0;
         var sentPubkey = false;
@@ -304,13 +317,20 @@ public sealed class AdbConnection : IAsyncDisposable
                         var banner = Encoding.UTF8.GetString(pkt.PayloadSpan).TrimEnd('\0');
                         var info = ParseBanner(banner);
                         var negotiated = Math.Min(options.MaxPayload, pkt.Header.Arg1);
-                        return new AdbConnection(transport, info, negotiated, options.WriteChecksum, authMethod);
+                        options.Logger.ConnectionEstablished(authMethod, info.SystemType, info.Serial, negotiated);
+                        return new AdbConnection(transport, info, negotiated, options.WriteChecksum, authMethod, options.Logger);
                     }
                 case AdbCommand.Auth when pkt.Header.Arg0 == (uint)AdbAuthType.Token:
                     {
+                        options.Logger.AuthTokenReceived();
                         if (keyIndex < keys.Count)
                         {
-                            var sig = keys[keyIndex++].SignToken(pkt.PayloadSpan);
+                            var key = keys[keyIndex];
+                            if (options.Logger.IsEnabled(LogLevel.Debug))
+                                options.Logger.SigningToken(key.GetAdbFingerprint(), keyIndex + 1, keys.Count);
+
+                            var sig = key.SignToken(pkt.PayloadSpan);
+                            keyIndex++;
                             authMethod = AdbAuthenticationMethod.Signature;
                             await transport.WritePacketAsync(
                                 new AdbHeader(AdbCommand.Auth, (uint)AdbAuthType.Signature, 0,
@@ -321,15 +341,17 @@ public sealed class AdbConnection : IAsyncDisposable
                         {
                             sentPubkey = true;
                             authMethod = AdbAuthenticationMethod.PublicKey;
+                            if (options.Logger.IsEnabled(LogLevel.Information))
+                                options.Logger.PushingPublicKey(keys.Count, keys[0].GetAdbFingerprint());
                             if (options.OnBeforePublicKeyPush != null)
                             {
                                 try
                                 {
                                     await options.OnBeforePublicKeyPush(keys[0], authCts.Token);
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
-                                    // Don't crash on user code
+                                    options.Logger.CallbackThrew(ex);
                                 }
                             }
 
@@ -359,6 +381,9 @@ public sealed class AdbConnection : IAsyncDisposable
                         if (keys.Count == 0)
                             throw new AdbAuthenticationException("Device requested STLS but no keys provided for client cert");
 
+                        if (options.Logger.IsEnabled(LogLevel.Information))
+                            options.Logger.StlsUpgrade(keys[0].GetAdbFingerprint());
+
                         // Reply STLS to confirm we will upgrade.
                         await transport.WritePacketAsync(
                             new AdbHeader(AdbCommand.Stls, 1, 0, 0, 0),
@@ -367,6 +392,11 @@ public sealed class AdbConnection : IAsyncDisposable
                         using var clientCert = keys[0].CreateSelfSignedCertificate();
                         await tlsCapable.UpgradeToTlsAsync(clientCert, authCts.Token);
                         authMethod = AdbAuthenticationMethod.Tls;
+                        if (options.Logger.IsEnabled(LogLevel.Information))
+                        {
+                            options.Logger.TlsUpgraded(tlsCapable.NegotiatedTlsProtocol?.ToString() ?? "unknown",
+                                tlsCapable.NegotiatedTlsCipherSuite?.ToString() ?? "unknown");
+                        }
 
                         // After TLS, device sends CNXN on the encrypted channel; AUTH is no longer required
                         // because the cert in the TLS handshake already proved key ownership.
@@ -447,9 +477,16 @@ public sealed class AdbConnection : IAsyncDisposable
         try
         {
             await _transport.WritePacketAsync(header, payload, cancellationToken);
+            Logger.OpenSent(service, localId);
             using var openCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var ok = await stream.OpenedTask.WaitAsync(openCts.Token);
-            return !ok ? throw new IOException($"ADB device rejected service: {service}") : stream;
+            if (!ok)
+            {
+                Logger.StreamRejected(service, localId);
+                throw new IOException($"ADB device rejected service: {service}");
+            }
+            Logger.StreamOpened(localId, stream.RemoteId, service);
+            return stream;
         }
         catch
         {
@@ -494,6 +531,7 @@ public sealed class AdbConnection : IAsyncDisposable
         catch (Exception ex)
         {
             fault = ex;
+            Logger.ReadLoopFaulted(ex);
         }
         finally
         {
@@ -523,6 +561,10 @@ public sealed class AdbConnection : IAsyncDisposable
                             s.OnOpened(remoteLocalId);
                         else s.OnAck();
                     }
+                    else
+                    {
+                        Logger.UnknownStreamPacket(pkt.Header.Command, ourLocalId);
+                    }
                     break;
                 }
             case AdbCommand.Wrte:
@@ -535,6 +577,8 @@ public sealed class AdbConnection : IAsyncDisposable
                         var ack = new AdbHeader(AdbCommand.Okay, ourLocalId, remoteLocalId, 0, 0);
                         await _transport.WritePacketAsync(ack, ReadOnlyMemory<byte>.Empty, _shutdownCts.Token);
                     }
+                    else
+                        Logger.UnknownStreamPacket(pkt.Header.Command, ourLocalId);
                     break;
                 }
             case AdbCommand.Clse:
@@ -542,6 +586,8 @@ public sealed class AdbConnection : IAsyncDisposable
                     var ourLocalId = pkt.Header.Arg1;
                     if (_streams.TryRemove(ourLocalId, out var s))
                         s.OnClosed();
+                    else
+                        Logger.UnknownStreamPacket(pkt.Header.Command, ourLocalId);
                     break;
                 }
             case AdbCommand.Auth:

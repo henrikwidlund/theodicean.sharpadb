@@ -28,6 +28,16 @@ public sealed class StreamAdbTransport : IAdbTransport
     public bool IsTls { get; private set; }
 
     /// <summary>
+    /// Negotiated TLS protocol version after <see cref="UpgradeToTlsAsync"/>; <see langword="null"/> before upgrade.
+    /// </summary>
+    public System.Security.Authentication.SslProtocols? NegotiatedTlsProtocol { get; private set; }
+
+    /// <summary>
+    /// Negotiated TLS cipher suite after <see cref="UpgradeToTlsAsync"/>; <see langword="null"/> before upgrade.
+    /// </summary>
+    public TlsCipherSuite? NegotiatedTlsCipherSuite { get; private set; }
+
+    /// <summary>
     /// Initializes a new instance that wraps an existing duplex stream as an ADB transport.
     /// </summary>
     /// <param name="stream">Stream to read/write ADB packets on.</param>
@@ -78,6 +88,8 @@ public sealed class StreamAdbTransport : IAdbTransport
 
             _stream = ssl;
             IsTls = true;
+            NegotiatedTlsProtocol = ssl.SslProtocol;
+            NegotiatedTlsCipherSuite = ssl.NegotiatedCipherSuite;
         }
         finally
         {

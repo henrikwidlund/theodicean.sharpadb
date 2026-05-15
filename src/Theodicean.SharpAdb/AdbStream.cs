@@ -56,6 +56,7 @@ public sealed class AdbStream : Stream
     internal void OnClosed()
     {
         if (Interlocked.Exchange(ref _closed, 1) != 0) return;
+        _connection.Logger.StreamClosed(LocalId, RemoteId);
         _inboundPipe.Writer.Complete();
         _opened.TrySetResult(false);
         TryReleaseWriteAck();
@@ -64,6 +65,7 @@ public sealed class AdbStream : Stream
     internal void OnFaulted(Exception fault)
     {
         if (Interlocked.Exchange(ref _closed, 1) != 0) return;
+        _connection.Logger.StreamFaulted(LocalId, RemoteId, fault);
         Volatile.Write(ref _fault, fault);
         _inboundPipe.Writer.Complete(fault);
         _opened.TrySetException(fault);
