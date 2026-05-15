@@ -71,6 +71,30 @@ public sealed class AdbAuthKey : IDisposable
     /// </summary>
     public string ExportPrivateKeyPem() => _rsa.ExportRSAPrivateKeyPem();
 
+    private string? _fingerprint;
+    /// <summary>
+    /// Gets the SHA-256 fingerprint of the mincrypt-encoded public key, formatted as uppercase hex with colon separators.
+    /// </summary>
+    /// <example><c>3F:5A:1C:9E:7B:2D:4E:8F:9A:BC:DE:F0:12:34:56:78:9A:BC:DE:F0:12:34:56:78:9A:BC:DE:F0:12:34:56:78</c></example>
+    public string GetAdbFingerprint()
+    {
+        if (!string.IsNullOrEmpty(_fingerprint))
+            return _fingerprint;
+
+        var blob = AndroidPublicKey.Encode(_rsa.ExportParameters(includePrivateParameters: false));
+        var hash = SHA256.HashData(blob);
+        return _fingerprint = string.Create(hash.Length * 3 - 1, hash, static (span, src) =>
+        {
+            const string hex = "0123456789ABCDEF";
+            for (var i = 0; i < src.Length; i++)
+            {
+                if (i > 0) span[i * 3 - 1] = ':';
+                span[i * 3] = hex[src[i] >> 4];
+                span[i * 3 + 1] = hex[src[i] & 0xF];
+            }
+        });
+    }
+
     /// <summary>
     /// Builds a self-signed X.509 certificate wrapping this key, for use as the client cert during
     /// the ADB STLS upgrade. adbd does not validate the cert chain; only key ownership matters.

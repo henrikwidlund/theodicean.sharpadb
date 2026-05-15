@@ -47,6 +47,15 @@ public sealed class AdbConnectOptions
     /// </summary>
     public bool SendPublicKeyOnAuthFailure { get; init; } = true;
 
+    /// <summary>
+    /// Invoked once, immediately before the first key's public key is written to the transport
+    /// via <c>AUTH(RSAPUBLICKEY)</c>. This step typically causes the device to display its
+    /// approval dialog, unless the key is already in <c>adb_keys</c>, in which case adbd
+    /// silently accepts. The callback receives the auth-handshake cancellation token, which
+    /// fires on <see cref="AuthTimeout"/> or caller cancellation.
+    /// </summary>
+    public Func<AdbAuthKey, CancellationToken, ValueTask>? OnBeforePublicKeyPush { get; init; }
+
     // ReSharper restore AutoPropertyCanBeMadeGetOnly.Global
 }
 
@@ -311,6 +320,18 @@ public sealed class AdbConnection : IAsyncDisposable
                         {
                             sentPubkey = true;
                             authMethod = AdbAuthenticationMethod.PublicKey;
+                            if (options.OnBeforePublicKeyPush != null)
+                            {
+                                try
+                                {
+                                    await options.OnBeforePublicKeyPush(keys[0], authCts.Token);
+                                }
+                                catch
+                                {
+                                    // Don't crash on user code
+                                }
+                            }
+
                             var pub = keys[0].EncodeAndroidPublicKey();
                             await transport.WritePacketAsync(
                                 new AdbHeader(AdbCommand.Auth, (uint)AdbAuthType.RsaPublicKey, 0,
