@@ -39,7 +39,7 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.8" />
-        <PackageReference Include="Meziantou.Analyzer" Version="3.0.85">
+        <PackageReference Include="Meziantou.Analyzer" Version="3.0.91">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
