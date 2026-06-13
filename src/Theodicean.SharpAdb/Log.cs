@@ -54,6 +54,6 @@ internal static partial class Log
     [LoggerMessage(EventId = 16, Level = LogLevel.Warning, Message = "Port-forward accept loop failed (localPort={LocalPort} -> remotePort={RemotePort})")]
     public static partial void PortForwardAcceptFailed(this ILogger logger, int localPort, int remotePort, Exception exception);
 
-    [LoggerMessage(EventId = 17, Level = LogLevel.Debug, Message = "Port-forward relay terminated (localPort={LocalPort} -> remotePort={RemotePort})")]
+    [LoggerMessage(EventId = 17, Level = LogLevel.Debug, Message = "Port-forward relay failed (localPort={LocalPort} -> remotePort={RemotePort})")]
     public static partial void PortForwardRelayFailed(this ILogger logger, int localPort, int remotePort, Exception exception);
 }
