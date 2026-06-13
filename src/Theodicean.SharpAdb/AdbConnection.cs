@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
 using System.Text;
@@ -197,12 +198,11 @@ public sealed class AdbConnection : IAsyncDisposable
         string host, int port,
         AdbConnectOptions? options = null, CancellationToken cancellationToken = default)
     {
-        var defaultPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".android", "adbkey");
+        var defaultPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".android");
         if (!Directory.Exists(defaultPath))
             Directory.CreateDirectory(defaultPath);
 
-        var keyPath = Environment.GetEnvironmentVariable("ADB_KEY_PATH") ?? Path.Combine(defaultPath, "sharpadb-test-key.pem");
+        var keyPath = Environment.GetEnvironmentVariable("ADB_KEY_PATH") ?? Path.Combine(defaultPath, "adbkey");
 
         AdbAuthKey key;
         if (File.Exists(keyPath))
@@ -292,12 +292,26 @@ public sealed class AdbConnection : IAsyncDisposable
         ArgumentNullException.ThrowIfNull(keys);
         options ??= new AdbConnectOptions();
 
+        // If we'll send or verify the legacy checksum we must advertise the legacy wire version,
+        // because adbd silences checksums whenever the peer advertised VersionSkipChecksum.
+        var advertisedVersion = options.WriteChecksum || options.VerifyChecksum
+            ? AdbProtocolConstants.VersionLegacy
+            : AdbProtocolConstants.VersionSkipChecksum;
+
         // Send CNXN.
-        var bannerBytes = EncodeNullTerminated(options.Banner);
-        await transport.WritePacketAsync(
-            new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, options.MaxPayload,
-                (uint)bannerBytes.Length, options.WriteChecksum ? AdbHeader.ComputeChecksum(bannerBytes) : 0u),
-            bannerBytes, cancellationToken);
+        var bannerBuf = RentNullTerminated(options.Banner, out var bannerLen);
+        try
+        {
+            var bannerPayload = bannerBuf.AsMemory(0, bannerLen);
+            await transport.WritePacketAsync(
+                new AdbHeader(AdbCommand.Cnxn, advertisedVersion, options.MaxPayload,
+                    (uint)bannerLen, options.WriteChecksum ? AdbHeader.ComputeChecksum(bannerPayload.Span) : 0u),
+                bannerPayload, cancellationToken);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(bannerBuf);
+        }
         options.Logger.CnxnSent(options.Banner, options.MaxPayload);
 
         var keyIndex = 0;
@@ -314,6 +328,10 @@ public sealed class AdbConnection : IAsyncDisposable
             {
                 case AdbCommand.Cnxn:
                     {
+                        if (pkt.Header.Arg0 < AdbProtocolConstants.MinSupportedVersion)
+                            throw new InvalidDataException(
+                                $"Unsupported ADB protocol version 0x{pkt.Header.Arg0:X8} from device (minimum 0x{AdbProtocolConstants.MinSupportedVersion:X8})");
+
                         var banner = Encoding.UTF8.GetString(pkt.PayloadSpan).TrimEnd('\0');
                         var info = ParseBanner(banner);
                         var negotiated = Math.Min(options.MaxPayload, pkt.Header.Arg1);
@@ -408,12 +426,19 @@ public sealed class AdbConnection : IAsyncDisposable
         }
     }
 
-    private static byte[] EncodeNullTerminated(in ReadOnlySpan<char> s)
+    /// <summary>
+    /// Rents a buffer from the shared pool and fills it with the UTF-8 bytes of <paramref name="s"/>
+    /// followed by a trailing NUL. The returned buffer's length may exceed <paramref name="length"/>;
+    /// only the first <paramref name="length"/> bytes are meaningful.
+    /// Caller MUST <see cref="ArrayPool{T}.Return"/> the buffer.
+    /// </summary>
+    private static byte[] RentNullTerminated(ReadOnlySpan<char> s, out int length)
     {
-        var len = Encoding.UTF8.GetByteCount(s);
-        var b = new byte[len + 1];
-        Encoding.UTF8.GetBytes(s, b);
-        return b;
+        length = Encoding.UTF8.GetByteCount(s) + 1;
+        var buf = ArrayPool<byte>.Shared.Rent(length);
+        var written = Encoding.UTF8.GetBytes(s, buf);
+        buf[written] = 0;
+        return buf;
     }
 
     private static AdbDeviceInfo ParseBanner(string banner)
@@ -421,12 +446,12 @@ public sealed class AdbConnection : IAsyncDisposable
         // Format: "<systemtype>:<serial>:<key1=v1;key2=v2;...>"
         var firstColon = banner.IndexOf(':', StringComparison.Ordinal);
         if (firstColon < 0)
-            return new AdbDeviceInfo(banner, "", "", new Dictionary<string, string>(0, StringComparer.Ordinal));
+            return new AdbDeviceInfo(banner, "", banner, new Dictionary<string, string>(0, StringComparer.Ordinal));
 
         var secondColon = banner.IndexOf(':', firstColon + 1);
         var systemType = banner[..firstColon];
         if (secondColon < 0)
-            return new AdbDeviceInfo(systemType, banner[(firstColon + 1)..], "", new Dictionary<string, string>(0, StringComparer.Ordinal));
+            return new AdbDeviceInfo(systemType, banner[(firstColon + 1)..], banner, new Dictionary<string, string>(0, StringComparer.Ordinal));
 
         var serial = banner[(firstColon + 1)..secondColon];
         var props = banner[(secondColon + 1)..];
@@ -470,28 +495,35 @@ public sealed class AdbConnection : IAsyncDisposable
             if (_streams.TryAdd(localId, stream)) break;
         }
 
-        var payload = EncodeNullTerminated(service);
-        var header = new AdbHeader(AdbCommand.Open, localId, 0, (uint)payload.Length,
-            WriteChecksum ? AdbHeader.ComputeChecksum(payload) : 0u);
-
+        var payloadBuf = RentNullTerminated(service, out var payloadLen);
         try
         {
-            await _transport.WritePacketAsync(header, payload, cancellationToken);
-            Logger.OpenSent(service, localId);
-            using var openCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            var ok = await stream.OpenedTask.WaitAsync(openCts.Token);
-            if (!ok)
+            var payload = payloadBuf.AsMemory(0, payloadLen);
+            var header = new AdbHeader(AdbCommand.Open, localId, 0, (uint)payloadLen,
+                WriteChecksum ? AdbHeader.ComputeChecksum(payload.Span) : 0u);
+
+            try
             {
-                Logger.StreamRejected(service, localId);
-                throw new IOException($"ADB device rejected service: {service}");
+                await _transport.WritePacketAsync(header, payload, cancellationToken);
+                Logger.OpenSent(service, localId);
+                var ok = await stream.OpenedTask.WaitAsync(cancellationToken);
+                if (!ok)
+                {
+                    Logger.StreamRejected(service, localId);
+                    throw new IOException($"ADB device rejected service: {service}");
+                }
+                Logger.StreamOpened(localId, stream.RemoteId, service);
+                return stream;
             }
-            Logger.StreamOpened(localId, stream.RemoteId, service);
-            return stream;
+            catch
+            {
+                _streams.TryRemove(localId, out _);
+                throw;
+            }
         }
-        catch
+        finally
         {
-            _streams.TryRemove(localId, out _);
-            throw;
+            ArrayPool<byte>.Shared.Return(payloadBuf);
         }
     }
 
@@ -591,8 +623,9 @@ public sealed class AdbConnection : IAsyncDisposable
                     break;
                 }
             case AdbCommand.Auth:
-                // Mid-session re-auth — not supported here.
-                break;
+                // Mid-session re-auth is not supported. Fault the connection so all blocked
+                // stream operations surface a clear error instead of hanging indefinitely.
+                throw new InvalidDataException($"Unexpected mid-session AUTH packet (arg0={pkt.Header.Arg0})");
         }
     }
 

@@ -117,8 +117,14 @@ public sealed class AdbStream : Stream
     public override void SetLength(long value) => throw new NotSupportedException();
 
     /// <summary>
-    /// Synchronous wrapper around <see cref="ReadAsync(Memory{byte}, CancellationToken)"/>. Prefer the async overload.
+    /// Synchronous wrapper around <see cref="ReadAsync(Memory{byte}, CancellationToken)"/>.
     /// </summary>
+    /// <remarks>
+    /// Implemented as sync-over-async. The inbound pipe is constructed with
+    /// <c>useSynchronizationContext: false</c> so this does not deadlock on a captured
+    /// synchronization context, but it does block a thread-pool thread for the duration of
+    /// the read. Prefer the async overload from any async or hot-path code.
+    /// </remarks>
     public override int Read(byte[] buffer, int offset, int count) =>
         ReadAsync(buffer.AsMemory(offset, count)).AsTask().GetAwaiter().GetResult();
 
@@ -142,8 +148,13 @@ public sealed class AdbStream : Stream
     }
 
     /// <summary>
-    /// Synchronous wrapper around <see cref="WriteAsync(ReadOnlyMemory{byte}, CancellationToken)"/>. Prefer the async overload.
+    /// Synchronous wrapper around <see cref="WriteAsync(ReadOnlyMemory{byte}, CancellationToken)"/>.
     /// </summary>
+    /// <remarks>
+    /// Implemented as sync-over-async. Waits for the per-packet WRTE/OKAY ack required by the
+    /// ADB protocol, blocking the calling thread for the full round trip. Prefer the async
+    /// overload from any async or hot-path code.
+    /// </remarks>
     public override void Write(byte[] buffer, int offset, int count) =>
         WriteAsync(buffer.AsMemory(offset, count)).AsTask().GetAwaiter().GetResult();
 

@@ -73,6 +73,13 @@ public sealed class StreamAdbTransport : IAdbTransport
         await _writeLock.WaitAsync(cancellationToken);
         try
         {
+            // Spec: STLS must be the last ADB frame before TLS ClientHello on either side.
+            // If our peer queued anything after the STLS frame those bytes will get fed into
+            // SslStream as bogus TLS records. Catch obvious cases of that and fail fast.
+            if (_stream is NetworkStream { DataAvailable: true } ns)
+                throw new InvalidDataException(
+                    $"Refusing TLS upgrade: {ns.Socket.Available} bytes pending on transport (peer violated STLS framing)");
+
             var ssl = new SslStream(_stream, leaveInnerStreamOpen: false);
 
             var opts = new SslClientAuthenticationOptions

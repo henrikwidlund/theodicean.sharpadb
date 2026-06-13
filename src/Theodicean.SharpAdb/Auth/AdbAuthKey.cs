@@ -40,8 +40,11 @@ public sealed class AdbAuthKey : IDisposable
     public AdbAuthKey(RSA rsa, string userHost = "sharpadb@dotnet", in bool ownsRsa = true)
     {
         ArgumentNullException.ThrowIfNull(rsa);
+        ArgumentException.ThrowIfNullOrWhiteSpace(userHost);
         if (rsa.KeySize != KeySizeBits)
             throw new ArgumentException(string.Create(CultureInfo.InvariantCulture, $"ADB requires {KeySizeBits}-bit RSA key, got {rsa.KeySize}"), nameof(rsa));
+        if (userHost.Contains('\0', StringComparison.Ordinal))
+            throw new ArgumentException("userHost must not contain NUL characters; the wire format would truncate at the embedded NUL", nameof(userHost));
         _rsa = rsa;
         _ownsRsa = ownsRsa;
         _userHost = userHost;
