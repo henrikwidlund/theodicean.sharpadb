@@ -28,6 +28,7 @@ public sealed class AdbStream : Stream
     private readonly SemaphoreSlim _writeAck = new(0, 1);
     private readonly TaskCompletionSource<bool> _opened = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private int _closed;
+    private int _resourcesDisposed;
     private Exception? _fault;
 
     internal AdbStream(AdbConnection connection, uint localId)
@@ -192,10 +193,14 @@ public sealed class AdbStream : Stream
     /// </summary>
     protected override void Dispose(bool disposing)
     {
-        if (disposing && Interlocked.Exchange(ref _closed, 1) == 0)
+        if (disposing)
         {
-            _ = _connection.CloseStreamAsync(this);
-            _inboundPipe.Writer.Complete();
+            if (Interlocked.Exchange(ref _closed, 1) == 0)
+            {
+                _ = _connection.CloseStreamAsync(this);
+                _inboundPipe.Writer.Complete();
+            }
+            DisposeResources();
         }
         base.Dispose(disposing);
     }
@@ -210,6 +215,15 @@ public sealed class AdbStream : Stream
             await _connection.CloseStreamAsync(this);
             await _inboundPipe.Writer.CompleteAsync();
         }
+        DisposeResources();
         await base.DisposeAsync();
+    }
+
+    private void DisposeResources()
+    {
+        // OnClosed/OnFaulted may have flipped _closed without ever owning the SemaphoreSlim;
+        // _resourcesDisposed guarantees we only dispose once even if both Dispose paths run.
+        if (Interlocked.Exchange(ref _resourcesDisposed, 1) == 0)
+            _writeAck.Dispose();
     }
 }

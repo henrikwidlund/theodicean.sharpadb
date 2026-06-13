@@ -526,7 +526,11 @@ public sealed class AdbConnection : IAsyncDisposable
             }
             catch
             {
+                // Remove from the dispatch map first so CloseStreamAsync no-ops (we never got an
+                // OKAY, so there is no remoteId to address a CLSE to), then dispose the stream
+                // for deterministic cleanup of its Pipe / SemaphoreSlim instead of waiting on GC.
                 _streams.TryRemove(localId, out _);
+                await stream.DisposeAsync();
                 throw;
             }
         }
