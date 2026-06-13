@@ -292,9 +292,18 @@ public sealed class AdbConnection : IAsyncDisposable
         ArgumentNullException.ThrowIfNull(keys);
         options ??= new AdbConnectOptions();
 
-        // If we'll send or verify the legacy checksum we must advertise the legacy wire version,
-        // because adbd silences checksums whenever the peer advertised VersionSkipChecksum.
-        var advertisedVersion = options.WriteChecksum || options.VerifyChecksum
+        // The ADB legacy checksum mode is symmetric: whichever side advertises the legacy wire
+        // version commits both sides to sending and verifying the sum-of-bytes payload checksum.
+        // VerifyChecksum=true without WriteChecksum=true would have us advertise the legacy
+        // version and then send payloads with DataChecksum=0 — adbd would reject them.
+        if (options.VerifyChecksum && !options.WriteChecksum)
+            throw new ArgumentException(
+                "VerifyChecksum=true requires WriteChecksum=true: the ADB legacy checksum mode is symmetric.",
+                nameof(options));
+
+        // Advertise legacy wire version iff we will send checksums. Otherwise the peer treats us
+        // as a modern client and skips its own checksum (so there is nothing for us to verify).
+        var advertisedVersion = options.WriteChecksum
             ? AdbProtocolConstants.VersionLegacy
             : AdbProtocolConstants.VersionSkipChecksum;
 
