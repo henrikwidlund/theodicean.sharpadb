@@ -43,7 +43,9 @@ public sealed class AdbStream : Stream
     {
         RemoteId = remoteId;
         _opened.TrySetResult(true);
-        _writeAck.Release(); // ready for first write
+        // Ready for first write. Routed through TryReleaseWriteAck so that a racing user-side
+        // Dispose() that already tore down the SemaphoreSlim doesn't fault the read loop.
+        TryReleaseWriteAck();
     }
 
     internal async ValueTask OnDataAsync(ReadOnlyMemory<byte> data, CancellationToken cancellationToken)
@@ -81,7 +83,13 @@ public sealed class AdbStream : Stream
         }
         catch (SemaphoreFullException)
         {
-            // Ignore
+            // Already signaled — fine, the next WriteAsync will pass through immediately.
+        }
+        catch (ObjectDisposedException)
+        {
+            // The user-side Dispose path may have torn down the SemaphoreSlim while a packet
+            // for this stream was still in flight on the read loop. Swallowing here keeps the
+            // demuxer alive for every other stream; the disposing stream will not write again.
         }
     }
 
