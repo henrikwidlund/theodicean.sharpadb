@@ -47,7 +47,14 @@ public sealed class AdbStream : Stream
     {
         _connection = connection;
         LocalId = localId;
-        _drainTask = Task.Run(DrainLoopAsync, _drainCts.Token);
+        // Intentionally NOT passing _drainCts.Token to Task.Run. If we did, a Dispose/OnClosed
+        // racing the scheduler after construction could leave the task in the Canceled state
+        // without ever entering DrainLoopAsync — and then the finally that completes the inbound
+        // Pipe.Writer would never run, hanging any pending ReadAsync. The body uses
+        // _drainCts.Token directly, so cancellation is observed once DrainLoopAsync starts.
+#pragma warning disable MA0040
+        _drainTask = Task.Run(DrainLoopAsync);
+#pragma warning restore MA0040
     }
 
     internal Task<bool> OpenedTask => _opened.Task;
