@@ -2,6 +2,8 @@ using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 
+using Microsoft.Extensions.Logging;
+
 namespace Theodicean.SharpAdb.Services;
 
 /// <summary>
@@ -14,6 +16,7 @@ public sealed class AdbPortForward : IAsyncDisposable
     private readonly AdbConnection _connection;
     private readonly TcpListener _listener;
     private readonly int _remotePort;
+    private readonly ILogger _logger;
     private readonly CancellationTokenSource _shutdownCts = new();
     private readonly Task _acceptLoop;
 
@@ -22,11 +25,12 @@ public sealed class AdbPortForward : IAsyncDisposable
     /// </summary>
     public int LocalPort { get; }
 
-    private AdbPortForward(AdbConnection connection, TcpListener listener, in int remotePort)
+    private AdbPortForward(AdbConnection connection, TcpListener listener, in int remotePort, ILogger logger)
     {
         _connection = connection;
         _listener = listener;
         _remotePort = remotePort;
+        _logger = logger;
         LocalPort = ((IPEndPoint)listener.LocalEndpoint).Port;
         _acceptLoop = Task.Run(AcceptLoopAsync, _shutdownCts.Token);
     }
@@ -40,7 +44,7 @@ public sealed class AdbPortForward : IAsyncDisposable
         ArgumentNullException.ThrowIfNull(connection);
         var listener = new TcpListener(bindAddress ?? IPAddress.Loopback, localPort);
         listener.Start();
-        return Task.FromResult(new AdbPortForward(connection, listener, remotePort));
+        return Task.FromResult(new AdbPortForward(connection, listener, remotePort, connection.Logger));
     }
 
     private async Task AcceptLoopAsync()
@@ -61,9 +65,15 @@ public sealed class AdbPortForward : IAsyncDisposable
         {
             // Ignore
         }
+        catch (SocketException ex) when (!_shutdownCts.IsCancellationRequested)
+        {
+            // TcpListener.Stop() also surfaces here as SocketException, so we only treat
+            // socket errors as real failures when we're not already shutting the forwarder down.
+            _logger.PortForwardAcceptFailed(LocalPort, _remotePort, ex);
+        }
         catch (SocketException)
         {
-            // Ignore
+            // Expected: TcpListener.Stop() races with AcceptSocketAsync during disposal.
         }
     }
 
@@ -72,14 +82,34 @@ public sealed class AdbPortForward : IAsyncDisposable
         socket.NoDelay = true;
         await using var net = new NetworkStream(socket, ownsSocket: true);
         AdbStream? stream = null;
+        using var pairCts = CancellationTokenSource.CreateLinkedTokenSource(_shutdownCts.Token);
         try
         {
-            stream = await _connection.OpenAsync(string.Create(CultureInfo.InvariantCulture, $"tcp:{_remotePort}"), _shutdownCts.Token);
-            var t1 = stream.CopyToAsync(net, _shutdownCts.Token);
-            var t2 = net.CopyToAsync(stream, _shutdownCts.Token);
+            stream = await _connection.OpenAsync(string.Create(CultureInfo.InvariantCulture, $"tcp:{_remotePort}"), pairCts.Token);
+            var t1 = stream.CopyToAsync(net, pairCts.Token);
+            var t2 = net.CopyToAsync(stream, pairCts.Token);
+
+            // Once either direction completes, the connection is effectively half-closed —
+            // cancel the surviving copy task so we don't leak a relay until forwarder shutdown.
             await Task.WhenAny(t1, t2);
+            await pairCts.CancelAsync();
+            try
+            {
+                await Task.WhenAll(t1, t2);
+            }
+            catch
+            {
+                // Both halves are torn down — secondary failures are expected here.
+            }
         }
-        catch { /* peer disconnect, port unreachable, etc. */ }
+        catch (OperationCanceledException) when (_shutdownCts.IsCancellationRequested)
+        {
+            // Forwarder shutting down — not a fault.
+        }
+        catch (Exception ex)
+        {
+            _logger.PortForwardRelayFailed(LocalPort, _remotePort, ex);
+        }
         finally
         {
             if (stream is not null)

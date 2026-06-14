@@ -180,6 +180,107 @@ public class AdbConnectionTests
         await Assert.That(async () => await conn.OpenAsync("shell:noop")).ThrowsExactly<IOException>();
     }
 
+    [Test]
+    public async Task MidSessionAuthFaultsConnection()
+    {
+        (Stream clientStream, Stream deviceStream) = CreateDuplexPair();
+        var clientTransport = new StreamAdbTransport(clientStream);
+        await using var deviceTransport = new StreamAdbTransport(deviceStream);
+
+        // Bring connection up with a no-auth handshake.
+        var deviceTask = Task.Run(async () =>
+        {
+            using (var pkt = await deviceTransport.ReadPacketAsync())
+                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);
+
+            var banner = "device::\0"u8.ToArray();
+            await deviceTransport.WritePacketAsync(
+                new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload,
+                    (uint)banner.Length, 0), banner);
+
+            // After the handshake the device sends an unsolicited AUTH packet, which is illegal
+            // in the middle of a live session and must cause the read loop to fault.
+            var token = new byte[AdbProtocolConstants.AuthTokenSize];
+            await deviceTransport.WritePacketAsync(
+                new AdbHeader(AdbCommand.Auth, (uint)AdbAuthType.Token, 0, (uint)token.Length, 0), token);
+        });
+
+        await using var conn = await AdbConnection.ConnectAsync(clientTransport, [], new AdbConnectOptions());
+        await deviceTask;
+
+        // Wait briefly for the read loop to ingest the bad packet and fault.
+        var deadline = DateTime.UtcNow.AddSeconds(2);
+        while (conn.FaultException is null && DateTime.UtcNow < deadline)
+            await Task.Delay(20);
+
+        await Assert.That(conn.FaultException).IsNotNull();
+        await Assert.That(conn.FaultException).IsTypeOf<InvalidDataException>();
+
+        // Subsequent OpenAsync must surface the recorded fault rather than hanging.
+        await Assert.That(async () => await conn.OpenAsync("shell:noop")).ThrowsExactly<IOException>();
+    }
+
+    [Test]
+    public async Task DispatchAfterStreamDisposeDoesNotFaultReadLoop()
+    {
+        // Regression: if a packet for a stream is in flight on the read loop at the moment the
+        // user disposes the stream, OnAck()/OnOpened() must not throw ObjectDisposedException
+        // from the torn-down SemaphoreSlim — that would escape the demuxer and fault the entire
+        // connection (and with it every sibling stream).
+        (Stream clientStream, Stream deviceStream) = CreateDuplexPair();
+        var clientTransport = new StreamAdbTransport(clientStream);
+        await using var deviceTransport = new StreamAdbTransport(deviceStream);
+
+        var deviceTask = Task.Run(async () =>
+        {
+            using (var pkt = await deviceTransport.ReadPacketAsync())
+                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);
+
+            var banner = "device::\0"u8.ToArray();
+            await deviceTransport.WritePacketAsync(
+                new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload,
+                    (uint)banner.Length, 0), banner);
+
+            uint clientLocalId;
+            using (var pkt = await deviceTransport.ReadPacketAsync())
+            {
+                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Open);
+                clientLocalId = pkt.Header.Arg0;
+            }
+
+            await deviceTransport.WritePacketAsync(
+                new AdbHeader(AdbCommand.Okay, 4242, clientLocalId, 0, 0), ReadOnlyMemory<byte>.Empty);
+        });
+
+        await using var conn = await AdbConnection.ConnectAsync(clientTransport, [], new AdbConnectOptions());
+        var stream = await conn.OpenAsync("shell:race");
+        await deviceTask;
+
+        // Sync dispose tears down the SemaphoreSlim deterministically (synchronous removal from
+        // the connection's stream map plus immediate _writeAck.Dispose()).
+        stream.Dispose();
+
+        // Simulate the race window: a packet snapshot captured a reference to the stream just
+        // before TryRemove ran. The dispatcher would then call OnAck()/OnOpened() on it. After
+        // the fix, both calls swallow the resulting ObjectDisposedException.
+        stream.OnAck();
+        stream.OnOpened(9999);
+
+        // Connection must still be healthy.
+        await Assert.That(conn.FaultException).IsNull();
+    }
+
+    [Test]
+    public async Task VerifyChecksumWithoutWriteChecksumThrows()
+    {
+        (Stream clientStream, Stream _) = CreateDuplexPair();
+        var clientTransport = new StreamAdbTransport(clientStream);
+
+        await Assert.That(async () => await AdbConnection.ConnectAsync(
+            clientTransport, [],
+            new AdbConnectOptions { VerifyChecksum = true, WriteChecksum = false })).ThrowsExactly<ArgumentException>();
+    }
+
     private static (Stream A, Stream B) CreateDuplexPair()
     {
         var aToB = new BlockingMemoryStream();

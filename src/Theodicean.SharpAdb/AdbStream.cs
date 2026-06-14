@@ -28,6 +28,7 @@ public sealed class AdbStream : Stream
     private readonly SemaphoreSlim _writeAck = new(0, 1);
     private readonly TaskCompletionSource<bool> _opened = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private int _closed;
+    private int _resourcesDisposed;
     private Exception? _fault;
 
     internal AdbStream(AdbConnection connection, uint localId)
@@ -42,7 +43,9 @@ public sealed class AdbStream : Stream
     {
         RemoteId = remoteId;
         _opened.TrySetResult(true);
-        _writeAck.Release(); // ready for first write
+        // Ready for first write. Routed through TryReleaseWriteAck so that a racing user-side
+        // Dispose() that already tore down the SemaphoreSlim doesn't fault the read loop.
+        TryReleaseWriteAck();
     }
 
     internal async ValueTask OnDataAsync(ReadOnlyMemory<byte> data, CancellationToken cancellationToken)
@@ -80,7 +83,13 @@ public sealed class AdbStream : Stream
         }
         catch (SemaphoreFullException)
         {
-            // Ignore
+            // Already signaled — fine, the next WriteAsync will pass through immediately.
+        }
+        catch (ObjectDisposedException)
+        {
+            // The user-side Dispose path may have torn down the SemaphoreSlim while a packet
+            // for this stream was still in flight on the read loop. Swallowing here keeps the
+            // demuxer alive for every other stream; the disposing stream will not write again.
         }
     }
 
@@ -117,8 +126,14 @@ public sealed class AdbStream : Stream
     public override void SetLength(long value) => throw new NotSupportedException();
 
     /// <summary>
-    /// Synchronous wrapper around <see cref="ReadAsync(Memory{byte}, CancellationToken)"/>. Prefer the async overload.
+    /// Synchronous wrapper around <see cref="ReadAsync(Memory{byte}, CancellationToken)"/>.
     /// </summary>
+    /// <remarks>
+    /// Implemented as sync-over-async. The inbound pipe is constructed with
+    /// <c>useSynchronizationContext: false</c> so this does not deadlock on a captured
+    /// synchronization context, but it does block a thread-pool thread for the duration of
+    /// the read. Prefer the async overload from any async or hot-path code.
+    /// </remarks>
     public override int Read(byte[] buffer, int offset, int count) =>
         ReadAsync(buffer.AsMemory(offset, count)).AsTask().GetAwaiter().GetResult();
 
@@ -142,8 +157,13 @@ public sealed class AdbStream : Stream
     }
 
     /// <summary>
-    /// Synchronous wrapper around <see cref="WriteAsync(ReadOnlyMemory{byte}, CancellationToken)"/>. Prefer the async overload.
+    /// Synchronous wrapper around <see cref="WriteAsync(ReadOnlyMemory{byte}, CancellationToken)"/>.
     /// </summary>
+    /// <remarks>
+    /// Implemented as sync-over-async. Waits for the per-packet WRTE/OKAY ack required by the
+    /// ADB protocol, blocking the calling thread for the full round trip. Prefer the async
+    /// overload from any async or hot-path code.
+    /// </remarks>
     public override void Write(byte[] buffer, int offset, int count) =>
         WriteAsync(buffer.AsMemory(offset, count)).AsTask().GetAwaiter().GetResult();
 
@@ -181,10 +201,14 @@ public sealed class AdbStream : Stream
     /// </summary>
     protected override void Dispose(bool disposing)
     {
-        if (disposing && Interlocked.Exchange(ref _closed, 1) == 0)
+        if (disposing)
         {
-            _ = _connection.CloseStreamAsync(this);
-            _inboundPipe.Writer.Complete();
+            if (Interlocked.Exchange(ref _closed, 1) == 0)
+            {
+                _ = _connection.CloseStreamAsync(this);
+                _inboundPipe.Writer.Complete();
+            }
+            DisposeResources();
         }
         base.Dispose(disposing);
     }
@@ -199,6 +223,15 @@ public sealed class AdbStream : Stream
             await _connection.CloseStreamAsync(this);
             await _inboundPipe.Writer.CompleteAsync();
         }
+        DisposeResources();
         await base.DisposeAsync();
+    }
+
+    private void DisposeResources()
+    {
+        // OnClosed/OnFaulted may have flipped _closed without ever owning the SemaphoreSlim;
+        // _resourcesDisposed guarantees we only dispose once even if both Dispose paths run.
+        if (Interlocked.Exchange(ref _resourcesDisposed, 1) == 0)
+            _writeAck.Dispose();
     }
 }

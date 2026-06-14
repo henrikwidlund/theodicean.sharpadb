@@ -70,7 +70,7 @@ public static class ActivityExtensions
             ArgumentException.ThrowIfNullOrEmpty(packageName);
             AdbConnection.ValidatePackage(packageName);
             var output = await connection.ExecuteAsync(
-                $"monkey -p {packageName} -c android.intent.category.LAUNCHER 1", cancellationToken);
+                $"monkey -p {ShellEscape.SingleQuote(packageName)} -c android.intent.category.LAUNCHER 1", cancellationToken);
             if (output.Contains("No activities found", StringComparison.Ordinal))
                 throw new InvalidOperationException($"No launcher activity for package '{packageName}'");
         }
@@ -85,7 +85,7 @@ public static class ActivityExtensions
             ArgumentNullException.ThrowIfNull(connection);
             ArgumentException.ThrowIfNullOrEmpty(component);
 
-            var args = new List<string>(8) { "am", "start", "-n", component };
+            var args = new List<string>(8) { "am", "start", "-n", ShellEscape.SingleQuote(component) };
             if (action is not null)
             {
                 args.Add("-a");
@@ -121,7 +121,7 @@ public static class ActivityExtensions
             ArgumentNullException.ThrowIfNull(connection);
             ArgumentException.ThrowIfNullOrEmpty(packageName);
             AdbConnection.ValidatePackage(packageName);
-            return connection.ExecuteAsync($"am force-stop {packageName}", cancellationToken);
+            return connection.ExecuteAsync($"am force-stop {ShellEscape.SingleQuote(packageName)}", cancellationToken);
         }
 
         /// <summary>

@@ -186,10 +186,10 @@ public class ParserTests
     }
 
     [Test]
-    public async Task LogcatParserUnknownPriorityDefaultsToVerbose()
+    public async Task LogcatParserUnknownPriorityMapsToUnknown()
     {
         const string line = "01-15 12:34:56.789  1   2 X Tag: msg";
         await Assert.That(LogcatParser.TryParseThreadTime(line, out var entry)).IsTrue();
-        await Assert.That(entry.Priority).IsEqualTo(LogcatPriority.Verbose);
+        await Assert.That(entry.Priority).IsEqualTo(LogcatPriority.Unknown);
     }
 }

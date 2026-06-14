@@ -22,6 +22,11 @@ public static class ProcessExtensions
         /// <summary>
         /// Lists running processes via <c>ps -A -o USER,PID,PPID,NAME</c>.
         /// </summary>
+        /// <remarks>
+        /// Requires the Toybox <c>ps</c> shipped on Android 6 (Marshmallow, API 23) and later — the
+        /// legacy Toolbox <c>ps</c> on Android 5.x and earlier does not accept <c>-A</c> or the
+        /// <c>-o</c> column selector and will return only its default columns.
+        /// </remarks>
         public async Task<IReadOnlyList<AdbProcess>> GetProcessesAsync(CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);

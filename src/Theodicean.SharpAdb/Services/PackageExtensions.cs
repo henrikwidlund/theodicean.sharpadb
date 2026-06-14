@@ -50,7 +50,7 @@ public static class PackageExtensions
                 if (grantAllPermissions)
                     args.Add("-g");
 
-                args.Add(remotePath);
+                args.Add(ShellEscape.SingleQuote(remotePath));
 
                 var result = await connection.ExecuteAsync($"pm {string.Join(' ', args)}", cancellationToken);
                 // pm install prints "Success" on a line; otherwise contains "Failure [REASON]".
@@ -61,7 +61,7 @@ public static class PackageExtensions
             {
                 try
                 {
-                    await connection.ExecuteAsync($"rm -f {remotePath}", CancellationToken.None);
+                    await connection.ExecuteAsync($"rm -f {ShellEscape.SingleQuote(remotePath)}", CancellationToken.None);
                 }
                 catch { /* best effort */ }
             }
@@ -90,7 +90,7 @@ public static class PackageExtensions
             AdbConnection.ValidatePackage(packageName);
 
             var flag = keepData ? "-k " : "";
-            var result = await connection.ExecuteAsync($"pm uninstall {flag}{packageName}", cancellationToken);
+            var result = await connection.ExecuteAsync($"pm uninstall {flag}{ShellEscape.SingleQuote(packageName)}", cancellationToken);
             if (!result.Contains("Success", StringComparison.Ordinal))
                 throw new AdbPackageException($"pm uninstall failed: {result.Trim()}");
         }
@@ -114,7 +114,7 @@ public static class PackageExtensions
             ArgumentNullException.ThrowIfNull(connection);
             ArgumentException.ThrowIfNullOrEmpty(packageName);
             AdbConnection.ValidatePackage(packageName);
-            var output = await connection.ExecuteAsync($"pm list packages {packageName}", cancellationToken);
+            var output = await connection.ExecuteAsync($"pm list packages {ShellEscape.SingleQuote(packageName)}", cancellationToken);
             // Match "package:exact.name\n" anywhere in output.
             var needle = $"package:{packageName}";
             var outputSpan = output.AsSpan();

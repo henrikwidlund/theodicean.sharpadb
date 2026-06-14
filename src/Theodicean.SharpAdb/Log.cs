@@ -50,4 +50,10 @@ internal static partial class Log
 
     [LoggerMessage(EventId = 15, Level = LogLevel.Information, Message = "TLS upgrade complete: protocol={Protocol} cipher={Cipher}")]
     public static partial void TlsUpgraded(this ILogger logger, string protocol, string cipher);
+
+    [LoggerMessage(EventId = 16, Level = LogLevel.Warning, Message = "Port-forward accept loop failed (localPort={LocalPort} -> remotePort={RemotePort})")]
+    public static partial void PortForwardAcceptFailed(this ILogger logger, int localPort, int remotePort, Exception exception);
+
+    [LoggerMessage(EventId = 17, Level = LogLevel.Debug, Message = "Port-forward relay failed (localPort={LocalPort} -> remotePort={RemotePort})")]
+    public static partial void PortForwardRelayFailed(this ILogger logger, int localPort, int remotePort, Exception exception);
 }

@@ -34,18 +34,18 @@ public sealed class SyncSession : IAsyncDisposable
     {
         await SendCommandAsync(SyncProtocol.Stat, remotePath, cancellationToken);
 
-        await ReadExactAsync(_frameBuf.AsMemory(0, 4), cancellationToken);
-        var tag = BinaryPrimitives.ReadUInt32LittleEndian(_frameBuf);
-        if (tag != SyncProtocol.Stat)
-            throw new IOException($"Expected STAT, got 0x{tag:X8}");
-
-        var tmp = ArrayPool<byte>.Shared.Rent(12);
+        // STAT response is exactly 16 bytes: tag(4) + mode(4) + size(4) + mtime(4).
+        var tmp = ArrayPool<byte>.Shared.Rent(16);
         try
         {
-            await ReadExactAsync(tmp.AsMemory(0, 12), cancellationToken);
-            var mode = BinaryPrimitives.ReadUInt32LittleEndian(tmp);
-            var size = BinaryPrimitives.ReadUInt32LittleEndian(tmp.AsSpan(4));
-            var mTime = BinaryPrimitives.ReadUInt32LittleEndian(tmp.AsSpan(8));
+            await ReadExactAsync(tmp.AsMemory(0, 16), cancellationToken);
+            var tag = BinaryPrimitives.ReadUInt32LittleEndian(tmp);
+            if (tag != SyncProtocol.Stat)
+                throw new IOException($"Expected STAT, got 0x{tag:X8}");
+
+            var mode = BinaryPrimitives.ReadUInt32LittleEndian(tmp.AsSpan(4));
+            var size = BinaryPrimitives.ReadUInt32LittleEndian(tmp.AsSpan(8));
+            var mTime = BinaryPrimitives.ReadUInt32LittleEndian(tmp.AsSpan(12));
             return new AdbFileStat(mode, size, DateTimeOffset.FromUnixTimeSeconds(mTime));
         }
         finally

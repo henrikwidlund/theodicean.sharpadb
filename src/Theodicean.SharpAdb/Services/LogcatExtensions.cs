@@ -8,6 +8,11 @@ namespace Theodicean.SharpAdb.Services;
 public enum LogcatPriority
 {
     /// <summary>
+    /// Priority character not one of the known logcat letters.
+    /// </summary>
+    Unknown = 1,
+
+    /// <summary>
     /// Verbose ("V"). Most detailed.
     /// </summary>
     Verbose,
@@ -197,6 +202,6 @@ internal static class LogcatParser
         'E' => LogcatPriority.Error,
         'F' => LogcatPriority.Fatal,
         'S' => LogcatPriority.Silent,
-        _ => LogcatPriority.Verbose
+        _ => LogcatPriority.Unknown
     };
 }

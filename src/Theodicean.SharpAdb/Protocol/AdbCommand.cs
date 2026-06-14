@@ -68,9 +68,25 @@ public enum AdbAuthType : uint
 public static class AdbProtocolConstants
 {
     /// <summary>
-    /// Wire protocol version negotiated by CNXN. ADB uses 0x01000001 since v34, 0x01000000 earlier.
+    /// Legacy ADB wire protocol version. Both sides compute and verify the sum-of-bytes payload checksum.
     /// </summary>
-    public const uint Version = 0x01000001;
+    public const uint VersionLegacy = 0x01000000;
+
+    /// <summary>
+    /// ADB wire protocol version since v34 (2021). Peers advertising this version agree to send
+    /// <see cref="AdbHeader.DataChecksum"/>=0 and skip verification.
+    /// </summary>
+    public const uint VersionSkipChecksum = 0x01000001;
+
+    /// <summary>
+    /// Default version advertised by this client (<see cref="VersionSkipChecksum"/>).
+    /// </summary>
+    public const uint Version = VersionSkipChecksum;
+
+    /// <summary>
+    /// Minimum supported wire protocol version. CNXN responses below this value are rejected.
+    /// </summary>
+    public const uint MinSupportedVersion = VersionLegacy;
 
     /// <summary>
     /// Largest payload an ADB peer is required to accept (post-handshake max_data).

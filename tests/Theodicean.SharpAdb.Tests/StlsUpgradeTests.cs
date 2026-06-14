@@ -79,6 +79,63 @@ public class StlsUpgradeTests
     }
 
     [Test]
+    public async Task UpgradeToTlsRejectsPendingBytesAfterStls()
+    {
+        // Regression: STLS must be the last ADB frame before TLS ClientHello. A misbehaving peer
+        // that queues extra bytes after STLS would otherwise have those bytes fed into SslStream
+        // as bogus TLS records, surfacing as opaque handshake failures. UpgradeToTlsAsync must
+        // fast-fail with InvalidDataException *before* starting the TLS handshake.
+        using var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+
+        using var serverDone = new CancellationTokenSource();
+        var serverTask = Task.Run(async () =>
+        {
+            using var serverSocket = await listener.AcceptSocketAsync();
+            await using var rawStream = new NetworkStream(serverSocket, ownsSocket: true);
+            var deviceTransport = new StreamAdbTransport(rawStream, ownsStream: false);
+
+            using (var pkt = await deviceTransport.ReadPacketAsync())
+                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);
+
+            // STLS frame + 4 KiB of garbage immediately afterwards. The kernel will deliver both
+            // chunks well before the client gets to UpgradeToTlsAsync, so Socket.Available is
+            // guaranteed to report the garbage as pending.
+            var stlsHeader = new byte[AdbProtocolConstants.HeaderSize];
+            new AdbHeader(AdbCommand.Stls, 1, 0, 0, 0).WriteTo(stlsHeader);
+            await rawStream.WriteAsync(stlsHeader);
+            await rawStream.WriteAsync(new byte[4096]);
+            await rawStream.FlushAsync();
+
+            // Hold the connection open until the test signals completion so we don't race the
+            // client's read of Socket.Available against the server closing the connection.
+            try
+            {
+                await Task.Delay(Timeout.Infinite, serverDone.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected: test body completed and signaled serverDone.
+            }
+        });
+
+        using var clientKey = AdbAuthKey.Generate("client@host");
+        try
+        {
+            await Assert.That(async () => await AdbConnection.ConnectTcpAsync("127.0.0.1", port, [clientKey]))
+                .ThrowsExactly<InvalidDataException>();
+        }
+        finally
+        {
+            await serverDone.CancelAsync();
+            // Let timeouts and any server-side assertion failures surface — only the expected
+            // post-cancellation completion goes through cleanly here.
+            await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
+        }
+    }
+
+    [Test]
     public async Task GeneratedCertificateContainsPublicKey()
     {
         using var key = AdbAuthKey.Generate();
