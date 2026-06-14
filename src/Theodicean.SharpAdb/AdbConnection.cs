@@ -568,6 +568,21 @@ public sealed class AdbConnection : IAsyncDisposable
             ReadOnlyMemory<byte>.Empty,
             _shutdownCts.Token);
 
+    private async Task SendCloseEchoAsync(uint localId, uint remoteId)
+    {
+        try
+        {
+            await _transport.WritePacketAsync(
+                new AdbHeader(AdbCommand.Clse, localId, remoteId, 0, 0),
+                ReadOnlyMemory<byte>.Empty,
+                _shutdownCts.Token);
+        }
+        catch
+        {
+            // Peer may have already torn the connection down; nothing actionable here.
+        }
+    }
+
     internal async Task CloseStreamAsync(AdbStream stream)
     {
         if (!_streams.TryRemove(stream.LocalId, out _)) return;
@@ -688,7 +703,15 @@ public sealed class AdbConnection : IAsyncDisposable
                 {
                     var ourLocalId = pkt.Header.Arg1;
                     if (_streams.TryRemove(ourLocalId, out var s))
+                    {
                         s.OnClosed();
+                        // Echo CLSE back per the ADB close handshake. Without this the peer
+                        // may keep the stream half-open and stall its own close completion.
+                        // RemoteId == 0 means we never saw an OKAY for our OPEN, so there's
+                        // no remote stream to address — skip in that pathological case.
+                        if (s.RemoteId != 0)
+                            _ = SendCloseEchoAsync(s.LocalId, s.RemoteId);
+                    }
                     else
                         Logger.UnknownStreamPacket(pkt.Header.Command, ourLocalId);
                     break;

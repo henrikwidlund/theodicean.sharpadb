@@ -76,9 +76,9 @@ public sealed class AdbStream : Stream
     /// <paramref name="buffer"/> (must be a pooled buffer of at least <paramref name="length"/>
     /// bytes, or <see langword="null"/> for a zero-length WRTE); the drain task returns it to
     /// the pool once the bytes have been copied into the reader's pipe. The demuxer never
-    /// blocks here — if the channel rejects the chunk (channel capacity 1, meaning the device
-    /// sent a second WRTE before we acknowledged the first) the stream is faulted but the
-    /// connection-wide read loop keeps running for other streams.
+    /// blocks here — if the channel rejects the chunk (bounded to one queued item, indicating
+    /// the device has sent additional WRTEs without waiting for our OKAY) the stream is
+    /// faulted but the connection-wide read loop keeps running for other streams.
     /// </summary>
     internal void EnqueueInboundWrite(byte[]? buffer, int length)
     {
@@ -434,9 +434,21 @@ public sealed class AdbStream : Stream
         {
             _writeAck.Dispose();
             // Complete the reader so any segments still buffered in the Pipe (the consumer
-            // never read them) are released now instead of waiting for GC. Pipe.Reader.Complete
-            // is idempotent if no read is in flight.
-            _inboundPipe.Reader.Complete();
+            // never read them) are released now instead of waiting for GC. If a ReadAsync is
+            // still in flight, Pipe.Reader.Complete throws InvalidOperationException —
+            // CancelPendingRead unblocks that read so the subsequent Complete is safe. The
+            // outer catch swallows the residual race where Complete still loses to ReadAsync.
+            _inboundPipe.Reader.CancelPendingRead();
+            try
+            {
+                _inboundPipe.Reader.Complete();
+            }
+            catch (InvalidOperationException)
+            {
+                // ReadAsync was still in flight when we got here; the cancel above releases
+                // it and the reader will see EOF on its next call. Buffered segments will be
+                // released by GC in that pathological case rather than synchronously here.
+            }
         }
     }
 
