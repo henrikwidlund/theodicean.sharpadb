@@ -28,5 +28,6 @@ public interface IAdbTransport : IAsyncDisposable
     /// this to the value it advertised in CNXN so a misbehaving peer cannot send more than we
     /// agreed to receive. Default <see cref="AdbProtocolConstants.MaxPayload"/>.
     /// </summary>
+    // ReSharper disable once UnusedMemberInSuper.Global
     uint MaxInboundPayload { get; set; }
 }

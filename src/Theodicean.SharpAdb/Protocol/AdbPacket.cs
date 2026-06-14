@@ -26,6 +26,7 @@ public struct AdbPacket : IDisposable
     /// <summary>
     /// Pooled payload memory; valid only until <see cref="Dispose"/> is called.
     /// </summary>
+    // ReSharper disable once UnusedMember.Global
     public readonly ReadOnlyMemory<byte> Payload => _rented?.AsMemory(0, _payloadLength) ?? ReadOnlyMemory<byte>.Empty;
 
     /// <summary>
