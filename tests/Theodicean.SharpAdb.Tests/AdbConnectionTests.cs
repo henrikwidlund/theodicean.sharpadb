@@ -282,8 +282,8 @@ public class AdbConnectionTests
         var clientTransport = new StreamAdbTransport(clientStream);
         await using var deviceTransport = new StreamAdbTransport(deviceStream);
 
-        uint clientLocalIdA = 0;
-        uint clientLocalIdB = 0;
+        uint clientLocalIdA;
+        uint clientLocalIdB;
         const uint deviceLocalIdA = 1111;
         const uint deviceLocalIdB = 2222;
 
