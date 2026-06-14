@@ -571,6 +571,12 @@ public sealed class AdbConnection : IAsyncDisposable
     internal async Task CloseStreamAsync(AdbStream stream)
     {
         if (!_streams.TryRemove(stream.LocalId, out _)) return;
+        // If the stream never opened (no OKAY echoed back our OPEN, or OnFaulted ran before
+        // the peer replied), RemoteId is still 0 — sending CLSE with Arg1=0 would address a
+        // non-existent remote stream and produce malformed wire traffic. Just drop the local
+        // bookkeeping; the peer's view of the stream never came into existence.
+        if (stream.RemoteId == 0) return;
+
         try
         {
             var header = new AdbHeader(AdbCommand.Clse, stream.LocalId, stream.RemoteId, 0, 0);
