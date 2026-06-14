@@ -33,8 +33,11 @@ public sealed class AdbStream : Stream
     public uint RemoteId { get; private set; }
 
     private readonly Pipe _inboundPipe = new(new PipeOptions(useSynchronizationContext: false));
+    // SingleReader=true because only the drain task reads. SingleWriter is NOT set: the
+    // dispatcher calls TryWrite while OnClosed/OnFaulted/Dispose may call TryComplete from a
+    // different thread, and the SingleWriter contract covers Complete() too.
     private readonly Channel<InboundChunk> _inboundChannel = Channel.CreateBounded<InboundChunk>(
-        new BoundedChannelOptions(1) { SingleReader = true, SingleWriter = true });
+        new BoundedChannelOptions(1) { SingleReader = true });
     private readonly SemaphoreSlim _writeAck = new(0, 1);
     private readonly TaskCompletionSource<bool> _opened = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly CancellationTokenSource _drainCts = new();
@@ -124,7 +127,11 @@ public sealed class AdbStream : Stream
         var token = _drainCts.Token;
         try
         {
-            await foreach ((byte[] buffer, int length) in _inboundChannel.Reader.ReadAllAsync(token))
+            // Don't pass `token` to ReadAllAsync: cancellation would stop enumeration before the
+            // channel drains, stranding queued InboundChunk buffers (they would never be returned
+            // to ArrayPool). OnClosed/OnFaulted/Dispose already complete the channel via
+            // TryComplete, which ends the enumeration cleanly after the pool buffers are drained.
+            await foreach ((byte[] buffer, int length) in _inboundChannel.Reader.ReadAllAsync())
             {
                 try
                 {
@@ -232,7 +239,9 @@ public sealed class AdbStream : Stream
     /// the read. Prefer the async overload from any async or hot-path code.
     /// </remarks>
     public override int Read(byte[] buffer, int offset, int count) =>
-        ReadAsync(buffer.AsMemory(offset, count), _drainCts.Token).AsTask().GetAwaiter().GetResult();
+#pragma warning disable MA0040
+        ReadAsync(buffer.AsMemory(offset, count)).AsTask().GetAwaiter().GetResult();
+#pragma warning restore MA0040
 
     /// <summary>
     /// Reads up to <paramref name="buffer"/>.Length bytes from the device-side service. Returns 0 on graceful close.
@@ -262,7 +271,9 @@ public sealed class AdbStream : Stream
     /// overload from any async or hot-path code.
     /// </remarks>
     public override void Write(byte[] buffer, int offset, int count) =>
-        WriteAsync(buffer.AsMemory(offset, count), _drainCts.Token).AsTask().GetAwaiter().GetResult();
+#pragma warning disable MA0040
+        WriteAsync(buffer.AsMemory(offset, count)).AsTask().GetAwaiter().GetResult();
+#pragma warning restore MA0040
 
     /// <summary>
     /// Writes the buffer to the device-side service, splitting into <see cref="AdbConnection.MaxPayload"/>-sized
