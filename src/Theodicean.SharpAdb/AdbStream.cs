@@ -119,7 +119,11 @@ public sealed class AdbStream : Stream
         _connection.Logger.StreamFaulted(LocalId, RemoteId, fault);
         Volatile.Write(ref _fault, fault);
         _inboundChannel.Writer.TryComplete(fault);
-        _inboundPipe.Writer.Complete(fault);
+        // Do NOT complete _inboundPipe.Writer here. The drain task is the pipe's sole writer
+        // and may be parked inside Pipe.Writer.WriteAsync — a concurrent Complete would race
+        // with that in-flight write and violate the single-writer contract. Cancelling the
+        // drain CTS unparks the writer; its finally block then propagates the stored _fault
+        // to the reader via CompleteAsync(_fault).
         _drainCts.Cancel();
         _opened.TrySetException(fault);
         TryReleaseWriteAck();
@@ -202,9 +206,10 @@ public sealed class AdbStream : Stream
                     ArrayPool<byte>.Shared.Return(leftover.Buffer);
             }
 
-            // Complete() is idempotent: if OnFaulted already completed the writer with a fault
-            // exception this call is a no-op.
-            await _inboundPipe.Writer.CompleteAsync();
+            // Propagate any recorded fault to the pipe reader so awaiting ReadAsync calls
+            // observe the original exception instead of a graceful EOF. On a clean close
+            // _fault stays null and the pipe completes normally.
+            await _inboundPipe.Writer.CompleteAsync(Volatile.Read(ref _fault));
         }
     }
 
