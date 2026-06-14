@@ -94,6 +94,13 @@ public static class AdbProtocolConstants
     public const uint MaxPayload = 1024 * 1024;
 
     /// <summary>
+    /// Minimum payload size we will accept as a CNXN-advertised max_data. Matches the legacy
+    /// ADB protocol ceiling — a peer advertising anything smaller is treated as broken and
+    /// has its advertisement clamped up to this floor so write fragmentation still works.
+    /// </summary>
+    public const uint MinPayload = 4096;
+
+    /// <summary>
     /// Size of the fixed-layout ADB packet header in bytes.
     /// </summary>
     public const int HeaderSize = 24;

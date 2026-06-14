@@ -307,6 +307,11 @@ public sealed class AdbConnection : IAsyncDisposable
             ? AdbProtocolConstants.VersionLegacy
             : AdbProtocolConstants.VersionSkipChecksum;
 
+        // Clamp inbound packets to what we are about to advertise. Without this a peer could
+        // send a payload bigger than we agreed to receive and the transport would still rent a
+        // buffer up to the protocol-wide ceiling.
+        transport.MaxInboundPayload = options.MaxPayload;
+
         // Send CNXN.
         var bannerBuf = RentNullTerminated(options.Banner, out var bannerLen);
         try
@@ -343,7 +348,11 @@ public sealed class AdbConnection : IAsyncDisposable
 
                         var banner = Encoding.UTF8.GetString(pkt.PayloadSpan).TrimEnd('\0');
                         var info = ParseBanner(banner);
-                        var negotiated = Math.Min(options.MaxPayload, pkt.Header.Arg1);
+                        // Clamp the device's advertised max_data up to the legacy floor so we
+                        // never produce a zero-length write chunk if a broken device advertises
+                        // an absurdly small (or zero) value.
+                        var deviceMax = Math.Max(pkt.Header.Arg1, AdbProtocolConstants.MinPayload);
+                        var negotiated = Math.Min(options.MaxPayload, deviceMax);
                         options.Logger.ConnectionEstablished(authMethod, info.SystemType, info.Serial, negotiated);
                         return new AdbConnection(transport, info, negotiated, options.WriteChecksum, authMethod, options.Logger);
                     }
@@ -543,6 +552,12 @@ public sealed class AdbConnection : IAsyncDisposable
     internal ValueTask SendAsync(AdbHeader header, ReadOnlyMemory<byte> payload, CancellationToken cancellationToken) =>
         _transport.WritePacketAsync(header, payload, cancellationToken);
 
+    internal ValueTask SendOkayAsync(AdbStream stream) =>
+        _transport.WritePacketAsync(
+            new AdbHeader(AdbCommand.Okay, stream.LocalId, stream.RemoteId, 0, 0),
+            ReadOnlyMemory<byte>.Empty,
+            _shutdownCts.Token);
+
     internal async Task CloseStreamAsync(AdbStream stream)
     {
         if (!_streams.TryRemove(stream.LocalId, out _)) return;
@@ -562,7 +577,7 @@ public sealed class AdbConnection : IAsyncDisposable
             while (!_shutdownCts.IsCancellationRequested)
             {
                 using var pkt = await _transport.ReadPacketAsync(_shutdownCts.Token);
-                await DispatchAsync(pkt);
+                Dispatch(pkt);
             }
         }
         catch (OperationCanceledException)
@@ -592,7 +607,7 @@ public sealed class AdbConnection : IAsyncDisposable
         }
     }
 
-    private async ValueTask DispatchAsync(AdbPacket pkt)
+    private void Dispatch(in AdbPacket pkt)
     {
         switch (pkt.Header.Command)
         {
@@ -614,13 +629,18 @@ public sealed class AdbConnection : IAsyncDisposable
                 }
             case AdbCommand.Wrte:
                 {
-                    var remoteLocalId = pkt.Header.Arg0;
                     var ourLocalId = pkt.Header.Arg1;
                     if (_streams.TryGetValue(ourLocalId, out var s))
                     {
-                        await s.OnDataAsync(pkt.Payload, _shutdownCts.Token);
-                        var ack = new AdbHeader(AdbCommand.Okay, ourLocalId, remoteLocalId, 0, 0);
-                        await _transport.WritePacketAsync(ack, ReadOnlyMemory<byte>.Empty, _shutdownCts.Token);
+                        // Copy the WRTE payload into a pooled buffer owned by the stream and
+                        // hand it off non-blocking. The stream's drain task is responsible for
+                        // copying into the reader's pipe and sending OKAY once the consumer has
+                        // accepted the bytes — keeping the demuxer non-blocking for sibling
+                        // streams (see AdbStream remarks).
+                        var payload = pkt.PayloadSpan;
+                        var owned = ArrayPool<byte>.Shared.Rent(payload.Length);
+                        payload.CopyTo(owned);
+                        s.EnqueueInboundWrite(owned, payload.Length);
                     }
                     else
                         Logger.UnknownStreamPacket(pkt.Header.Command, ourLocalId);

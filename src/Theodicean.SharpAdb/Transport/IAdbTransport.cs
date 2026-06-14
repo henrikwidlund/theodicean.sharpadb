@@ -22,4 +22,11 @@ public interface IAdbTransport : IAsyncDisposable
     /// </summary>
     // ReSharper disable once UnusedMember.Global
     ValueTask FlushAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Largest payload accepted on inbound packets, in bytes. <see cref="AdbConnection"/> sets
+    /// this to the value it advertised in CNXN so a misbehaving peer cannot send more than we
+    /// agreed to receive. Default <see cref="AdbProtocolConstants.MaxPayload"/>.
+    /// </summary>
+    uint MaxInboundPayload { get; set; }
 }

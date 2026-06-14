@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.IO.Pipelines;
+using System.Threading.Channels;
 
 using Theodicean.SharpAdb.Protocol;
 
@@ -10,6 +11,13 @@ namespace Theodicean.SharpAdb;
 /// <see cref="AdbConnection.OpenAsync"/>. ADB requires every WRTE be ACKed by the peer before
 /// the next WRTE may be sent — this class enforces that with an internal ack semaphore.
 /// </summary>
+/// <remarks>
+/// Inbound WRTE packets are handed off to a per-stream drain task and acknowledged only after
+/// the bytes have been placed in this stream's read buffer. That preserves per-stream
+/// backpressure (a slow consumer throttles the device for *its* stream) without ever blocking
+/// the connection-wide demuxer, so a slow reader on one stream cannot deadlock writers on any
+/// other stream.
+/// </remarks>
 public sealed class AdbStream : Stream
 {
     private readonly AdbConnection _connection;
@@ -25,8 +33,12 @@ public sealed class AdbStream : Stream
     public uint RemoteId { get; private set; }
 
     private readonly Pipe _inboundPipe = new(new PipeOptions(useSynchronizationContext: false));
+    private readonly Channel<InboundChunk> _inboundChannel = Channel.CreateBounded<InboundChunk>(
+        new BoundedChannelOptions(1) { SingleReader = true, SingleWriter = true });
     private readonly SemaphoreSlim _writeAck = new(0, 1);
     private readonly TaskCompletionSource<bool> _opened = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly CancellationTokenSource _drainCts = new();
+    private readonly Task _drainTask;
     private int _closed;
     private int _resourcesDisposed;
     private Exception? _fault;
@@ -35,6 +47,7 @@ public sealed class AdbStream : Stream
     {
         _connection = connection;
         LocalId = localId;
+        _drainTask = Task.Run(DrainLoopAsync, _drainCts.Token);
     }
 
     internal Task<bool> OpenedTask => _opened.Task;
@@ -48,10 +61,28 @@ public sealed class AdbStream : Stream
         TryReleaseWriteAck();
     }
 
-    internal async ValueTask OnDataAsync(ReadOnlyMemory<byte> data, CancellationToken cancellationToken)
+    /// <summary>
+    /// Hands off an inbound WRTE payload to this stream's drain task. Takes ownership of
+    /// <paramref name="buffer"/> (must be a pooled buffer of at least <paramref name="length"/>
+    /// bytes); the drain task returns it to the pool once the bytes have been copied into the
+    /// reader's pipe. The demuxer never blocks here — if the channel rejects the chunk (channel
+    /// capacity 1, meaning the device sent a second WRTE before we acknowledged the first) the
+    /// stream is faulted but the connection-wide read loop keeps running for other streams.
+    /// </summary>
+    internal void EnqueueInboundWrite(byte[] buffer, int length)
     {
-        if (Volatile.Read(ref _closed) != 0) return;
-        await _inboundPipe.Writer.WriteAsync(data, cancellationToken);
+        if (Volatile.Read(ref _closed) != 0)
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+            return;
+        }
+
+        if (!_inboundChannel.Writer.TryWrite(new InboundChunk(buffer, length)))
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+            OnFaulted(new IOException(
+                $"ADB device sent a WRTE on stream {LocalId} before acknowledging the previous one"));
+        }
     }
 
     internal void OnAck() => TryReleaseWriteAck();
@@ -60,7 +91,11 @@ public sealed class AdbStream : Stream
     {
         if (Interlocked.Exchange(ref _closed, 1) != 0) return;
         _connection.Logger.StreamClosed(LocalId, RemoteId);
-        _inboundPipe.Writer.Complete();
+        _inboundChannel.Writer.TryComplete();
+        // Wake the drain task if it is parked inside Pipe.Writer.WriteAsync waiting for a
+        // consumer that will never read — otherwise DisposeAsync's await on the drain task
+        // would hang forever.
+        _drainCts.Cancel();
         _opened.TrySetResult(false);
         TryReleaseWriteAck();
     }
@@ -70,9 +105,64 @@ public sealed class AdbStream : Stream
         if (Interlocked.Exchange(ref _closed, 1) != 0) return;
         _connection.Logger.StreamFaulted(LocalId, RemoteId, fault);
         Volatile.Write(ref _fault, fault);
+        _inboundChannel.Writer.TryComplete(fault);
         _inboundPipe.Writer.Complete(fault);
+        _drainCts.Cancel();
         _opened.TrySetException(fault);
         TryReleaseWriteAck();
+    }
+
+    private async Task DrainLoopAsync()
+    {
+        var token = _drainCts.Token;
+        try
+        {
+            await foreach ((byte[] buffer, int length) in _inboundChannel.Reader.ReadAllAsync(token))
+            {
+                try
+                {
+                    if (Volatile.Read(ref _closed) != 0)
+                        return;
+
+                    await _inboundPipe.Writer.WriteAsync(buffer.AsMemory(0, length), token);
+                }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(buffer);
+                }
+
+                if (Volatile.Read(ref _closed) != 0)
+                    return;
+
+                // OKAY-on-consume: only acknowledge after the consumer's pipe has the bytes,
+                // so a slow reader naturally throttles the device for this stream alone.
+                try
+                {
+                    await _connection.SendOkayAsync(this);
+                }
+                catch (Exception ex)
+                {
+                    if (Volatile.Read(ref _closed) == 0)
+                        OnFaulted(ex);
+                    return;
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Stream closed/faulted while we were blocked on Pipe.WriteAsync or the channel.
+        }
+        catch (Exception ex)
+        {
+            if (Volatile.Read(ref _closed) == 0)
+                OnFaulted(ex);
+        }
+        finally
+        {
+            // Complete() is idempotent: if OnFaulted already completed the writer with a fault
+            // exception this call is a no-op.
+            _inboundPipe.Writer.Complete();
+        }
     }
 
     private void TryReleaseWriteAck()
@@ -185,12 +275,24 @@ public sealed class AdbStream : Stream
             var slice = remaining[..chunk];
 
             await _writeAck.WaitAsync(cancellationToken);
-            if (Volatile.Read(ref _closed) != 0)
-                throw StreamClosedException();
+            try
+            {
+                if (Volatile.Read(ref _closed) != 0)
+                    throw StreamClosedException();
 
-            var checksum = _connection.WriteChecksum ? AdbHeader.ComputeChecksum(slice.Span) : 0u;
-            var header = new AdbHeader(AdbCommand.Wrte, LocalId, RemoteId, (uint)slice.Length, checksum);
-            await _connection.SendAsync(header, slice, cancellationToken);
+                var checksum = _connection.WriteChecksum ? AdbHeader.ComputeChecksum(slice.Span) : 0u;
+                var header = new AdbHeader(AdbCommand.Wrte, LocalId, RemoteId, (uint)slice.Length, checksum);
+                await _connection.SendAsync(header, slice, cancellationToken);
+            }
+            catch
+            {
+                // Restore the slot we consumed. If the WRTE actually went out, the eventual OKAY
+                // will land on a full semaphore and TryReleaseWriteAck swallows the resulting
+                // SemaphoreFullException. If the WRTE never went out, this lets the next
+                // legitimate write (or close) proceed instead of hanging forever on WaitAsync.
+                TryReleaseWriteAck();
+                throw;
+            }
 
             remaining = remaining[chunk..];
         }
@@ -206,7 +308,8 @@ public sealed class AdbStream : Stream
             if (Interlocked.Exchange(ref _closed, 1) == 0)
             {
                 _ = _connection.CloseStreamAsync(this);
-                _inboundPipe.Writer.Complete();
+                _inboundChannel.Writer.TryComplete();
+                _drainCts.Cancel();
             }
             DisposeResources();
         }
@@ -221,7 +324,18 @@ public sealed class AdbStream : Stream
         if (Interlocked.Exchange(ref _closed, 1) == 0)
         {
             await _connection.CloseStreamAsync(this);
-            await _inboundPipe.Writer.CompleteAsync();
+            _inboundChannel.Writer.TryComplete();
+            // Cancel any in-flight Pipe.WriteAsync inside the drain task so awaiting it below
+            // can't block on a consumer that will never read.
+            await _drainCts.CancelAsync();
+            try
+            {
+                await _drainTask;
+            }
+            catch
+            {
+                // Drain task surfaces faults via OnFaulted; don't double-throw from dispose.
+            }
         }
         DisposeResources();
         await base.DisposeAsync();
@@ -232,6 +346,11 @@ public sealed class AdbStream : Stream
         // OnClosed/OnFaulted may have flipped _closed without ever owning the SemaphoreSlim;
         // _resourcesDisposed guarantees we only dispose once even if both Dispose paths run.
         if (Interlocked.Exchange(ref _resourcesDisposed, 1) == 0)
+        {
             _writeAck.Dispose();
+            _drainCts.Dispose();
+        }
     }
+
+    private readonly record struct InboundChunk(byte[] Buffer, int Length);
 }
