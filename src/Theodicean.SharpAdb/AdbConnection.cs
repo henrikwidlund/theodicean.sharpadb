@@ -586,8 +586,18 @@ public sealed class AdbConnection : IAsyncDisposable
         {
             while (!_shutdownCts.IsCancellationRequested)
             {
-                using var pkt = await _transport.ReadPacketAsync(_shutdownCts.Token);
-                Dispatch(pkt);
+                var pkt = await _transport.ReadPacketAsync(_shutdownCts.Token);
+                try
+                {
+                    // Dispatch takes a `ref` so the WRTE branch can detach the rented payload
+                    // buffer (transfer ownership) without re-copying. Dispose below sees the
+                    // mutation via the same local and becomes a no-op if ownership transferred.
+                    Dispatch(ref pkt);
+                }
+                finally
+                {
+                    pkt.Dispose();
+                }
             }
         }
         catch (OperationCanceledException)
@@ -617,7 +627,7 @@ public sealed class AdbConnection : IAsyncDisposable
         }
     }
 
-    private void Dispatch(in AdbPacket pkt)
+    private void Dispatch(ref AdbPacket pkt)
     {
         switch (pkt.Header.Command)
         {
@@ -642,15 +652,13 @@ public sealed class AdbConnection : IAsyncDisposable
                     var ourLocalId = pkt.Header.Arg1;
                     if (_streams.TryGetValue(ourLocalId, out var s))
                     {
-                        // Copy the WRTE payload into a pooled buffer owned by the stream and
-                        // hand it off non-blocking. The stream's drain task is responsible for
-                        // copying into the reader's pipe and sending OKAY once the consumer has
-                        // accepted the bytes — keeping the demuxer non-blocking for sibling
-                        // streams (see AdbStream remarks).
-                        var payload = pkt.PayloadSpan;
-                        var owned = ArrayPool<byte>.Shared.Rent(payload.Length);
-                        payload.CopyTo(owned);
-                        s.EnqueueInboundWrite(owned, payload.Length);
+                        // Transfer ownership of the transport-rented buffer to the stream's
+                        // drain task — no extra copy. Dispose on the packet becomes a no-op
+                        // after this call; the stream's EnqueueInboundWrite (or its drain
+                        // task) is now responsible for returning the buffer to the pool.
+                        var owned = pkt.TakePayloadBuffer(out var len);
+                        if (owned is not null)
+                            s.EnqueueInboundWrite(owned, len);
                     }
                     else
                         Logger.UnknownStreamPacket(pkt.Header.Command, ourLocalId);

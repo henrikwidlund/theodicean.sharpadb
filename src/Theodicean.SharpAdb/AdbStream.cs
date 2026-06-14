@@ -309,13 +309,14 @@ public sealed class AdbStream : Stream
                 var header = new AdbHeader(AdbCommand.Wrte, LocalId, RemoteId, (uint)slice.Length, checksum);
                 await _connection.SendAsync(header, slice, cancellationToken);
             }
-            catch
+            catch (Exception ex)
             {
-                // Restore the slot we consumed. If the WRTE actually went out, the eventual OKAY
-                // will land on a full semaphore and TryReleaseWriteAck swallows the resulting
-                // SemaphoreFullException. If the WRTE never went out, this lets the next
-                // legitimate write (or close) proceed instead of hanging forever on WaitAsync.
-                TryReleaseWriteAck();
+                // The send may have placed part of a WRTE on the wire (header sent, payload
+                // truncated, or vice versa). Per the ADB "one outstanding WRTE per stream"
+                // rule we cannot safely issue another WRTE — the next OKAY no longer maps
+                // unambiguously to a logical write. Fault the stream so subsequent writes
+                // surface a clear error instead of corrupting the framing on the transport.
+                OnFaulted(ex);
                 throw;
             }
 
@@ -385,7 +386,13 @@ public sealed class AdbStream : Stream
         // OnClosed/OnFaulted may have flipped _closed without ever owning the SemaphoreSlim;
         // _resourcesDisposed guarantees we only dispose once even if both Dispose paths run.
         if (Interlocked.Exchange(ref _resourcesDisposed, 1) == 0)
+        {
             _writeAck.Dispose();
+            // Complete the reader so any segments still buffered in the Pipe (the consumer
+            // never read them) are released now instead of waiting for GC. Pipe.Reader.Complete
+            // is idempotent if no read is in flight.
+            _inboundPipe.Reader.Complete();
+        }
     }
 
     private int _drainCtsDisposed;
