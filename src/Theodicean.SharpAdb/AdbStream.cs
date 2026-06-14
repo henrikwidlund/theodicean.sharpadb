@@ -332,17 +332,32 @@ public sealed class AdbStream : Stream
                 if (Volatile.Read(ref _closed) != 0)
                     throw StreamClosedException();
 
+                // Last chance to honor caller cancellation BEFORE bytes hit the wire. After
+                // this point we commit to sending: the transport writes the header and payload
+                // as two separate inner WriteAsync calls under one lock, and a mid-packet
+                // cancellation would leave a partial WRTE on the wire and desynchronize the
+                // framing for every other stream sharing the transport.
+                cancellationToken.ThrowIfCancellationRequested();
+
                 var checksum = _connection.WriteChecksum ? AdbHeader.ComputeChecksum(slice.Span) : 0u;
                 var header = new AdbHeader(AdbCommand.Wrte, LocalId, RemoteId, (uint)slice.Length, checksum);
-                await _connection.SendAsync(header, slice, cancellationToken);
+                // Pass CancellationToken.None deliberately — see note above. Connection shutdown
+                // still terminates an in-flight write by disposing the underlying transport.
+                await _connection.SendAsync(header, slice, CancellationToken.None);
+            }
+            catch (OperationCanceledException)
+            {
+                // We consumed the ack slot but never sent the WRTE. Release the slot so the
+                // next write (or graceful close) on this stream can proceed cleanly instead
+                // of hanging on WaitAsync forever.
+                TryReleaseWriteAck();
+                throw;
             }
             catch (Exception ex)
             {
-                // The send may have placed part of a WRTE on the wire (header sent, payload
-                // truncated, or vice versa). Per the ADB "one outstanding WRTE per stream"
-                // rule we cannot safely issue another WRTE — the next OKAY no longer maps
-                // unambiguously to a logical write. Fault the stream so subsequent writes
-                // surface a clear error instead of corrupting the framing on the transport.
+                // Send threw mid-packet (transport fault). Framing on the transport is now
+                // indeterminate — fault the stream so subsequent writes surface a clear error
+                // instead of issuing a follow-up WRTE that the device can't disambiguate.
                 OnFaulted(ex);
                 throw;
             }
