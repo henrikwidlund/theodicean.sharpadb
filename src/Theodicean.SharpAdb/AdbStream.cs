@@ -137,11 +137,11 @@ public sealed class AdbStream : Stream
         var token = _drainCts.Token;
         try
         {
-            // Don't pass `token` to ReadAllAsync: cancellation would stop enumeration before the
-            // channel drains, stranding queued InboundChunk buffers (they would never be returned
-            // to ArrayPool). OnClosed/OnFaulted/Dispose already complete the channel via
-            // TryComplete, which ends the enumeration cleanly after the pool buffers are drained.
-            await foreach ((byte[]? buffer, int length) in _inboundChannel.Reader.ReadAllAsync())
+            // Pass `token` so cancellation breaks out of MoveNextAsync immediately rather than
+            // waiting on the channel's own completion signal. Any chunks still queued behind us
+            // are returned to ArrayPool by the finally block below — without that safety net
+            // the token would strand them.
+            await foreach ((byte[]? buffer, int length) in _inboundChannel.Reader.ReadAllAsync(token))
             {
                 try
                 {
