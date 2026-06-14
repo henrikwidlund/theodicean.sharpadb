@@ -258,7 +258,7 @@ public class AdbConnectionTests
 
         // Sync dispose tears down the SemaphoreSlim deterministically (synchronous removal from
         // the connection's stream map plus immediate _writeAck.Dispose()).
-        stream.Dispose();
+        await stream.DisposeAsync();
 
         // Simulate the race window: a packet snapshot captured a reference to the stream just
         // before TryRemove ran. The dispatcher would then call OnAck()/OnOpened() on it. After

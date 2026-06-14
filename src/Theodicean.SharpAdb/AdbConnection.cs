@@ -32,12 +32,12 @@ public sealed class AdbConnectOptions
     /// <summary>
     /// Computes and sends the legacy sum-of-bytes checksum on outbound payloads. Modern adbd ignores it.
     /// </summary>
-    public bool WriteChecksum { get; init; } = false;
+    public bool WriteChecksum { get; init; }
 
     /// <summary>
     /// Verifies the legacy checksum on inbound payloads. Off by default since modern devices send 0.
     /// </summary>
-    public bool VerifyChecksum { get; init; } = false;
+    public bool VerifyChecksum { get; init; }
 
     /// <summary>
     /// Maximum time the CNXN/AUTH handshake may take before <see cref="AdbAuthenticationException"/> is thrown.
@@ -296,7 +296,7 @@ public sealed class AdbConnection : IAsyncDisposable
         // version commits both sides to sending and verifying the sum-of-bytes payload checksum.
         // VerifyChecksum=true without WriteChecksum=true would have us advertise the legacy
         // version and then send payloads with DataChecksum=0 — adbd would reject them.
-        if (options.VerifyChecksum && !options.WriteChecksum)
+        if (options is { VerifyChecksum: true, WriteChecksum: false })
             throw new ArgumentException(
                 "VerifyChecksum=true requires WriteChecksum=true: the ADB legacy checksum mode is symmetric.",
                 nameof(options));
