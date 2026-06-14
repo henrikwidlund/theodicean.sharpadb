@@ -46,53 +46,53 @@ public static class ActivityExtensions
         /// <summary>
         /// Sends a single key event via <c>input keyevent</c>.
         /// </summary>
-        public async Task SendKeyEventAsync(KeyCode key, CancellationToken cancellationToken = default)
+        public Task SendKeyEventAsync(KeyCode key, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
-            await connection.ExecuteAsync(string.Create(CultureInfo.InvariantCulture, $"input keyevent {(int)key}"), cancellationToken);
+            return connection.ExecuteAsync(string.Create(CultureInfo.InvariantCulture, $"input keyevent {(int)key}"), cancellationToken);
         }
 
         /// <summary>
         /// Sends a long-press key event via <c>input keyevent --longpress</c>.
         /// </summary>
         // ReSharper disable once UnusedMember.Global
-        public async Task SendLongPressAsync(KeyCode key, CancellationToken cancellationToken = default)
+        public Task SendLongPressAsync(KeyCode key, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
-            await connection.ExecuteAsync(string.Create(CultureInfo.InvariantCulture, $"input keyevent --longpress {(int)key}"), cancellationToken);
+            return connection.ExecuteAsync(string.Create(CultureInfo.InvariantCulture, $"input keyevent --longpress {(int)key}"), cancellationToken);
         }
 
         /// <summary>
         /// Injects typed text via <c>input text</c>. Spaces become %s; quotes are escaped.
         /// </summary>
         // ReSharper disable once UnusedMember.Global
-        public async Task SendTextAsync(string text, CancellationToken cancellationToken = default)
+        public Task SendTextAsync(string text, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
             ArgumentNullException.ThrowIfNull(text);
             // input text expects spaces encoded as %s.
             var escaped = ShellEscape.SingleQuote(text.Replace(" ", "%s", StringComparison.Ordinal));
-            await connection.ExecuteAsync($"input text {escaped}", cancellationToken);
+            return connection.ExecuteAsync($"input text {escaped}", cancellationToken);
         }
 
         /// <summary>
         /// Injects a tap at screen coordinates.
         /// </summary>
         // ReSharper disable once UnusedMember.Global
-        public async Task TapAsync(int x, int y, CancellationToken cancellationToken = default)
+        public Task TapAsync(int x, int y, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
-            await connection.ExecuteAsync(string.Create(CultureInfo.InvariantCulture, $"input tap {x} {y}"), cancellationToken);
+            return connection.ExecuteAsync(string.Create(CultureInfo.InvariantCulture, $"input tap {x} {y}"), cancellationToken);
         }
 
         /// <summary>
         /// Injects a swipe.
         /// </summary>
         // ReSharper disable once UnusedMember.Global
-        public async Task SwipeAsync(int x1, int y1, int x2, int y2, int durationMs = 300, CancellationToken cancellationToken = default)
+        public Task SwipeAsync(int x1, int y1, int x2, int y2, int durationMs = 300, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
-            await connection.ExecuteAsync(string.Create(CultureInfo.InvariantCulture, $"input swipe {x1} {y1} {x2} {y2} {durationMs}"), cancellationToken);
+            return connection.ExecuteAsync(string.Create(CultureInfo.InvariantCulture, $"input swipe {x1} {y1} {x2} {y2} {durationMs}"), cancellationToken);
         }
 
         /// <summary>

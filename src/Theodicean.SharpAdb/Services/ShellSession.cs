@@ -24,13 +24,13 @@ public sealed class ShellSession : IAsyncDisposable
     /// is returned for the lifetime of the session — every access shares state, so disposing
     /// it disposes the only stdout reader.
     /// </summary>
-    public Stream Stdout => field ??= _stdout.Reader.AsStream();
+    public Stream Stdout { get; }
 
     /// <summary>
     /// Standard error stream from the remote command. See <see cref="Stdout"/> for the
     /// single-instance lifetime contract.
     /// </summary>
-    public Stream Stderr => field ??= _stderr.Reader.AsStream();
+    public Stream Stderr { get; }
 
     /// <summary>
     /// Completes with the exit code from the device's shell_v2 EXIT packet. Faults with
@@ -206,18 +206,29 @@ public sealed class ShellSession : IAsyncDisposable
     {
         if (length == 0) return;
         var remaining = length;
+        var readerGone = false;
         while (remaining > 0)
         {
             var chunk = Math.Min(remaining, PayloadChunkSize);
-            var buf = ArrayPool<byte>.Shared.Rent(chunk);
-            try
+            if (readerGone)
             {
-                await _stream.ReadExactlyAsync(buf.AsMemory(0, chunk));
-                await writer.WriteAsync(buf.AsMemory(0, chunk));
+                // Reader was completed mid-frame (caller disposed Stdout/Stderr). We still
+                // have to drain the remaining payload bytes so the next frame's header lands
+                // where ReadLoopAsync expects it — otherwise we'd parse a partial payload as
+                // a header and fault the whole session.
+                await DiscardAsync(chunk);
             }
-            finally
+            else
             {
-                ArrayPool<byte>.Shared.Return(buf);
+                // Read straight into the pipe's owned memory — saves an ArrayPool rent and
+                // one memcpy per chunk versus rent→read→Write. GetMemory may hand us a buffer
+                // larger than `chunk`; Advance tells the pipe how many bytes we actually wrote.
+                var memory = writer.GetMemory(chunk);
+                await _stream.ReadExactlyAsync(memory[..chunk]);
+                writer.Advance(chunk);
+                var flush = await writer.FlushAsync();
+                if (flush.IsCompleted)
+                    readerGone = true;
             }
             remaining -= chunk;
         }
@@ -258,6 +269,11 @@ public sealed class ShellSession : IAsyncDisposable
         {
             // Read loop surfaces faults via ExitCodeTask / pipe completion — don't double-throw.
         }
-        _exit.TrySetException(new IOException("shell_v2 session disposed before EXIT packet"));
+
+        // Only synthesize the "disposed before EXIT" fault if the read loop didn't already
+        // record an outcome — TrySetException would no-op for a completed task, but allocating
+        // a fresh IOException every dispose just to discard it is wasted work.
+        if (!_exit.Task.IsCompleted)
+            _exit.TrySetException(new IOException("shell_v2 session disposed before EXIT packet"));
     }
 }
