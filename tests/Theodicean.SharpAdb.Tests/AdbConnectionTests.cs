@@ -282,8 +282,6 @@ public class AdbConnectionTests
         var clientTransport = new StreamAdbTransport(clientStream);
         await using var deviceTransport = new StreamAdbTransport(deviceStream);
 
-        uint clientLocalIdA;
-        uint clientLocalIdB;
         const uint deviceLocalIdA = 1111;
         const uint deviceLocalIdB = 2222;
 
@@ -291,6 +289,9 @@ public class AdbConnectionTests
 
         var deviceTask = Task.Run(async () =>
         {
+            uint clientLocalIdA;
+            uint clientLocalIdB;
+
             using (var pkt = await deviceTransport.ReadPacketAsync())
                 await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);
             var banner = "device::\0"u8.ToArray();
