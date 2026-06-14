@@ -271,6 +271,171 @@ public class AdbConnectionTests
     }
 
     [Test]
+    public async Task SlowConsumerOnOneStreamDoesNotBlockAnother()
+    {
+        // Regression for the per-stream drain refactor (the demux-deadlock fix). With the old
+        // implementation the connection-wide read loop awaited Pipe.WriteAsync per WRTE, so a
+        // stream whose consumer never read would block ALL inbound dispatch — including OKAYs
+        // and WRTEs for sibling streams. With the new drain-per-stream design that head-of-line
+        // block is gone: stream A may stall but stream B keeps making progress.
+        (Stream clientStream, Stream deviceStream) = CreateDuplexPair();
+        var clientTransport = new StreamAdbTransport(clientStream);
+        await using var deviceTransport = new StreamAdbTransport(deviceStream);
+
+        const uint deviceLocalIdA = 1111;
+        const uint deviceLocalIdB = 2222;
+
+        var setupComplete = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var deviceTask = Task.Run(async () =>
+        {
+            try
+            {
+                uint clientLocalIdA;
+                uint clientLocalIdB;
+
+                using (var pkt = await deviceTransport.ReadPacketAsync())
+                    await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);
+                var banner = "device::\0"u8.ToArray();
+                await deviceTransport.WritePacketAsync(
+                    new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload,
+                        (uint)banner.Length, 0), banner);
+
+                using (var pkt = await deviceTransport.ReadPacketAsync())
+                {
+                    await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Open);
+                    clientLocalIdA = pkt.Header.Arg0;
+                }
+                await deviceTransport.WritePacketAsync(
+                    new AdbHeader(AdbCommand.Okay, deviceLocalIdA, clientLocalIdA, 0, 0), ReadOnlyMemory<byte>.Empty);
+
+                using (var pkt = await deviceTransport.ReadPacketAsync())
+                {
+                    await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Open);
+                    clientLocalIdB = pkt.Header.Arg0;
+                }
+                await deviceTransport.WritePacketAsync(
+                    new AdbHeader(AdbCommand.Okay, deviceLocalIdB, clientLocalIdB, 0, 0), ReadOnlyMemory<byte>.Empty);
+
+                // Push a WRTE to A whose size exceeds the inbound Pipe's default PauseWriterThreshold
+                // (64 KiB). Under the old code the dispatcher would await Pipe.WriteAsync here and
+                // block forever — the test consumer never reads from A — wedging the read loop and
+                // every sibling stream with it.
+                var payloadA = new byte[128 * 1024];
+                await deviceTransport.WritePacketAsync(
+                    new AdbHeader(AdbCommand.Wrte, deviceLocalIdA, clientLocalIdA, (uint)payloadA.Length, 0), payloadA);
+
+                var payloadB = "hello from B"u8.ToArray();
+                await deviceTransport.WritePacketAsync(
+                    new AdbHeader(AdbCommand.Wrte, deviceLocalIdB, clientLocalIdB, (uint)payloadB.Length, 0), payloadB);
+
+                setupComplete.SetResult(true);
+            }
+            catch (Exception ex)
+            {
+                // Propagate device-side failures through setupComplete so the test awaits the
+                // real exception instead of timing out on the TCS — that would mask the actual
+                // failure with a generic TimeoutException.
+                setupComplete.TrySetException(ex);
+                throw;
+            }
+        });
+
+        await using var conn = await AdbConnection.ConnectAsync(clientTransport, [], new AdbConnectOptions());
+        await using var streamA = await conn.OpenAsync("shell:slow");
+        await using var streamB = await conn.OpenAsync("shell:fast");
+        await setupComplete.Task.WaitAsync(TimeSpan.FromSeconds(2));
+
+        // Read from B with a short timeout. If A were head-of-line blocking the demuxer, this
+        // would never complete.
+        var buf = new byte[64];
+        var n = await streamB.ReadAsync(buf).AsTask().WaitAsync(TimeSpan.FromSeconds(2));
+        await Assert.That(Encoding.UTF8.GetString(buf, 0, n)).IsEqualTo("hello from B");
+
+        // Connection must still be healthy.
+        await Assert.That(conn.FaultException).IsNull();
+
+        await deviceTask.WaitAsync(TimeSpan.FromSeconds(2));
+    }
+
+    [Test]
+    public async Task DeviceWrteLargerThanAdvertisedFaultsConnection()
+    {
+        // Regression for the inbound-cap fix: a peer must not be allowed to send a payload
+        // larger than we advertised in CNXN. The transport's MaxInboundPayload is plumbed from
+        // AdbConnectOptions.MaxPayload, so a WRTE above that should fault the read loop.
+        const uint advertisedMax = 64 * 1024;
+
+        (Stream clientStream, Stream deviceStream) = CreateDuplexPair();
+        var clientTransport = new StreamAdbTransport(clientStream);
+        await using var deviceTransport = new StreamAdbTransport(deviceStream);
+
+        var deviceTask = Task.Run(async () =>
+        {
+            using (var pkt = await deviceTransport.ReadPacketAsync())
+                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);
+            var banner = "device::\0"u8.ToArray();
+            await deviceTransport.WritePacketAsync(
+                new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload,
+                    (uint)banner.Length, 0), banner);
+
+            uint clientLocalId;
+            using (var pkt = await deviceTransport.ReadPacketAsync())
+            {
+                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Open);
+                clientLocalId = pkt.Header.Arg0;
+            }
+            await deviceTransport.WritePacketAsync(
+                new AdbHeader(AdbCommand.Okay, 4321, clientLocalId, 0, 0), ReadOnlyMemory<byte>.Empty);
+
+            // DataLength one byte over what we advertised. Transport rejects this without
+            // attempting to allocate the payload buffer.
+            var hdr = new byte[AdbProtocolConstants.HeaderSize];
+            new AdbHeader(AdbCommand.Wrte, 4321, clientLocalId, advertisedMax + 1, 0).WriteTo(hdr);
+            await deviceStream.WriteAsync(hdr);
+        });
+
+        await using var conn = await AdbConnection.ConnectAsync(clientTransport, [],
+            new AdbConnectOptions { MaxPayload = advertisedMax });
+        await using var stream = await conn.OpenAsync("shell:cat");
+        await deviceTask;
+
+        // Wait briefly for the read loop to ingest the oversize header and fault.
+        var deadline = DateTime.UtcNow.AddSeconds(2);
+        while (conn.FaultException is null && DateTime.UtcNow < deadline)
+            await Task.Delay(20);
+
+        await Assert.That(conn.FaultException).IsNotNull();
+        await Assert.That(conn.FaultException).IsTypeOf<InvalidDataException>();
+    }
+
+    [Test]
+    public async Task DeviceAdvertisedZeroMaxPayloadClampedToFloor()
+    {
+        // Regression for the negotiated-min clamp: a broken device advertising max_data=0 must
+        // not produce a zero-length write chunk that loops forever in WriteAsync. Clamp up to
+        // AdbProtocolConstants.MinPayload.
+        (Stream clientStream, Stream deviceStream) = CreateDuplexPair();
+        var clientTransport = new StreamAdbTransport(clientStream);
+        await using var deviceTransport = new StreamAdbTransport(deviceStream);
+
+        var deviceTask = Task.Run(async () =>
+        {
+            using (var pkt = await deviceTransport.ReadPacketAsync())
+                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);
+            var banner = "device::\0"u8.ToArray();
+            await deviceTransport.WritePacketAsync(
+                new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, /* Arg1 = max_data */ 0,
+                    (uint)banner.Length, 0), banner);
+        });
+
+        await using var conn = await AdbConnection.ConnectAsync(clientTransport, [], new AdbConnectOptions());
+        await deviceTask;
+
+        await Assert.That(conn.MaxPayload).IsGreaterThanOrEqualTo(AdbProtocolConstants.MinPayload);
+    }
+
+    [Test]
     public async Task VerifyChecksumWithoutWriteChecksumThrows()
     {
         (Stream clientStream, Stream _) = CreateDuplexPair();

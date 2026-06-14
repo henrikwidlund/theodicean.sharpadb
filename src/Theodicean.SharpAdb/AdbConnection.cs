@@ -292,6 +292,16 @@ public sealed class AdbConnection : IAsyncDisposable
         ArgumentNullException.ThrowIfNull(keys);
         options ??= new AdbConnectOptions();
 
+        // MaxPayload is consumed by (1) the transport's inbound cap and (2) WriteAsync's
+        // outbound fragmentation chunk size. Both paths cast it to int; the inbound cap also
+        // rents an ArrayPool buffer of that size. Catch unusable values now instead of failing
+        // deep in the protocol later.
+        if (options.MaxPayload is < AdbProtocolConstants.MinPayload or > int.MaxValue)
+            throw new ArgumentOutOfRangeException(
+                nameof(options),
+                options.MaxPayload,
+                $"MaxPayload must be in [{AdbProtocolConstants.MinPayload}, {int.MaxValue}]");
+
         // The ADB legacy checksum mode is symmetric: whichever side advertises the legacy wire
         // version commits both sides to sending and verifying the sum-of-bytes payload checksum.
         // VerifyChecksum=true without WriteChecksum=true would have us advertise the legacy
@@ -306,6 +316,11 @@ public sealed class AdbConnection : IAsyncDisposable
         var advertisedVersion = options.WriteChecksum
             ? AdbProtocolConstants.VersionLegacy
             : AdbProtocolConstants.VersionSkipChecksum;
+
+        // Clamp inbound packets to what we are about to advertise. Without this a peer could
+        // send a payload bigger than we agreed to receive and the transport would still rent a
+        // buffer up to the protocol-wide ceiling.
+        transport.MaxInboundPayload = options.MaxPayload;
 
         // Send CNXN.
         var bannerBuf = RentNullTerminated(options.Banner, out var bannerLen);
@@ -343,7 +358,16 @@ public sealed class AdbConnection : IAsyncDisposable
 
                         var banner = Encoding.UTF8.GetString(pkt.PayloadSpan).TrimEnd('\0');
                         var info = ParseBanner(banner);
-                        var negotiated = Math.Min(options.MaxPayload, pkt.Header.Arg1);
+                        // Clamp the device's advertised max_data up to the legacy floor so we
+                        // never produce a zero-length write chunk if a broken device advertises
+                        // an absurdly small (or zero) value.
+                        var deviceMax = Math.Max(pkt.Header.Arg1, AdbProtocolConstants.MinPayload);
+                        var negotiated = Math.Min(options.MaxPayload, deviceMax);
+                        // Tighten the transport's inbound cap to the negotiated value. We
+                        // initially set it to options.MaxPayload (what we advertised), but if
+                        // the device came back with something smaller, anything bigger is now
+                        // a protocol violation we should reject early.
+                        transport.MaxInboundPayload = negotiated;
                         options.Logger.ConnectionEstablished(authMethod, info.SystemType, info.Serial, negotiated);
                         return new AdbConnection(transport, info, negotiated, options.WriteChecksum, authMethod, options.Logger);
                     }
@@ -543,9 +567,42 @@ public sealed class AdbConnection : IAsyncDisposable
     internal ValueTask SendAsync(AdbHeader header, ReadOnlyMemory<byte> payload, CancellationToken cancellationToken) =>
         _transport.WritePacketAsync(header, payload, cancellationToken);
 
+    // ReSharper disable once UnusedMethodReturnValue.Global
+    internal ValueTask SendOkayAsync(AdbStream stream, CancellationToken cancellationToken) =>
+        // Hot path: this fires once per inbound WRTE, so we avoid linking a per-call CTS.
+        // Caller passes the stream's drain token (cancels on stream fault/dispose). Connection
+        // shutdown unblocks any parked write by disposing the transport, which surfaces as an
+        // IOException / ObjectDisposedException to the drain task — equally effective at
+        // freeing the await without per-OKAY allocation overhead.
+        _transport.WritePacketAsync(
+            new AdbHeader(AdbCommand.Okay, stream.LocalId, stream.RemoteId, 0, 0),
+            ReadOnlyMemory<byte>.Empty,
+            cancellationToken);
+
+    private async Task SendCloseEchoAsync(uint localId, uint remoteId)
+    {
+        try
+        {
+            await _transport.WritePacketAsync(
+                new AdbHeader(AdbCommand.Clse, localId, remoteId, 0, 0),
+                ReadOnlyMemory<byte>.Empty,
+                _shutdownCts.Token);
+        }
+        catch
+        {
+            // Peer may have already torn the connection down; nothing actionable here.
+        }
+    }
+
     internal async Task CloseStreamAsync(AdbStream stream)
     {
         if (!_streams.TryRemove(stream.LocalId, out _)) return;
+        // If the stream never opened (no OKAY echoed back our OPEN, or OnFaulted ran before
+        // the peer replied), RemoteId is still 0 — sending CLSE with Arg1=0 would address a
+        // non-existent remote stream and produce malformed wire traffic. Just drop the local
+        // bookkeeping; the peer's view of the stream never came into existence.
+        if (stream.RemoteId == 0) return;
+
         try
         {
             var header = new AdbHeader(AdbCommand.Clse, stream.LocalId, stream.RemoteId, 0, 0);
@@ -561,8 +618,18 @@ public sealed class AdbConnection : IAsyncDisposable
         {
             while (!_shutdownCts.IsCancellationRequested)
             {
-                using var pkt = await _transport.ReadPacketAsync(_shutdownCts.Token);
-                await DispatchAsync(pkt);
+                var pkt = await _transport.ReadPacketAsync(_shutdownCts.Token);
+                try
+                {
+                    // Dispatch takes a `ref` so the WRTE branch can detach the rented payload
+                    // buffer (transfer ownership) without re-copying. Dispose below sees the
+                    // mutation via the same local and becomes a no-op if ownership transferred.
+                    Dispatch(ref pkt);
+                }
+                finally
+                {
+                    pkt.Dispose();
+                }
             }
         }
         catch (OperationCanceledException)
@@ -592,7 +659,7 @@ public sealed class AdbConnection : IAsyncDisposable
         }
     }
 
-    private async ValueTask DispatchAsync(AdbPacket pkt)
+    private void Dispatch(ref AdbPacket pkt)
     {
         switch (pkt.Header.Command)
         {
@@ -618,9 +685,26 @@ public sealed class AdbConnection : IAsyncDisposable
                     var ourLocalId = pkt.Header.Arg1;
                     if (_streams.TryGetValue(ourLocalId, out var s))
                     {
-                        await s.OnDataAsync(pkt.Payload, _shutdownCts.Token);
-                        var ack = new AdbHeader(AdbCommand.Okay, ourLocalId, remoteLocalId, 0, 0);
-                        await _transport.WritePacketAsync(ack, ReadOnlyMemory<byte>.Empty, _shutdownCts.Token);
+                        // ADB requires the WRTE's Arg0 to match the remote id we recorded when
+                        // the stream opened (i.e. the OKAY reply to our OPEN). A WRTE arriving
+                        // before OnOpened (RemoteId still 0) or with a different Arg0 means the
+                        // peer is misbehaving — the OKAY we would echo back addresses the
+                        // wrong remote stream and would stall both ends. Fault the stream so
+                        // the protocol error surfaces cleanly to the caller.
+                        if (s.RemoteId == 0 || s.RemoteId != remoteLocalId)
+                        {
+                            s.OnFaulted(new IOException(
+                                $"WRTE on stream {ourLocalId} carried Arg0={remoteLocalId}, expected {s.RemoteId} (stream not opened or remote id mismatch)"));
+                            break;
+                        }
+
+                        // Transfer ownership of the transport-rented buffer to the stream's
+                        // drain task — no extra copy. Dispose on the packet becomes a no-op
+                        // after this call. For zero-length WRTEs (e.g. keepalives) the take
+                        // returns null but we still enqueue so the drain task sends the OKAY
+                        // the device is waiting for.
+                        var owned = pkt.TakePayloadBuffer(out var len);
+                        s.EnqueueInboundWrite(owned, len);
                     }
                     else
                         Logger.UnknownStreamPacket(pkt.Header.Command, ourLocalId);
@@ -630,7 +714,15 @@ public sealed class AdbConnection : IAsyncDisposable
                 {
                     var ourLocalId = pkt.Header.Arg1;
                     if (_streams.TryRemove(ourLocalId, out var s))
+                    {
                         s.OnClosed();
+                        // Echo CLSE back per the ADB close handshake. Without this the peer
+                        // may keep the stream half-open and stall its own close completion.
+                        // RemoteId == 0 means we never saw an OKAY for our OPEN, so there's
+                        // no remote stream to address — skip in that pathological case.
+                        if (s.RemoteId != 0)
+                            _ = SendCloseEchoAsync(s.LocalId, s.RemoteId);
+                    }
                     else
                         Logger.UnknownStreamPacket(pkt.Header.Command, ourLocalId);
                     break;

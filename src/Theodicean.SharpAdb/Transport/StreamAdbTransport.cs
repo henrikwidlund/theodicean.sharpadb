@@ -38,6 +38,9 @@ public sealed class StreamAdbTransport : IAdbTransport
     /// </summary>
     public TlsCipherSuite? NegotiatedTlsCipherSuite { get; private set; }
 
+    /// <inheritdoc/>
+    public uint MaxInboundPayload { get; set; } = AdbProtocolConstants.MaxPayload;
+
     /// <summary>
     /// Initializes a new instance that wraps an existing duplex stream as an ADB transport.
     /// </summary>
@@ -122,8 +125,16 @@ public sealed class StreamAdbTransport : IAdbTransport
         if (header.DataLength == 0)
             return new AdbPacket(header, rented: null, payloadLength: 0);
 
-        if (header.DataLength > AdbProtocolConstants.MaxPayload)
-            throw new InvalidDataException($"ADB payload exceeds max ({header.DataLength} > {AdbProtocolConstants.MaxPayload})");
+        if (header.DataLength > MaxInboundPayload)
+            throw new InvalidDataException($"ADB payload exceeds advertised max ({header.DataLength} > {MaxInboundPayload})");
+
+        // Defense in depth against a too-large MaxInboundPayload (or a peer that lied about
+        // length): we are about to cast a uint to int for ArrayPool.Rent. Anything past
+        // int.MaxValue would wrap to a negative length and the Rent would throw a less useful
+        // exception. Catch it here with a precise message.
+        if (header.DataLength > int.MaxValue)
+            throw new InvalidDataException(
+                $"ADB payload too large for this runtime ({header.DataLength} > {int.MaxValue})");
 
         var len = (int)header.DataLength;
         var rented = ArrayPool<byte>.Shared.Rent(len);
