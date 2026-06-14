@@ -168,6 +168,11 @@ public sealed class AdbStream : Stream
                 {
                     await _connection.SendOkayAsync(this);
                 }
+                catch (OperationCanceledException) when(token.IsCancellationRequested)
+                {
+                    // Connection is shutting down; treat as stream close rather than faulting.
+                    return;
+                }
                 catch (Exception ex)
                 {
                     if (Volatile.Read(ref _closed) == 0)
