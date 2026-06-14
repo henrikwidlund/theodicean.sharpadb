@@ -161,7 +161,7 @@ public sealed class AdbStream : Stream
         {
             // Complete() is idempotent: if OnFaulted already completed the writer with a fault
             // exception this call is a no-op.
-            _inboundPipe.Writer.Complete();
+            await _inboundPipe.Writer.CompleteAsync();
         }
     }
 
@@ -225,7 +225,7 @@ public sealed class AdbStream : Stream
     /// the read. Prefer the async overload from any async or hot-path code.
     /// </remarks>
     public override int Read(byte[] buffer, int offset, int count) =>
-        ReadAsync(buffer.AsMemory(offset, count)).AsTask().GetAwaiter().GetResult();
+        ReadAsync(buffer.AsMemory(offset, count), _drainCts.Token).AsTask().GetAwaiter().GetResult();
 
     /// <summary>
     /// Reads up to <paramref name="buffer"/>.Length bytes from the device-side service. Returns 0 on graceful close.
@@ -255,7 +255,7 @@ public sealed class AdbStream : Stream
     /// overload from any async or hot-path code.
     /// </remarks>
     public override void Write(byte[] buffer, int offset, int count) =>
-        WriteAsync(buffer.AsMemory(offset, count)).AsTask().GetAwaiter().GetResult();
+        WriteAsync(buffer.AsMemory(offset, count), _drainCts.Token).AsTask().GetAwaiter().GetResult();
 
     /// <summary>
     /// Writes the buffer to the device-side service, splitting into <see cref="AdbConnection.MaxPayload"/>-sized
