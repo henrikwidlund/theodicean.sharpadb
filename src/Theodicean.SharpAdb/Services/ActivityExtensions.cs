@@ -15,7 +15,9 @@ namespace Theodicean.SharpAdb.Services;
 /// <c>"No activities found"</c>), or <see langword="null"/> on success.
 /// </param>
 /// <param name="Raw">The underlying shell result.</param>
+// ReSharper disable NotAccessedPositionalProperty.Global
 public sealed record AdbAppLaunchResult(bool IsLaunched, string? FailureReason, AdbShellResult Raw)
+// ReSharper restore NotAccessedPositionalProperty.Global
 {
     internal static AdbAppLaunchResult Parse(AdbShellResult raw)
     {
@@ -26,7 +28,7 @@ public sealed record AdbAppLaunchResult(bool IsLaunched, string? FailureReason, 
             return new AdbAppLaunchResult(false, "No activities found", raw);
 
         if (!raw.IsSuccess)
-            return new AdbAppLaunchResult(false, $"monkey exited with code {raw.ExitCode}", raw);
+            return new AdbAppLaunchResult(false, string.Create(CultureInfo.InvariantCulture, $"monkey exited with code {raw.ExitCode}"), raw);
 
         return new AdbAppLaunchResult(true, null, raw);
 
@@ -102,6 +104,7 @@ public static class ActivityExtensions
         /// activity is found, so <see cref="AdbShellResult.IsSuccess"/> is not sufficient on
         /// its own — the wrapper checks for the <c>"No activities found"</c> diagnostic too.
         /// </returns>
+        // ReSharper disable once UnusedMethodReturnValue.Global
         public async Task<AdbAppLaunchResult> StartAppAsync(string packageName, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);

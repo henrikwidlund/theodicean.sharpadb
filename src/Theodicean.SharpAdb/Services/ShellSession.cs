@@ -43,6 +43,7 @@ public sealed class ShellSession : IAsyncDisposable
     /// <summary>
     /// Sends bytes to the remote command's stdin.
     /// </summary>
+    // ReSharper disable once UnusedMember.Global
     public async ValueTask WriteStdinAsync(ReadOnlyMemory<byte> data, CancellationToken cancellationToken = default)
     {
         if (data.IsEmpty) return;
@@ -62,6 +63,7 @@ public sealed class ShellSession : IAsyncDisposable
     /// <summary>
     /// Signals end-of-input to the remote command (equivalent to closing stdin).
     /// </summary>
+    // ReSharper disable once UnusedMember.Global
     public async ValueTask CloseStdinAsync(CancellationToken cancellationToken = default)
     {
         var buf = new byte[ShellV2Protocol.HeaderSize];

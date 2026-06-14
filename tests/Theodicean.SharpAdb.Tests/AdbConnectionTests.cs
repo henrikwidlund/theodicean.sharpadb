@@ -3,7 +3,6 @@ using System.Text;
 
 using Theodicean.SharpAdb.Auth;
 using Theodicean.SharpAdb.Protocol;
-using Theodicean.SharpAdb.Services;
 using Theodicean.SharpAdb.Transport;
 
 namespace Theodicean.SharpAdb.Tests;

@@ -21,7 +21,9 @@ public sealed record AdbPackageInfo(string PackageName, string? Path = null);
 /// did not print one. Always <see langword="null"/> on success.
 /// </param>
 /// <param name="Raw">The underlying shell result, in case the caller needs the unparsed output.</param>
+// ReSharper disable NotAccessedPositionalProperty.Global
 public sealed record AdbPackageOperationResult(bool IsSuccess, string? FailureReason, AdbShellResult Raw)
+// ReSharper restore NotAccessedPositionalProperty.Global
 {
     internal static AdbPackageOperationResult Parse(AdbShellResult raw)
     {
