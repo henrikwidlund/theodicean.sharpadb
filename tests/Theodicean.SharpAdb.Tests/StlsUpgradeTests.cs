@@ -92,26 +92,34 @@ public class StlsUpgradeTests
         using var serverDone = new CancellationTokenSource();
         var serverTask = Task.Run(async () =>
         {
-            using var serverSocket = await listener.AcceptSocketAsync(serverDone.Token);
-            await using var rawStream = new NetworkStream(serverSocket, ownsSocket: true);
-            var deviceTransport = new StreamAdbTransport(rawStream, ownsStream: false);
-
-            using (var pkt = await deviceTransport.ReadPacketAsync(serverDone.Token))
-                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);
-
-            // STLS frame + 4 KiB of garbage immediately afterwards. The kernel will deliver both
-            // chunks well before the client gets to UpgradeToTlsAsync, so Socket.Available is
-            // guaranteed to report the garbage as pending.
-            var stlsHeader = new byte[AdbProtocolConstants.HeaderSize];
-            new AdbHeader(AdbCommand.Stls, 1, 0, 0, 0).WriteTo(stlsHeader);
-            await rawStream.WriteAsync(stlsHeader, serverDone.Token);
-            await rawStream.WriteAsync(new byte[4096], serverDone.Token);
-            await rawStream.FlushAsync(serverDone.Token);
-
-            // Hold the connection open until the test signals completion so we don't race the
-            // client's read of Socket.Available against the server closing the connection.
+            // Single try/catch over the entire body so cancellation observed by ANY awaited
+            // operation (accept/read/write/flush/delay) resolves the task normally instead of
+            // transitioning it to the Canceled state and re-throwing through WaitAsync below.
             try
             {
+                using var serverSocket = await listener.AcceptSocketAsync(serverDone.Token);
+                // Disable Nagle so the single combined write below isn't held back waiting for
+                // an ACK on Linux — Nagle can otherwise delay the garbage past the client's
+                // DataAvailable check and flake the test.
+                serverSocket.NoDelay = true;
+                await using var rawStream = new NetworkStream(serverSocket, ownsSocket: true);
+                var deviceTransport = new StreamAdbTransport(rawStream, ownsStream: false);
+
+                using (var pkt = await deviceTransport.ReadPacketAsync(serverDone.Token))
+                    await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);
+
+                // STLS frame + 4 KiB of garbage in a single WriteAsync so both land in one TCP
+                // segment. With two separate writes the kernel may deliver the STLS header
+                // before the garbage, leaving Socket.Available falsely reporting 0 when the
+                // client checks it. One contiguous buffer guarantees the garbage is already
+                // pending the moment the client finishes reading the STLS header.
+                var combined = new byte[AdbProtocolConstants.HeaderSize + 4096];
+                new AdbHeader(AdbCommand.Stls, 1, 0, 0, 0).WriteTo(combined);
+                await rawStream.WriteAsync(combined, serverDone.Token);
+                await rawStream.FlushAsync(serverDone.Token);
+
+                // Hold the connection open until the test signals completion so we don't race
+                // the client's read of Socket.Available against the server closing.
                 await Task.Delay(Timeout.Infinite, serverDone.Token);
             }
             catch (OperationCanceledException)
@@ -129,8 +137,9 @@ public class StlsUpgradeTests
         finally
         {
             await serverDone.CancelAsync();
-            // Let timeouts and any server-side assertion failures surface — only the expected
-            // post-cancellation completion goes through cleanly here.
+            // No token passed to WaitAsync — serverDone is already canceled, so any token here
+            // would make WaitAsync immediately throw before the server task has settled. We
+            // just want the 5s wall-clock timeout fallback.
             await serverTask.WaitAsync(TimeSpan.FromSeconds(5), serverDone.Token);
         }
     }
