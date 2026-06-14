@@ -307,7 +307,10 @@ public class AdbConnectionTests
                 new AdbHeader(AdbCommand.Okay, deviceLocalIdA, clientLocalIdA, 0, 0), ReadOnlyMemory<byte>.Empty);
 
             using (var pkt = await deviceTransport.ReadPacketAsync())
+            {
+                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Open);
                 clientLocalIdB = pkt.Header.Arg0;
+            }
             await deviceTransport.WritePacketAsync(
                 new AdbHeader(AdbCommand.Okay, deviceLocalIdB, clientLocalIdB, 0, 0), ReadOnlyMemory<byte>.Empty);
 
