@@ -104,11 +104,12 @@ public sealed class AdbStream : Stream
     {
         if (Interlocked.Exchange(ref _closed, 1) != 0) return;
         _connection.Logger.StreamClosed(LocalId, RemoteId);
+        // Graceful close: complete the channel but DO NOT cancel the drain CTS. The peer may
+        // have queued a final WRTE just before CLSE — we want the drain task to deliver those
+        // bytes to the consumer's pipe and emit the required OKAY before exiting. ReadAllAsync
+        // ends naturally once the channel is fully drained. CTS cancellation is reserved for
+        // fault / user-driven dispose, where we explicitly want to abandon queued work.
         _inboundChannel.Writer.TryComplete();
-        // Wake the drain task if it is parked inside Pipe.Writer.WriteAsync waiting for a
-        // consumer that will never read — otherwise DisposeAsync's await on the drain task
-        // would hang forever.
-        _drainCts.Cancel();
         _opened.TrySetResult(false);
         TryReleaseWriteAck();
     }
@@ -149,8 +150,10 @@ public sealed class AdbStream : Stream
             {
                 try
                 {
-                    if (Volatile.Read(ref _closed) != 0)
-                        return;
+                    // Only abandon on fault/dispose (drain CTS cancelled). On graceful close the
+                    // channel has been completed but the token stays valid so we still deliver
+                    // queued WRTEs to the pipe and send their OKAYs before exiting.
+                    token.ThrowIfCancellationRequested();
 
                     // Zero-length WRTEs (e.g. keepalives) carry no buffer but still require an
                     // OKAY — skip the pipe write but fall through to the ack below.
@@ -163,8 +166,8 @@ public sealed class AdbStream : Stream
                         ArrayPool<byte>.Shared.Return(buffer);
                 }
 
-                if (Volatile.Read(ref _closed) != 0)
-                    return;
+                // Same rationale: only skip the OKAY if we're being torn down hard.
+                token.ThrowIfCancellationRequested();
 
                 // OKAY-on-consume: only acknowledge after the consumer's pipe has the bytes,
                 // so a slow reader naturally throttles the device for this stream alone.
