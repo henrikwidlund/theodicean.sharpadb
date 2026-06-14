@@ -12,7 +12,7 @@ internal enum ShellPacketId : byte
     Stdout = 1,
     Stderr = 2,
     Exit = 3,
-    CloseStdin = 4,
+    CloseStdin = 4
 }
 
 /// <summary>
