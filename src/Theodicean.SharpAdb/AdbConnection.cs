@@ -654,11 +654,11 @@ public sealed class AdbConnection : IAsyncDisposable
                     {
                         // Transfer ownership of the transport-rented buffer to the stream's
                         // drain task — no extra copy. Dispose on the packet becomes a no-op
-                        // after this call; the stream's EnqueueInboundWrite (or its drain
-                        // task) is now responsible for returning the buffer to the pool.
+                        // after this call. For zero-length WRTEs (e.g. keepalives) the take
+                        // returns null but we still enqueue so the drain task sends the OKAY
+                        // the device is waiting for.
                         var owned = pkt.TakePayloadBuffer(out var len);
-                        if (owned is not null)
-                            s.EnqueueInboundWrite(owned, len);
+                        s.EnqueueInboundWrite(owned, len);
                     }
                     else
                         Logger.UnknownStreamPacket(pkt.Header.Command, ourLocalId);

@@ -74,22 +74,25 @@ public sealed class AdbStream : Stream
     /// <summary>
     /// Hands off an inbound WRTE payload to this stream's drain task. Takes ownership of
     /// <paramref name="buffer"/> (must be a pooled buffer of at least <paramref name="length"/>
-    /// bytes); the drain task returns it to the pool once the bytes have been copied into the
-    /// reader's pipe. The demuxer never blocks here — if the channel rejects the chunk (channel
-    /// capacity 1, meaning the device sent a second WRTE before we acknowledged the first) the
-    /// stream is faulted but the connection-wide read loop keeps running for other streams.
+    /// bytes, or <see langword="null"/> for a zero-length WRTE); the drain task returns it to
+    /// the pool once the bytes have been copied into the reader's pipe. The demuxer never
+    /// blocks here — if the channel rejects the chunk (channel capacity 1, meaning the device
+    /// sent a second WRTE before we acknowledged the first) the stream is faulted but the
+    /// connection-wide read loop keeps running for other streams.
     /// </summary>
-    internal void EnqueueInboundWrite(byte[] buffer, int length)
+    internal void EnqueueInboundWrite(byte[]? buffer, int length)
     {
         if (Volatile.Read(ref _closed) != 0)
         {
-            ArrayPool<byte>.Shared.Return(buffer);
+            if (buffer is not null)
+                ArrayPool<byte>.Shared.Return(buffer);
             return;
         }
 
         if (!_inboundChannel.Writer.TryWrite(new InboundChunk(buffer, length)))
         {
-            ArrayPool<byte>.Shared.Return(buffer);
+            if (buffer is not null)
+                ArrayPool<byte>.Shared.Return(buffer);
             OnFaulted(new IOException(
                 $"ADB device sent a WRTE on stream {LocalId} before acknowledging the previous one"));
         }
@@ -138,18 +141,22 @@ public sealed class AdbStream : Stream
             // channel drains, stranding queued InboundChunk buffers (they would never be returned
             // to ArrayPool). OnClosed/OnFaulted/Dispose already complete the channel via
             // TryComplete, which ends the enumeration cleanly after the pool buffers are drained.
-            await foreach ((byte[] buffer, int length) in _inboundChannel.Reader.ReadAllAsync())
+            await foreach ((byte[]? buffer, int length) in _inboundChannel.Reader.ReadAllAsync())
             {
                 try
                 {
                     if (Volatile.Read(ref _closed) != 0)
                         return;
 
-                    await _inboundPipe.Writer.WriteAsync(buffer.AsMemory(0, length), token);
+                    // Zero-length WRTEs (e.g. keepalives) carry no buffer but still require an
+                    // OKAY — skip the pipe write but fall through to the ack below.
+                    if (buffer is not null)
+                        await _inboundPipe.Writer.WriteAsync(buffer.AsMemory(0, length), token);
                 }
                 finally
                 {
-                    ArrayPool<byte>.Shared.Return(buffer);
+                    if (buffer is not null)
+                        ArrayPool<byte>.Shared.Return(buffer);
                 }
 
                 if (Volatile.Read(ref _closed) != 0)
@@ -171,7 +178,8 @@ public sealed class AdbStream : Stream
         }
         catch (OperationCanceledException)
         {
-            // Stream closed/faulted while we were blocked on Pipe.WriteAsync or the channel.
+            // Stream closed/faulted while we were blocked on Pipe.WriteAsync. Buffers that were
+            // already queued behind us are released by the finally block below.
         }
         catch (Exception ex)
         {
@@ -180,6 +188,15 @@ public sealed class AdbStream : Stream
         }
         finally
         {
+            // Drain anything still sitting in the channel so its pooled buffers aren't stranded.
+            // (Normal exit drains via ReadAllAsync; only the cancellation/exception paths can
+            // leave items behind here.)
+            while (_inboundChannel.Reader.TryRead(out var leftover))
+            {
+                if (leftover.Buffer is not null)
+                    ArrayPool<byte>.Shared.Return(leftover.Buffer);
+            }
+
             // Complete() is idempotent: if OnFaulted already completed the writer with a fault
             // exception this call is a no-op.
             await _inboundPipe.Writer.CompleteAsync();
@@ -418,5 +435,5 @@ public sealed class AdbStream : Stream
             this, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
     }
 
-    private readonly record struct InboundChunk(byte[] Buffer, int Length);
+    private readonly record struct InboundChunk(byte[]? Buffer, int Length);
 }
