@@ -131,7 +131,7 @@ public class StlsUpgradeTests
         using var clientKey = AdbAuthKey.Generate("client@host");
         try
         {
-            await Assert.That(async () => await AdbConnection.ConnectTcpAsync("127.0.0.1", port, [clientKey]))
+            await Assert.That(async () => await AdbConnection.ConnectTcpAsync("127.0.0.1", port, [clientKey], cancellationToken: CancellationToken.None))
                 .ThrowsExactly<InvalidDataException>();
         }
         finally
@@ -140,7 +140,7 @@ public class StlsUpgradeTests
             // No token passed to WaitAsync — serverDone is already canceled, so any token here
             // would make WaitAsync immediately throw before the server task has settled. We
             // just want the 5s wall-clock timeout fallback.
-            await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
+            await serverTask.WaitAsync(TimeSpan.FromSeconds(5), CancellationToken.None);
         }
     }
 
