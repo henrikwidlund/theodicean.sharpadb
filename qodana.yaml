@@ -703,6 +703,4 @@ exclude:
   - name: MA0020
   - name: All
     paths:
-      - "**/*.g.cs"
-      - "**/obj/**"
       - "**/bin/**"
