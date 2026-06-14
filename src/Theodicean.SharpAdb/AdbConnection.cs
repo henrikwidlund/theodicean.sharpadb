@@ -292,6 +292,15 @@ public sealed class AdbConnection : IAsyncDisposable
         ArgumentNullException.ThrowIfNull(keys);
         options ??= new AdbConnectOptions();
 
+        // MaxPayload is consumed by (1) the transport's inbound cap and (2) WriteAsync's
+        // outbound fragmentation chunk size. Both paths cast it to int; the inbound cap also
+        // rents an ArrayPool buffer of that size. Catch unusable values now instead of failing
+        // deep in the protocol later.
+        if (options.MaxPayload < AdbProtocolConstants.MinPayload || options.MaxPayload > int.MaxValue)
+            throw new ArgumentOutOfRangeException(
+                nameof(options),
+                $"options.MaxPayload must be in [{AdbProtocolConstants.MinPayload}, {int.MaxValue}] (got {options.MaxPayload})");
+
         // The ADB legacy checksum mode is symmetric: whichever side advertises the legacy wire
         // version commits both sides to sending and verifying the sum-of-bytes payload checksum.
         // VerifyChecksum=true without WriteChecksum=true would have us advertise the legacy

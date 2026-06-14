@@ -128,6 +128,14 @@ public sealed class StreamAdbTransport : IAdbTransport
         if (header.DataLength > MaxInboundPayload)
             throw new InvalidDataException($"ADB payload exceeds advertised max ({header.DataLength} > {MaxInboundPayload})");
 
+        // Defense in depth against a too-large MaxInboundPayload (or a peer that lied about
+        // length): we are about to cast a uint to int for ArrayPool.Rent. Anything past
+        // int.MaxValue would wrap to a negative length and the Rent would throw a less useful
+        // exception. Catch it here with a precise message.
+        if (header.DataLength > int.MaxValue)
+            throw new InvalidDataException(
+                $"ADB payload too large for this runtime ({header.DataLength} > {int.MaxValue})");
+
         var len = (int)header.DataLength;
         var rented = ArrayPool<byte>.Shared.Rent(len);
         try

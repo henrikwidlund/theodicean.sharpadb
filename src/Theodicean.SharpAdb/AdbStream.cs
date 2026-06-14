@@ -311,7 +311,11 @@ public sealed class AdbStream : Stream
                 _inboundChannel.Writer.TryComplete();
                 _drainCts.Cancel();
             }
-            DisposeResources();
+            DisposeWriteAck();
+            // Defer disposing _drainCts until the drain task observes cancellation. Disposing
+            // it inline here would race with the in-flight ReadAllAsync/Pipe.WriteAsync that
+            // still hold a registration on its token.
+            ScheduleDrainCtsDispose();
         }
         base.Dispose(disposing);
     }
@@ -336,20 +340,50 @@ public sealed class AdbStream : Stream
             {
                 // Drain task surfaces faults via OnFaulted; don't double-throw from dispose.
             }
+
+            // Drain task has observed cancellation and exited — safe to release the CTS now.
+            DisposeDrainCts();
         }
-        DisposeResources();
+        else
+        {
+            // Another path (sync Dispose / OnClosed / OnFaulted) already started teardown. Make
+            // sure the CTS still gets disposed once the drain task settles.
+            ScheduleDrainCtsDispose();
+        }
+
+        DisposeWriteAck();
         await base.DisposeAsync();
     }
 
-    private void DisposeResources()
+    private void DisposeWriteAck()
     {
         // OnClosed/OnFaulted may have flipped _closed without ever owning the SemaphoreSlim;
         // _resourcesDisposed guarantees we only dispose once even if both Dispose paths run.
         if (Interlocked.Exchange(ref _resourcesDisposed, 1) == 0)
-        {
             _writeAck.Dispose();
+    }
+
+    private int _drainCtsDisposed;
+
+    private void DisposeDrainCts()
+    {
+        if (Interlocked.Exchange(ref _drainCtsDisposed, 1) == 0)
             _drainCts.Dispose();
+    }
+
+    private void ScheduleDrainCtsDispose()
+    {
+        if (_drainTask.IsCompleted)
+        {
+            DisposeDrainCts();
+            return;
         }
+
+        // Synchronous continuation: the drain task's own completion thread disposes the CTS,
+        // immediately after observing cancellation — no extra thread-pool hop.
+        _ = _drainTask.ContinueWith(
+            static (_, state) => ((AdbStream)state!).DisposeDrainCts(),
+            this, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
     }
 
     private readonly record struct InboundChunk(byte[] Buffer, int Length);
