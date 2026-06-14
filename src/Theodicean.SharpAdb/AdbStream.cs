@@ -120,6 +120,13 @@ public sealed class AdbStream : Stream
         _drainCts.Cancel();
         _opened.TrySetException(fault);
         TryReleaseWriteAck();
+
+        // Best-effort cleanup: remove from the connection's dispatch map and notify the peer
+        // with CLSE. Without this, subsequent WRTEs from a misbehaving peer keep landing in the
+        // dispatcher, paying an alloc+copy before EnqueueInboundWrite discovers _closed and
+        // discards them. CloseStreamAsync swallows transport failures, so this is safe when the
+        // underlying fault is already a dead transport.
+        _ = _connection.CloseStreamAsync(this);
     }
 
     private async Task DrainLoopAsync()
