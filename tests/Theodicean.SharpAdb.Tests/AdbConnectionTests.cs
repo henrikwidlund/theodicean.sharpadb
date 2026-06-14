@@ -335,7 +335,7 @@ public class AdbConnectionTests
         // would never complete.
         var buf = new byte[64];
         var n = await streamB.ReadAsync(buf).AsTask().WaitAsync(TimeSpan.FromSeconds(2));
-        await Assert.That(System.Text.Encoding.UTF8.GetString(buf, 0, n)).IsEqualTo("hello from B");
+        await Assert.That(Encoding.UTF8.GetString(buf, 0, n)).IsEqualTo("hello from B");
 
         // Connection must still be healthy.
         await Assert.That(conn.FaultException).IsNull();
