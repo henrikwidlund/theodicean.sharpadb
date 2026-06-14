@@ -126,7 +126,7 @@ public class StlsUpgradeTests
             {
                 // Expected: test body completed and signaled serverDone.
             }
-        }, serverDone.Token);
+        }, CancellationToken.None);
 
         using var clientKey = AdbAuthKey.Generate("client@host");
         try

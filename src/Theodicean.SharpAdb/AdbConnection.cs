@@ -649,9 +649,23 @@ public sealed class AdbConnection : IAsyncDisposable
                 }
             case AdbCommand.Wrte:
                 {
+                    var remoteLocalId = pkt.Header.Arg0;
                     var ourLocalId = pkt.Header.Arg1;
                     if (_streams.TryGetValue(ourLocalId, out var s))
                     {
+                        // ADB requires the WRTE's Arg0 to match the remote id we recorded when
+                        // the stream opened (i.e. the OKAY reply to our OPEN). A WRTE arriving
+                        // before OnOpened (RemoteId still 0) or with a different Arg0 means the
+                        // peer is misbehaving — the OKAY we would echo back addresses the
+                        // wrong remote stream and would stall both ends. Fault the stream so
+                        // the protocol error surfaces cleanly to the caller.
+                        if (s.RemoteId == 0 || s.RemoteId != remoteLocalId)
+                        {
+                            s.OnFaulted(new IOException(
+                                $"WRTE on stream {ourLocalId} carried Arg0={remoteLocalId}, expected {s.RemoteId} (stream not opened or remote id mismatch)"));
+                            break;
+                        }
+
                         // Transfer ownership of the transport-rented buffer to the stream's
                         // drain task — no extra copy. Dispose on the packet becomes a no-op
                         // after this call. For zero-length WRTEs (e.g. keepalives) the take
