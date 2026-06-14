@@ -363,6 +363,11 @@ public sealed class AdbConnection : IAsyncDisposable
                         // an absurdly small (or zero) value.
                         var deviceMax = Math.Max(pkt.Header.Arg1, AdbProtocolConstants.MinPayload);
                         var negotiated = Math.Min(options.MaxPayload, deviceMax);
+                        // Tighten the transport's inbound cap to the negotiated value. We
+                        // initially set it to options.MaxPayload (what we advertised), but if
+                        // the device came back with something smaller, anything bigger is now
+                        // a protocol violation we should reject early.
+                        transport.MaxInboundPayload = negotiated;
                         options.Logger.ConnectionEstablished(authMethod, info.SystemType, info.Serial, negotiated);
                         return new AdbConnection(transport, info, negotiated, options.WriteChecksum, authMethod, options.Logger);
                     }
