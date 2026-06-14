@@ -30,20 +30,19 @@ public static class ProcessExtensions
         public async Task<IReadOnlyList<AdbProcess>> GetProcessesAsync(CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
-            var output = await connection.ExecuteAsync("ps -A -o USER,PID,PPID,NAME", cancellationToken);
-            return ProcessParser.Parse(output);
+            var result = await connection.ExecuteAsync("ps -A -o USER,PID,PPID,NAME", cancellationToken);
+            return ProcessParser.Parse(result.Stdout);
         }
 
         /// <summary>
         /// Sends signal <paramref name="signal"/> (default SIGKILL) to the given pid via <c>kill</c>.
         /// </summary>
         // ReSharper disable once UnusedMember.Global
-        public async Task KillAsync(int pid, int signal = 9, CancellationToken cancellationToken = default)
+        public Task<AdbShellResult> KillAsync(int pid, int signal = 9, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
-            if (pid <= 1)
-                throw new ArgumentOutOfRangeException(nameof(pid), "pid must be > 1");
-            await connection.ExecuteAsync(string.Create(CultureInfo.InvariantCulture, $"kill -{signal} {pid}"), cancellationToken);
+            ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(pid, 1);
+            return connection.ExecuteAsync(string.Create(CultureInfo.InvariantCulture, $"kill -{signal} {pid}"), cancellationToken);
         }
     }
 }

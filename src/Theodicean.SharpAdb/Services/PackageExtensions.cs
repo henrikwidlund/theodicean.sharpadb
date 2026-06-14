@@ -8,14 +8,42 @@ namespace Theodicean.SharpAdb.Services;
 public sealed record AdbPackageInfo(string PackageName, string? Path = null);
 
 /// <summary>
-/// Thrown when <c>pm install</c> or <c>pm uninstall</c> reports a non-success result.
+/// Result of a package management operation that emits <c>"Success"</c> / <c>"Failure [REASON]"</c>
+/// on stdout (currently <c>pm install</c> and <c>pm uninstall</c>). Encapsulates the success
+/// parsing so callers don't have to grep stdout themselves.
 /// </summary>
-public sealed class AdbPackageException : Exception
+/// <param name="IsSuccess">
+/// <see langword="true"/> when the device reported <c>"Success"</c> and exited 0.
+/// </param>
+/// <param name="FailureReason">
+/// On failure, the bracketed reason code (e.g. <c>"INSTALL_FAILED_INSUFFICIENT_STORAGE"</c>)
+/// extracted from the <c>"Failure [REASON]"</c> line, or <see langword="null"/> if the device
+/// did not print one. Always <see langword="null"/> on success.
+/// </param>
+/// <param name="Raw">The underlying shell result, in case the caller needs the unparsed output.</param>
+public sealed record AdbPackageOperationResult(bool IsSuccess, string? FailureReason, AdbShellResult Raw)
 {
-    /// <summary>
-    /// Initializes a new instance with the given diagnostic message.
-    /// </summary>
-    public AdbPackageException(string message) : base(message) { }
+    internal static AdbPackageOperationResult Parse(AdbShellResult raw)
+    {
+        // Happy path: pm prints "Success" on stdout and exits 0.
+        if (raw.IsSuccess && raw.Stdout.Contains("Success", StringComparison.Ordinal))
+            return new AdbPackageOperationResult(true, null, raw);
+
+        // Failure: pm prints "Failure [REASON]" on stdout (some Android builds route it to
+        // stderr instead). Extract the bracketed reason if present.
+        return new AdbPackageOperationResult(
+            IsSuccess: false,
+            FailureReason: ExtractBracketed(raw.Stdout) ?? ExtractBracketed(raw.Stderr),
+            Raw: raw);
+    }
+
+    private static string? ExtractBracketed(string s)
+    {
+        var open = s.IndexOf('[', StringComparison.Ordinal);
+        if (open < 0) return null;
+        var close = s.IndexOf(']', open + 1);
+        return close > open + 1 ? s[(open + 1)..close] : null;
+    }
 }
 
 /// <summary>
@@ -26,10 +54,18 @@ public static class PackageExtensions
     extension(AdbConnection connection)
     {
         /// <summary>
-        /// Installs an APK by streaming it to /data/local/tmp and invoking <c>pm install</c>.
+        /// Installs an APK by streaming it to <c>/data/local/tmp</c> and invoking
+        /// <c>pm install</c>. The temporary file is always cleaned up, even if the install
+        /// itself fails.
         /// </summary>
+        /// <returns>
+        /// An <see cref="AdbPackageOperationResult"/> with <c>IsSuccess</c> reflecting whether
+        /// the device reported <c>"Success"</c>; on failure, <c>FailureReason</c> carries the
+        /// parsed reason code (e.g. <c>INSTALL_FAILED_INSUFFICIENT_STORAGE</c>) when one was
+        /// emitted.
+        /// </returns>
         // ReSharper disable once MemberCanBePrivate.Global
-        public async Task InstallAsync(Stream apk, bool replaceExisting = true, bool grantAllPermissions = false,
+        public async Task<AdbPackageOperationResult> InstallAsync(Stream apk, bool replaceExisting = true, bool grantAllPermissions = false,
             CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
@@ -52,10 +88,8 @@ public static class PackageExtensions
 
                 args.Add(ShellEscape.SingleQuote(remotePath));
 
-                var result = await connection.ExecuteAsync($"pm {string.Join(' ', args)}", cancellationToken);
-                // pm install prints "Success" on a line; otherwise contains "Failure [REASON]".
-                if (!result.Contains("Success", StringComparison.Ordinal))
-                    throw new AdbPackageException($"pm install failed: {result.Trim()}");
+                var raw = await connection.ExecuteAsync($"pm {string.Join(' ', args)}", cancellationToken);
+                return AdbPackageOperationResult.Parse(raw);
             }
             finally
             {
@@ -71,28 +105,33 @@ public static class PackageExtensions
         /// Installs an APK from a local file path.
         /// </summary>
         // ReSharper disable once UnusedMember.Global
-        public async Task InstallAsync(string apkPath, bool replaceExisting = true, bool grantAllPermissions = false,
+        public async Task<AdbPackageOperationResult> InstallAsync(string apkPath, bool replaceExisting = true, bool grantAllPermissions = false,
             CancellationToken cancellationToken = default)
         {
             ArgumentException.ThrowIfNullOrEmpty(apkPath);
             await using var fs = File.OpenRead(apkPath);
-            await connection.InstallAsync(fs, replaceExisting, grantAllPermissions, cancellationToken);
+            return await connection.InstallAsync(fs, replaceExisting, grantAllPermissions, cancellationToken);
         }
 
         /// <summary>
-        /// Uninstalls a package by id. Set <paramref name="keepData"/> to preserve the app's data directory.
+        /// Uninstalls a package by id. Set <paramref name="keepData"/> to preserve the app's
+        /// data directory.
         /// </summary>
+        /// <returns>
+        /// An <see cref="AdbPackageOperationResult"/> with <c>IsSuccess</c> reflecting whether
+        /// the device reported <c>"Success"</c>; on failure, <c>FailureReason</c> carries the
+        /// parsed reason code when one was emitted (e.g. when the package was not installed).
+        /// </returns>
         // ReSharper disable once UnusedMember.Global
-        public async Task UninstallAsync(string packageName, bool keepData = false, CancellationToken cancellationToken = default)
+        public async Task<AdbPackageOperationResult> UninstallAsync(string packageName, bool keepData = false, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
             ArgumentException.ThrowIfNullOrEmpty(packageName);
             AdbConnection.ValidatePackage(packageName);
 
             var flag = keepData ? "-k " : "";
-            var result = await connection.ExecuteAsync($"pm uninstall {flag}{ShellEscape.SingleQuote(packageName)}", cancellationToken);
-            if (!result.Contains("Success", StringComparison.Ordinal))
-                throw new AdbPackageException($"pm uninstall failed: {result.Trim()}");
+            var raw = await connection.ExecuteAsync($"pm uninstall {flag}{ShellEscape.SingleQuote(packageName)}", cancellationToken);
+            return AdbPackageOperationResult.Parse(raw);
         }
 
         /// <summary>
@@ -102,8 +141,8 @@ public static class PackageExtensions
         {
             ArgumentNullException.ThrowIfNull(connection);
             var args = includePath ? "list packages -f" : "list packages";
-            var output = await connection.ExecuteAsync($"pm {args}", cancellationToken);
-            return PackageParser.Parse(output);
+            var result = await connection.ExecuteAsync($"pm {args}", cancellationToken);
+            return PackageParser.Parse(result.Stdout);
         }
 
         /// <summary>
@@ -114,10 +153,10 @@ public static class PackageExtensions
             ArgumentNullException.ThrowIfNull(connection);
             ArgumentException.ThrowIfNullOrEmpty(packageName);
             AdbConnection.ValidatePackage(packageName);
-            var output = await connection.ExecuteAsync($"pm list packages {ShellEscape.SingleQuote(packageName)}", cancellationToken);
+            var result = await connection.ExecuteAsync($"pm list packages {ShellEscape.SingleQuote(packageName)}", cancellationToken);
             // Match "package:exact.name\n" anywhere in output.
             var needle = $"package:{packageName}";
-            var outputSpan = output.AsSpan();
+            var outputSpan = result.Stdout.AsSpan();
             foreach (var range in outputSpan.Split('\n'))
             {
                 if (outputSpan[range].TrimEnd('\r').Equals(needle, StringComparison.Ordinal))
@@ -142,9 +181,10 @@ internal static class PackageParser
     public static List<AdbPackageInfo> Parse(string output)
     {
         var list = new List<AdbPackageInfo>();
-        foreach (var rawLine in output.Split('\n'))
+        var outputSpan = output.AsSpan();
+        foreach (var lineRange in outputSpan.Split('\n'))
         {
-            var line = rawLine.AsSpan().TrimEnd('\r');
+            var line = outputSpan[lineRange].TrimEnd('\r');
             if (!line.StartsWith("package:"))
                 continue;
 

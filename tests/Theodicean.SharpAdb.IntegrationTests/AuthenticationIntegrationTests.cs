@@ -95,6 +95,6 @@ public class AuthenticationIntegrationTests
 
         await Assert.That(conn.AuthenticationMethod).IsEqualTo(AdbAuthenticationMethod.Signature);
         var output = await conn.ExecuteAsync("id -u");
-        await Assert.That(output).IsNullOrWhiteSpace();
+        await Assert.That(output.Stdout).IsNullOrWhiteSpace();
     }
 }

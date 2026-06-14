@@ -127,8 +127,8 @@ public class HelperServicesIntegrationTests
         foreach (var pkg in await conn.ListPackagesAsync())
         {
             // Ask the framework whether this package has a LAUNCHER activity.
-            var output = await conn.ExecuteAsync(
-                $"cmd package resolve-activity -c android.intent.category.LAUNCHER {pkg.PackageName}");
+            var output = (await conn.ExecuteAsync(
+                $"cmd package resolve-activity -c android.intent.category.LAUNCHER {pkg.PackageName}")).Stdout;
             if (output.Contains("name=", StringComparison.Ordinal) && !output.Contains("No activity found", StringComparison.Ordinal))
             {
                 candidate = pkg.PackageName;

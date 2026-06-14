@@ -16,7 +16,8 @@ public static class PropertiesExtensions
             ArgumentException.ThrowIfNullOrEmpty(name);
 
             AdbConnection.ValidatePropName(name);
-            var output = (await connection.ExecuteAsync($"getprop {name}", cancellationToken)).TrimEnd('\r', '\n');
+            var result = await connection.ExecuteAsync($"getprop {name}", cancellationToken);
+            var output = result.Stdout.TrimEnd('\r', '\n');
             return string.IsNullOrEmpty(output) ? null : output;
         }
 
@@ -24,7 +25,7 @@ public static class PropertiesExtensions
         /// Sets a property via setprop. Requires appropriate device permissions for the prop.
         /// </summary>
         // ReSharper disable once UnusedMember.Global
-        public Task SetPropertyAsync(string name, string value, CancellationToken cancellationToken = default)
+        public Task<AdbShellResult> SetPropertyAsync(string name, string value, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
             ArgumentException.ThrowIfNullOrEmpty(name);
@@ -41,8 +42,8 @@ public static class PropertiesExtensions
         public async Task<IReadOnlyDictionary<string, string>> GetAllPropertiesAsync(CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(connection);
-            var output = await connection.ExecuteAsync("getprop", cancellationToken);
-            return PropertiesParser.Parse(output);
+            var result = await connection.ExecuteAsync("getprop", cancellationToken);
+            return PropertiesParser.Parse(result.Stdout);
         }
 
         private static void ValidatePropName(string name)
