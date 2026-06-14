@@ -103,7 +103,7 @@ public class StlsUpgradeTests
                 // DataAvailable check and flake the test.
                 serverSocket.NoDelay = true;
                 await using var rawStream = new NetworkStream(serverSocket, ownsSocket: true);
-                var deviceTransport = new StreamAdbTransport(rawStream, ownsStream: false);
+                await using var deviceTransport = new StreamAdbTransport(rawStream, ownsStream: false);
 
                 using (var pkt = await deviceTransport.ReadPacketAsync(serverDone.Token))
                     await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);
