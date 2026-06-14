@@ -140,7 +140,7 @@ public class StlsUpgradeTests
             // No token passed to WaitAsync — serverDone is already canceled, so any token here
             // would make WaitAsync immediately throw before the server task has settled. We
             // just want the 5s wall-clock timeout fallback.
-            await serverTask.WaitAsync(TimeSpan.FromSeconds(5), serverDone.Token);
+            await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
         }
     }
 
