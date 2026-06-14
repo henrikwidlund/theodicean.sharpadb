@@ -567,17 +567,17 @@ public sealed class AdbConnection : IAsyncDisposable
     internal ValueTask SendAsync(AdbHeader header, ReadOnlyMemory<byte> payload, CancellationToken cancellationToken) =>
         _transport.WritePacketAsync(header, payload, cancellationToken);
 
-    internal async ValueTask SendOkayAsync(AdbStream stream, CancellationToken cancellationToken)
-    {
-        // Link the caller's token (typically the stream's drain CTS) with the connection-wide
-        // shutdown token. Either cancellation unblocks the transport write, so DisposeAsync
-        // can't hang on a slow-network OKAY when a stream is being torn down.
-        using var linked = CancellationTokenSource.CreateLinkedTokenSource(_shutdownCts.Token, cancellationToken);
-        await _transport.WritePacketAsync(
+    // ReSharper disable once UnusedMethodReturnValue.Global
+    internal ValueTask SendOkayAsync(AdbStream stream, CancellationToken cancellationToken) =>
+        // Hot path: this fires once per inbound WRTE, so we avoid linking a per-call CTS.
+        // Caller passes the stream's drain token (cancels on stream fault/dispose). Connection
+        // shutdown unblocks any parked write by disposing the transport, which surfaces as an
+        // IOException / ObjectDisposedException to the drain task — equally effective at
+        // freeing the await without per-OKAY allocation overhead.
+        _transport.WritePacketAsync(
             new AdbHeader(AdbCommand.Okay, stream.LocalId, stream.RemoteId, 0, 0),
             ReadOnlyMemory<byte>.Empty,
-            linked.Token);
-    }
+            cancellationToken);
 
     private async Task SendCloseEchoAsync(uint localId, uint remoteId)
     {

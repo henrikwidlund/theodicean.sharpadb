@@ -289,45 +289,56 @@ public class AdbConnectionTests
 
         var deviceTask = Task.Run(async () =>
         {
-            uint clientLocalIdA;
-            uint clientLocalIdB;
-
-            using (var pkt = await deviceTransport.ReadPacketAsync())
-                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);
-            var banner = "device::\0"u8.ToArray();
-            await deviceTransport.WritePacketAsync(
-                new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload,
-                    (uint)banner.Length, 0), banner);
-
-            using (var pkt = await deviceTransport.ReadPacketAsync())
+            try
             {
-                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Open);
-                clientLocalIdA = pkt.Header.Arg0;
-            }
-            await deviceTransport.WritePacketAsync(
-                new AdbHeader(AdbCommand.Okay, deviceLocalIdA, clientLocalIdA, 0, 0), ReadOnlyMemory<byte>.Empty);
+                uint clientLocalIdA;
+                uint clientLocalIdB;
 
-            using (var pkt = await deviceTransport.ReadPacketAsync())
+                using (var pkt = await deviceTransport.ReadPacketAsync())
+                    await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);
+                var banner = "device::\0"u8.ToArray();
+                await deviceTransport.WritePacketAsync(
+                    new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload,
+                        (uint)banner.Length, 0), banner);
+
+                using (var pkt = await deviceTransport.ReadPacketAsync())
+                {
+                    await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Open);
+                    clientLocalIdA = pkt.Header.Arg0;
+                }
+                await deviceTransport.WritePacketAsync(
+                    new AdbHeader(AdbCommand.Okay, deviceLocalIdA, clientLocalIdA, 0, 0), ReadOnlyMemory<byte>.Empty);
+
+                using (var pkt = await deviceTransport.ReadPacketAsync())
+                {
+                    await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Open);
+                    clientLocalIdB = pkt.Header.Arg0;
+                }
+                await deviceTransport.WritePacketAsync(
+                    new AdbHeader(AdbCommand.Okay, deviceLocalIdB, clientLocalIdB, 0, 0), ReadOnlyMemory<byte>.Empty);
+
+                // Push a WRTE to A whose size exceeds the inbound Pipe's default PauseWriterThreshold
+                // (64 KiB). Under the old code the dispatcher would await Pipe.WriteAsync here and
+                // block forever — the test consumer never reads from A — wedging the read loop and
+                // every sibling stream with it.
+                var payloadA = new byte[128 * 1024];
+                await deviceTransport.WritePacketAsync(
+                    new AdbHeader(AdbCommand.Wrte, deviceLocalIdA, clientLocalIdA, (uint)payloadA.Length, 0), payloadA);
+
+                var payloadB = "hello from B"u8.ToArray();
+                await deviceTransport.WritePacketAsync(
+                    new AdbHeader(AdbCommand.Wrte, deviceLocalIdB, clientLocalIdB, (uint)payloadB.Length, 0), payloadB);
+
+                setupComplete.SetResult(true);
+            }
+            catch (Exception ex)
             {
-                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Open);
-                clientLocalIdB = pkt.Header.Arg0;
+                // Propagate device-side failures through setupComplete so the test awaits the
+                // real exception instead of timing out on the TCS — that would mask the actual
+                // failure with a generic TimeoutException.
+                setupComplete.TrySetException(ex);
+                throw;
             }
-            await deviceTransport.WritePacketAsync(
-                new AdbHeader(AdbCommand.Okay, deviceLocalIdB, clientLocalIdB, 0, 0), ReadOnlyMemory<byte>.Empty);
-
-            // Push a WRTE to A whose size exceeds the inbound Pipe's default PauseWriterThreshold
-            // (64 KiB). Under the old code the dispatcher would await Pipe.WriteAsync here and
-            // block forever — the test consumer never reads from A — wedging the read loop and
-            // every sibling stream with it.
-            var payloadA = new byte[128 * 1024];
-            await deviceTransport.WritePacketAsync(
-                new AdbHeader(AdbCommand.Wrte, deviceLocalIdA, clientLocalIdA, (uint)payloadA.Length, 0), payloadA);
-
-            var payloadB = "hello from B"u8.ToArray();
-            await deviceTransport.WritePacketAsync(
-                new AdbHeader(AdbCommand.Wrte, deviceLocalIdB, clientLocalIdB, (uint)payloadB.Length, 0), payloadB);
-
-            setupComplete.SetResult(true);
         });
 
         await using var conn = await AdbConnection.ConnectAsync(clientTransport, [], new AdbConnectOptions());
