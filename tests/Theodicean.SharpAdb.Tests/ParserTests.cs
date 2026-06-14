@@ -247,11 +247,37 @@ public class ParserTests
         // treat it as failure. Real adbd is consistent, but the parser should not be
         // fooled by stray output appearing in test fixtures or unusual builds.
         var raw = new AdbShellResult(
-            Stdout: "Success-ish? not really\n",
+            Stdout: "Success\n",
             Stderr: "",
             ExitCode: 1);
         var result = AdbPackageOperationResult.Parse(raw);
         await Assert.That(result.IsSuccess).IsFalse();
+    }
+
+    [Test]
+    public async Task PackageOperationParseRequiresExactSuccessLine()
+    {
+        // pm install prints "Success" as its own line. Make sure we don't false-positive on
+        // commands that just happen to mention the word.
+        var raw = new AdbShellResult(
+            Stdout: "Success-ish? not really\n",
+            Stderr: "",
+            ExitCode: 0);
+        var result = AdbPackageOperationResult.Parse(raw);
+        await Assert.That(result.IsSuccess).IsFalse();
+    }
+
+    [Test]
+    public async Task PackageOperationParseAcceptsSuccessLineAmongstOtherOutput()
+    {
+        // Real pm install prints "Success" preceded by progress noise on some builds.
+        // The parser must still recognise the standalone line.
+        var raw = new AdbShellResult(
+            Stdout: "Performing Streamed Install\nSuccess\n",
+            Stderr: "",
+            ExitCode: 0);
+        var result = AdbPackageOperationResult.Parse(raw);
+        await Assert.That(result.IsSuccess).IsTrue();
     }
 
     [Test]

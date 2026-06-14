@@ -227,7 +227,10 @@ public sealed class ShellSession : IAsyncDisposable
                 await _stream.ReadExactlyAsync(memory[..chunk]);
                 writer.Advance(chunk);
                 var flush = await writer.FlushAsync();
-                if (flush.IsCompleted)
+                // IsCompleted: reader was completed (caller disposed Stdout/Stderr).
+                // IsCanceled: reader called PipeReader.CancelPendingFlush — same outcome for
+                // our purposes (we can't deliver more), so flip into drain mode either way.
+                if (flush.IsCompleted || flush.IsCanceled)
                     readerGone = true;
             }
             remaining -= chunk;

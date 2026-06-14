@@ -78,7 +78,7 @@ public enum AdbAuthenticationMethod : byte
     /// <summary>
     /// Device did not request authentication (rare; debug builds).
     /// </summary>
-    None = 1,
+    None,
 
     /// <summary>
     /// Device accepted a signature produced from one of the supplied keys.

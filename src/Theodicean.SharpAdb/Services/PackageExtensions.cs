@@ -27,8 +27,10 @@ public sealed record AdbPackageOperationResult(bool IsSuccess, string? FailureRe
 {
     internal static AdbPackageOperationResult Parse(AdbShellResult raw)
     {
-        // Happy path: pm prints "Success" on stdout and exits 0.
-        if (raw.IsSuccess && raw.Stdout.Contains("Success", StringComparison.Ordinal))
+        // Happy path: pm prints "Success" as its own line on stdout and exits 0. Match the
+        // exact line (after trim) — a substring search would false-positive on commands
+        // that mention "Success" elsewhere in their output.
+        if (raw.IsSuccess && ContainsSuccessLine(raw.Stdout))
             return new AdbPackageOperationResult(true, null, raw);
 
         // Failure: pm prints "Failure [REASON]" on stdout (some Android builds route it to
@@ -37,6 +39,16 @@ public sealed record AdbPackageOperationResult(bool IsSuccess, string? FailureRe
             IsSuccess: false,
             FailureReason: ExtractBracketed(raw.Stdout) ?? ExtractBracketed(raw.Stderr),
             Raw: raw);
+    }
+
+    private static bool ContainsSuccessLine(string s)
+    {
+        foreach (var line in s.AsSpan().EnumerateLines())
+        {
+            if (line.Trim() is "Success")
+                return true;
+        }
+        return false;
     }
 
     private static string? ExtractBracketed(string s)
