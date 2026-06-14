@@ -170,10 +170,13 @@ public sealed class AdbStream : Stream
                 token.ThrowIfCancellationRequested();
 
                 // OKAY-on-consume: only acknowledge after the consumer's pipe has the bytes,
-                // so a slow reader naturally throttles the device for this stream alone.
+                // so a slow reader naturally throttles the device for this stream alone. Pass
+                // the drain CTS token so a stream-level fault/dispose can unblock a write that
+                // is parked on TCP back-pressure (the connection-wide shutdown token is linked
+                // in by the connection itself).
                 try
                 {
-                    await _connection.SendOkayAsync(this);
+                    await _connection.SendOkayAsync(this, token);
                 }
                 catch (OperationCanceledException)
                 {
