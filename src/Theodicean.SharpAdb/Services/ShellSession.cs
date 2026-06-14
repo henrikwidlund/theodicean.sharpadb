@@ -20,14 +20,17 @@ public sealed class ShellSession : IAsyncDisposable
     private int _disposed;
 
     /// <summary>
-    /// Standard output stream from the remote command.
+    /// Standard output stream from the remote command. The same <see cref="Stream"/> instance
+    /// is returned for the lifetime of the session — every access shares state, so disposing
+    /// it disposes the only stdout reader.
     /// </summary>
-    public Stream Stdout => _stdout.Reader.AsStream();
+    public Stream Stdout => field ??= _stdout.Reader.AsStream();
 
     /// <summary>
-    /// Standard error stream from the remote command.
+    /// Standard error stream from the remote command. See <see cref="Stdout"/> for the
+    /// single-instance lifetime contract.
     /// </summary>
-    public Stream Stderr => _stderr.Reader.AsStream();
+    public Stream Stderr => field ??= _stderr.Reader.AsStream();
 
     /// <summary>
     /// Completes with the exit code from the device's shell_v2 EXIT packet. Faults with
@@ -38,6 +41,11 @@ public sealed class ShellSession : IAsyncDisposable
     internal ShellSession(AdbStream stream)
     {
         _stream = stream;
+        // Cache the AsStream() wrappers once. PipeReader.AsStream() returns a fresh wrapper
+        // each call, and disposing any wrapper completes the underlying reader — leaving the
+        // other wrappers broken. Single instance per pipe avoids that footgun.
+        Stdout = _stdout.Reader.AsStream();
+        Stderr = _stderr.Reader.AsStream();
         _readLoop = Task.Run(ReadLoopAsync);
     }
 
