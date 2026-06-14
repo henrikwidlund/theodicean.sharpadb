@@ -168,7 +168,7 @@ public sealed class AdbStream : Stream
                 {
                     await _connection.SendOkayAsync(this);
                 }
-                catch (OperationCanceledException) when(token.IsCancellationRequested)
+                catch (OperationCanceledException)
                 {
                     // Connection is shutting down; treat as stream close rather than faulting.
                     return;
