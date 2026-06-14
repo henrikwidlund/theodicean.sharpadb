@@ -92,15 +92,34 @@ public static class ShellExtensions
                 // ExecuteAsync or OpenShellAsync directly.
                 var stderrDrain = session.Stderr.CopyToAsync(Stream.Null, cancellationToken);
 
-                using (var reader = new StreamReader(session.Stdout, Encoding.UTF8, leaveOpen: true))
+                // Observe any drain fault even if the consumer abandons the enumerator early
+                // (in which case code after the loop below never runs). Without this the
+                // exception would surface only at GC time as an unobserved-task exception.
+                _ = stderrDrain.ContinueWith(static t => _ = t.Exception,
+                    CancellationToken.None,
+                    TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default);
+
+                try
                 {
+                    using var reader = new StreamReader(session.Stdout, Encoding.UTF8, leaveOpen: true);
                     while (await reader.ReadLineAsync(cancellationToken) is { } line)
                         yield return line;
                 }
-
-                // Await the drain so any exception it raised (transport fault, cancellation)
-                // surfaces here instead of being silently dropped on session disposal.
-                await stderrDrain;
+                finally
+                {
+                    // Normal-completion path: surface a drain fault to the caller. Early-break
+                    // path: the ContinueWith above already observed it; this await throws but
+                    // is invoked from disposal so the original break is preserved.
+                    try
+                    {
+                        await stderrDrain;
+                    }
+                    catch
+                    {
+                        // Swallow inside finally so we don't replace the user's own exception.
+                    }
+                }
             }
         }
     }

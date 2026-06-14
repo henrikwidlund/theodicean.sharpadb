@@ -94,7 +94,11 @@ public class AuthenticationIntegrationTests
         await using var conn = await Fixture.ConnectWithAsync([Fixture.Key!], opts);
 
         await Assert.That(conn.AuthenticationMethod).IsEqualTo(AdbAuthenticationMethod.Signature);
+        // Confirms the shell roundtrip works post-auth: `id -u` prints the numeric UID on
+        // stdout (e.g. "2000" for the shell user) and exits 0. Assert both — null/whitespace
+        // would mean the command never produced output, which is the opposite of success.
         var output = await conn.ExecuteAsync("id -u");
-        await Assert.That(output.Stdout).IsNullOrWhiteSpace();
+        await Assert.That(output.IsSuccess).IsTrue();
+        await Assert.That(int.TryParse(output.Stdout.Trim(), out _)).IsTrue();
     }
 }

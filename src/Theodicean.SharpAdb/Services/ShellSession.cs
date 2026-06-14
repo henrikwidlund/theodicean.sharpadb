@@ -175,28 +175,46 @@ public sealed class ShellSession : IAsyncDisposable
         return total;
     }
 
+    // Maximum buffer we will rent in one shot when streaming a shell_v2 frame's payload.
+    // The wire-level `length` field is device-controlled (32-bit), so a malformed or hostile
+    // peer could request a huge allocation if we passed it straight to ArrayPool.Rent. Reading
+    // in bounded chunks preserves framing correctness without giving the peer that lever.
+    private const int PayloadChunkSize = 64 * 1024;
+
     private async ValueTask CopyPayloadToPipeAsync(PipeWriter writer, int length)
     {
         if (length == 0) return;
-        var buf = ArrayPool<byte>.Shared.Rent(length);
-        try
+        var remaining = length;
+        while (remaining > 0)
         {
-            await _stream.ReadExactlyAsync(buf.AsMemory(0, length));
-            await writer.WriteAsync(buf.AsMemory(0, length));
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(buf);
+            var chunk = Math.Min(remaining, PayloadChunkSize);
+            var buf = ArrayPool<byte>.Shared.Rent(chunk);
+            try
+            {
+                await _stream.ReadExactlyAsync(buf.AsMemory(0, chunk));
+                await writer.WriteAsync(buf.AsMemory(0, chunk));
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buf);
+            }
+            remaining -= chunk;
         }
     }
 
     private async ValueTask DiscardAsync(int length)
     {
         if (length == 0) return;
-        var buf = ArrayPool<byte>.Shared.Rent(length);
+        var remaining = length;
+        var buf = ArrayPool<byte>.Shared.Rent(Math.Min(remaining, PayloadChunkSize));
         try
         {
-            await _stream.ReadExactlyAsync(buf.AsMemory(0, length));
+            while (remaining > 0)
+            {
+                var chunk = Math.Min(remaining, buf.Length);
+                await _stream.ReadExactlyAsync(buf.AsMemory(0, chunk));
+                remaining -= chunk;
+            }
         }
         finally
         {
