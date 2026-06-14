@@ -117,21 +117,11 @@ public static class ShellExtensions
                         // their own exception, so this won't mask anything.
                         await stderrDrain;
                     }
-                    else
-                    {
-                        // Either the consumer abandoned the enumerator (early-disposal during
-                        // a yield) or the stdout loop itself threw. Don't mask that original
-                        // signal; the ContinueWith above already observes any drain fault so
-                        // it isn't a silent unobserved exception either.
-                        try
-                        {
-                            await stderrDrain;
-                        }
-                        catch
-                        {
-                            // intentionally suppressed: original exception takes priority.
-                        }
-                    }
+                    // Non-normal path (early-break or stdout fault): intentionally do NOT
+                    // await stderrDrain. The session isn't disposed yet, so the drain task
+                    // could be blocked waiting for the remote command to finish — awaiting
+                    // here would deadlock the enumerator's disposal. The ContinueWith above
+                    // already observes any drain fault, so leaving it running is safe.
                 }
             }
         }

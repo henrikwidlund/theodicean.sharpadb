@@ -93,16 +93,20 @@ public sealed class ShellSession : IAsyncDisposable
                 if (read == 0)
                 {
                     // Remote closed the stream without sending EXIT — surface that to callers.
-                    _exit.TrySetException(new IOException(
-                        "shell_v2 stream closed without an EXIT packet"));
+                    // Propagate the same exception to the pipe readers via `fault` so a caller
+                    // reading from Stdout/Stderr (without awaiting ExitCodeTask) doesn't just
+                    // see a clean EOF and miss the protocol error.
+                    fault = new IOException("shell_v2 stream closed without an EXIT packet");
+                    _exit.TrySetException(fault);
                     break;
                 }
                 if (read < ShellV2Protocol.HeaderSize)
                 {
                     // Stream ended in the middle of a header. Parsing the partial buffer would
                     // produce a garbage length that subsequent ReadExactly would hang on.
-                    _exit.TrySetException(new IOException(
-                        string.Create(CultureInfo.InvariantCulture, $"shell_v2 stream closed mid-header (read {read} of {ShellV2Protocol.HeaderSize} bytes)")));
+                    fault = new IOException(string.Create(CultureInfo.InvariantCulture,
+                        $"shell_v2 stream closed mid-header (read {read} of {ShellV2Protocol.HeaderSize} bytes)"));
+                    _exit.TrySetException(fault);
                     break;
                 }
 
@@ -132,7 +136,10 @@ public sealed class ShellSession : IAsyncDisposable
                             // DiscardAsync helper.
                             if (length == 0)
                             {
-                                _exit.TrySetException(new IOException("shell_v2 EXIT packet had zero-length payload"));
+                                // Malformed EXIT. Mirror this to `fault` so pipe readers see
+                                // the protocol error rather than a clean EOF.
+                                fault = new IOException("shell_v2 EXIT packet had zero-length payload");
+                                _exit.TrySetException(fault);
                             }
                             else
                             {
