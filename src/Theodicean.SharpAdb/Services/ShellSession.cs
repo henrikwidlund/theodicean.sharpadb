@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Globalization;
 using System.IO.Pipelines;
 
 namespace Theodicean.SharpAdb.Services;
@@ -88,8 +89,23 @@ public sealed class ShellSession : IAsyncDisposable
                         "shell_v2 stream closed without an EXIT packet"));
                     break;
                 }
+                if (read < ShellV2Protocol.HeaderSize)
+                {
+                    // Stream ended in the middle of a header. Parsing the partial buffer would
+                    // produce a garbage length that subsequent ReadExactly would hang on.
+                    _exit.TrySetException(new IOException(
+                        string.Create(CultureInfo.InvariantCulture, $"shell_v2 stream closed mid-header (read {read} of {ShellV2Protocol.HeaderSize} bytes)")));
+                    break;
+                }
 
                 (ShellPacketId id, uint length) = ShellV2Protocol.ReadHeader(headerBuf);
+
+                // Reject frame lengths that would overflow when cast to int (used by
+                // ReadExactlyAsync / ArrayPool.Rent below). Real shell_v2 payloads are tiny
+                // by protocol convention; anything past int.MaxValue is malformed.
+                if (length > int.MaxValue)
+                    throw new IOException(
+                        $"shell_v2 frame length {length} exceeds the supported maximum ({int.MaxValue})");
 
                 switch (id)
                 {

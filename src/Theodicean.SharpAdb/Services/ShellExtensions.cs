@@ -84,9 +84,23 @@ public static class ShellExtensions
             static async IAsyncEnumerable<string> ExecuteLines(AdbConnection conn, string command, [EnumeratorCancellation] CancellationToken cancellationToken)
             {
                 await using var session = await OpenShellInternal(conn, command, cancellationToken);
-                using var reader = new StreamReader(session.Stdout, Encoding.UTF8, leaveOpen: true);
-                while (await reader.ReadLineAsync(cancellationToken) is { } line)
-                    yield return line;
+                // Drain stderr in the background. The ShellSession's read loop blocks when
+                // either pipe applies backpressure, so leaving stderr unread would stall
+                // stdout (and the EXIT packet) the moment a command emits enough stderr to
+                // fill its pipe — hanging this iterator. Discarding the bytes is the right
+                // behavior for ExecuteLinesAsync; callers wanting stderr should use
+                // ExecuteAsync or OpenShellAsync directly.
+                var stderrDrain = session.Stderr.CopyToAsync(Stream.Null, cancellationToken);
+
+                using (var reader = new StreamReader(session.Stdout, Encoding.UTF8, leaveOpen: true))
+                {
+                    while (await reader.ReadLineAsync(cancellationToken) is { } line)
+                        yield return line;
+                }
+
+                // Await the drain so any exception it raised (transport fault, cancellation)
+                // surfaces here instead of being silently dropped on session disposal.
+                await stderrDrain;
             }
         }
     }
