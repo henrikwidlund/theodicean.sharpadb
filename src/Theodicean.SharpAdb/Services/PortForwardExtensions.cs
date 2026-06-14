@@ -65,9 +65,15 @@ public sealed class AdbPortForward : IAsyncDisposable
         {
             // Ignore
         }
-        catch (SocketException ex)
+        catch (SocketException ex) when (!_shutdownCts.IsCancellationRequested)
         {
+            // TcpListener.Stop() also surfaces here as SocketException, so we only treat
+            // socket errors as real failures when we're not already shutting the forwarder down.
             _logger.PortForwardAcceptFailed(LocalPort, _remotePort, ex);
+        }
+        catch (SocketException)
+        {
+            // Expected: TcpListener.Stop() races with AcceptSocketAsync during disposal.
         }
     }
 

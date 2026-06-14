@@ -110,7 +110,14 @@ public class StlsUpgradeTests
 
             // Hold the connection open until the test signals completion so we don't race the
             // client's read of Socket.Available against the server closing the connection.
-            try { await Task.Delay(Timeout.Infinite, serverDone.Token); } catch { /* expected */ }
+            try
+            {
+                await Task.Delay(Timeout.Infinite, serverDone.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected: test body completed and signaled serverDone.
+            }
         });
 
         using var clientKey = AdbAuthKey.Generate("client@host");
@@ -122,8 +129,9 @@ public class StlsUpgradeTests
         finally
         {
             await serverDone.CancelAsync();
-            try { await serverTask.WaitAsync(TimeSpan.FromSeconds(5)); }
-            catch { /* shutting down */ }
+            // Let timeouts and any server-side assertion failures surface — only the expected
+            // post-cancellation completion goes through cleanly here.
+            await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
         }
     }
 
