@@ -100,24 +100,37 @@ public static class ShellExtensions
                     TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
                     TaskScheduler.Default);
 
+                var completedNormally = false;
                 try
                 {
                     using var reader = new StreamReader(session.Stdout, Encoding.UTF8, leaveOpen: true);
                     while (await reader.ReadLineAsync(cancellationToken) is { } line)
                         yield return line;
+                    completedNormally = true;
                 }
                 finally
                 {
-                    // Normal-completion path: surface a drain fault to the caller. Early-break
-                    // path: the ContinueWith above already observed it; this await throws but
-                    // is invoked from disposal so the original break is preserved.
-                    try
+                    if (completedNormally)
                     {
+                        // Loop exited because the device's stdout closed cleanly. Surface any
+                        // drain fault to the caller — they're not in the middle of unwinding
+                        // their own exception, so this won't mask anything.
                         await stderrDrain;
                     }
-                    catch
+                    else
                     {
-                        // Swallow inside finally so we don't replace the user's own exception.
+                        // Either the consumer abandoned the enumerator (early-disposal during
+                        // a yield) or the stdout loop itself threw. Don't mask that original
+                        // signal; the ContinueWith above already observes any drain fault so
+                        // it isn't a silent unobserved exception either.
+                        try
+                        {
+                            await stderrDrain;
+                        }
+                        catch
+                        {
+                            // intentionally suppressed: original exception takes priority.
+                        }
                     }
                 }
             }

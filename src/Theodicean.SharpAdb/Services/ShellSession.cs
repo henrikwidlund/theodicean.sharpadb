@@ -118,16 +118,22 @@ public sealed class ShellSession : IAsyncDisposable
                     case ShellPacketId.Exit:
                         {
                             // EXIT payload is a single byte exit code per the shell protocol.
+                            // Don't let a misbehaving / hostile peer steer a single big Rent
+                            // via the device-controlled length — read the byte we need into a
+                            // 1-byte buffer and discard any extras through the chunked
+                            // DiscardAsync helper.
                             if (length == 0)
                             {
                                 _exit.TrySetException(new IOException("shell_v2 EXIT packet had zero-length payload"));
                             }
                             else
                             {
-                                var exitBuf = ArrayPool<byte>.Shared.Rent((int)length);
+                                var exitBuf = ArrayPool<byte>.Shared.Rent(1);
                                 try
                                 {
-                                    await _stream.ReadExactlyAsync(exitBuf.AsMemory(0, (int)length));
+                                    await _stream.ReadExactlyAsync(exitBuf.AsMemory(0, 1));
+                                    if (length > 1)
+                                        await DiscardAsync((int)(length - 1));
                                     _exit.TrySetResult(exitBuf[0]);
                                 }
                                 finally
