@@ -235,12 +235,15 @@ public static class PackageExtensions
                 {
                     await session.WriteStdinAsync(buf.AsMemory(0, n), cancellationToken);
                 }
-                catch (IOException) when (session.ExitCodeTask.IsCompleted)
+                catch (IOException)
                 {
-                    // Server exited mid-pump (rejected the APK early, ran out of disk, etc.)
-                    // and closed our stdin. Don't propagate the broken-pipe error — the
-                    // concurrent stdoutCopy / stderrCopy / ExitCode path will surface the
-                    // actual install diagnostic the device emitted.
+                    // Stdin write failed: either the device closed our stream after emitting
+                    // a Failure (race — EXIT may not yet have arrived through the read loop)
+                    // or the transport itself is dying. In both cases the concurrent
+                    // stdoutCopy / stderrCopy / ExitCodeTask will surface the real outcome —
+                    // a parsed Failure on the device-side error path, or a genuine fault on
+                    // the transport-failure path. Swallow here so the install result isn't
+                    // masked by a broken-pipe IOException from this pump.
                     return;
                 }
 
@@ -251,9 +254,9 @@ public static class PackageExtensions
             {
                 await session.CloseStdinAsync(cancellationToken);
             }
-            catch (IOException) when (session.ExitCodeTask.IsCompleted)
+            catch (IOException)
             {
-                // Same race: server already finished. CloseStdin is moot.
+                // Same race as above: server may already have closed the stream after EXIT.
             }
         }
         finally
