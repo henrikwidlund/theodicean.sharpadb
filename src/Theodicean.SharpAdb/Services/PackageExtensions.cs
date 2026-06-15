@@ -1,3 +1,6 @@
+using System.Buffers;
+using System.Text;
+
 namespace Theodicean.SharpAdb.Services;
 
 /// <summary>
@@ -68,10 +71,16 @@ public static class PackageExtensions
     extension(AdbConnection connection)
     {
         /// <summary>
-        /// Installs an APK by streaming it to <c>/data/local/tmp</c> and invoking
-        /// <c>pm install</c>. The temporary file is always cleaned up, even if the install
-        /// itself fails.
+        /// Installs an APK by streaming it through <c>cmd package install</c> over a shell_v2
+        /// stdin channel. No temporary file is written to the device — the APK bytes go
+        /// straight from <paramref name="apk"/> into the installer.
         /// </summary>
+        /// <param name="apk">APK contents. Must be seekable so the size can be passed to
+        /// <c>cmd package install -S &lt;size&gt;</c>; <see cref="ArgumentException"/> is thrown
+        /// otherwise.</param>
+        /// <param name="replaceExisting">Pass <c>-r</c> to replace an already-installed package.</param>
+        /// <param name="grantAllPermissions">Pass <c>-g</c> to grant all runtime permissions on install.</param>
+        /// <param name="cancellationToken">Cancels the install.</param>
         /// <returns>
         /// An <see cref="AdbPackageOperationResult"/> with <c>IsSuccess</c> reflecting whether
         /// the device reported <c>"Success"</c>; on failure, <c>FailureReason</c> carries the
@@ -84,38 +93,37 @@ public static class PackageExtensions
         {
             ArgumentNullException.ThrowIfNull(connection);
             ArgumentNullException.ThrowIfNull(apk);
+            if (!apk.CanSeek)
+                throw new ArgumentException("APK stream must be seekable so its size can be advertised to cmd package install.", nameof(apk));
 
-            var remotePath = $"/data/local/tmp/sharpadb_install_{Guid.NewGuid():N}.apk";
+            var size = apk.Length - apk.Position;
 
-            // Single try/finally so the rm -f always runs — including the case where
-            // PushAsync throws partway through and leaves a partial APK on the device.
-            try
-            {
-                await using (var sync = await SyncSession.OpenAsync(connection, cancellationToken))
-                {
-                    await sync.PushAsync(apk, remotePath, cancellationToken: cancellationToken);
-                }
+            var args = new List<string>(8) { "cmd", "package", "install" };
+            if (replaceExisting)
+                args.Add("-r");
+            if (grantAllPermissions)
+                args.Add("-g");
+            args.Add("-S");
+            args.Add(size.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            args.Add("-");
+            var command = string.Join(' ', args);
 
-                var args = new List<string>(4) { "install" };
-                if (replaceExisting)
-                    args.Add("-r");
+            await using var session = await connection.OpenShellAsync(command, cancellationToken);
+            using var stdoutMs = new MemoryStream();
+            using var stderrMs = new MemoryStream();
 
-                if (grantAllPermissions)
-                    args.Add("-g");
+            var stdinPump = PumpStdinAsync(session, apk, cancellationToken);
+            var stdoutCopy = session.Stdout.CopyToAsync(stdoutMs, cancellationToken);
+            var stderrCopy = session.Stderr.CopyToAsync(stderrMs, cancellationToken);
+            await Task.WhenAll(stdinPump, stdoutCopy, stderrCopy);
 
-                args.Add(ShellEscape.SingleQuote(remotePath));
+            var exitCode = await session.ExitCodeTask.WaitAsync(cancellationToken);
 
-                var raw = await connection.ExecuteAsync($"pm {string.Join(' ', args)}", cancellationToken);
-                return AdbPackageOperationResult.Parse(raw);
-            }
-            finally
-            {
-                try
-                {
-                    await connection.ExecuteAsync($"rm -f {ShellEscape.SingleQuote(remotePath)}", CancellationToken.None);
-                }
-                catch { /* best effort */ }
-            }
+            var raw = new AdbShellResult(
+                Encoding.UTF8.GetString(stdoutMs.GetBuffer(), 0, (int)stdoutMs.Length),
+                Encoding.UTF8.GetString(stderrMs.GetBuffer(), 0, (int)stderrMs.Length),
+                exitCode);
+            return AdbPackageOperationResult.Parse(raw);
         }
 
         /// <summary>
@@ -189,6 +197,30 @@ public static class PackageExtensions
                 if (!(char.IsAsciiLetterOrDigit(c) || c is '.' or '_'))
                     throw new ArgumentException($"Invalid package name '{name}'", nameof(name));
             }
+        }
+    }
+
+    private static async Task PumpStdinAsync(ShellSession session, Stream apk, CancellationToken cancellationToken)
+    {
+        // Stream the APK in 64 KiB chunks. The shell_v2 stdin packet header costs only 5 bytes
+        // per chunk, and AdbStream's WRTE flow control (OKAY-per-write) means we're already
+        // bounded by the round-trip — bigger chunks don't help and they'd grow per-write
+        // ArrayPool rentals inside WriteStdinAsync.
+        const int chunkSize = 64 * 1024;
+        var buf = ArrayPool<byte>.Shared.Rent(chunkSize);
+        try
+        {
+            while (true)
+            {
+                var n = await apk.ReadAsync(buf.AsMemory(0, chunkSize), cancellationToken);
+                if (n == 0) break;
+                await session.WriteStdinAsync(buf.AsMemory(0, n), cancellationToken);
+            }
+            await session.CloseStdinAsync(cancellationToken);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buf);
         }
     }
 }
