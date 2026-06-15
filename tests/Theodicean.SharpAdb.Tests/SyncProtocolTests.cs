@@ -1,3 +1,5 @@
+using System.Buffers.Binary;
+
 using Theodicean.SharpAdb.Services;
 
 namespace Theodicean.SharpAdb.Tests;
@@ -7,17 +9,19 @@ public class SyncProtocolTests
     [Test]
     public async Task TagsMatchAsciiLittleEndian()
     {
-        await Assert.That(BitConverter.ToUInt32("LIS2"u8)).IsEqualTo(SyncProtocol.ListV2);
-        await Assert.That(BitConverter.ToUInt32("DNT2"u8)).IsEqualTo(SyncProtocol.DentV2);
-        await Assert.That(BitConverter.ToUInt32("STA2"u8)).IsEqualTo(SyncProtocol.StatV2);
-        await Assert.That(BitConverter.ToUInt32("LST2"u8)).IsEqualTo(SyncProtocol.LStatV2);
-        await Assert.That(BitConverter.ToUInt32("SND2"u8)).IsEqualTo(SyncProtocol.SendV2);
-        await Assert.That(BitConverter.ToUInt32("RCV2"u8)).IsEqualTo(SyncProtocol.RecvV2);
-        await Assert.That(BitConverter.ToUInt32("DATA"u8)).IsEqualTo(SyncProtocol.Data);
-        await Assert.That(BitConverter.ToUInt32("DONE"u8)).IsEqualTo(SyncProtocol.Done);
-        await Assert.That(BitConverter.ToUInt32("OKAY"u8)).IsEqualTo(SyncProtocol.Okay);
-        await Assert.That(BitConverter.ToUInt32("FAIL"u8)).IsEqualTo(SyncProtocol.Fail);
-        await Assert.That(BitConverter.ToUInt32("QUIT"u8)).IsEqualTo(SyncProtocol.Quit);
+        // Use BinaryPrimitives.ReadUInt32LittleEndian instead of BitConverter.ToUInt32 — the
+        // latter reads in host byte order, which would silently flip on a big-endian runtime.
+        await Assert.That(BinaryPrimitives.ReadUInt32LittleEndian("LIS2"u8)).IsEqualTo(SyncProtocol.ListV2);
+        await Assert.That(BinaryPrimitives.ReadUInt32LittleEndian("DNT2"u8)).IsEqualTo(SyncProtocol.DentV2);
+        await Assert.That(BinaryPrimitives.ReadUInt32LittleEndian("STA2"u8)).IsEqualTo(SyncProtocol.StatV2);
+        await Assert.That(BinaryPrimitives.ReadUInt32LittleEndian("LST2"u8)).IsEqualTo(SyncProtocol.LStatV2);
+        await Assert.That(BinaryPrimitives.ReadUInt32LittleEndian("SND2"u8)).IsEqualTo(SyncProtocol.SendV2);
+        await Assert.That(BinaryPrimitives.ReadUInt32LittleEndian("RCV2"u8)).IsEqualTo(SyncProtocol.RecvV2);
+        await Assert.That(BinaryPrimitives.ReadUInt32LittleEndian("DATA"u8)).IsEqualTo(SyncProtocol.Data);
+        await Assert.That(BinaryPrimitives.ReadUInt32LittleEndian("DONE"u8)).IsEqualTo(SyncProtocol.Done);
+        await Assert.That(BinaryPrimitives.ReadUInt32LittleEndian("OKAY"u8)).IsEqualTo(SyncProtocol.Okay);
+        await Assert.That(BinaryPrimitives.ReadUInt32LittleEndian("FAIL"u8)).IsEqualTo(SyncProtocol.Fail);
+        await Assert.That(BinaryPrimitives.ReadUInt32LittleEndian("QUIT"u8)).IsEqualTo(SyncProtocol.Quit);
     }
 
     [Test]

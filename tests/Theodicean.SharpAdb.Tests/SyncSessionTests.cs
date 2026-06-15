@@ -19,7 +19,7 @@ public class SyncSessionTests
         var deviceTask = RunHandshakeAsync(deviceTransport, features: "shell_v2");
 
         await using var conn = await AdbConnection.ConnectAsync(clientTransport, [], new AdbConnectOptions());
-        await deviceTask;
+        await deviceTask.WaitAsync(TimeSpan.FromSeconds(10));
 
         await Assert.That(async () => await SyncSession.OpenAsync(conn))
             .ThrowsExactly<NotSupportedException>();
@@ -51,7 +51,7 @@ public class SyncSessionTests
 
         await using var conn = await AdbConnection.ConnectAsync(clientTransport, [], new AdbConnectOptions());
         await using var sync = await SyncSession.OpenAsync(conn);
-        await deviceTask;
+        await deviceTask.WaitAsync(TimeSpan.FromSeconds(10));
 
         await Assert.That(await observedService.Task).IsEqualTo("sync:");
     }
