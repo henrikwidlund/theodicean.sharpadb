@@ -116,6 +116,34 @@ public class StreamingInstallTests
     }
 
     [Test]
+    public async Task InstallAsyncRejectsStreamWithNoBytesRemaining()
+    {
+        (Stream clientStream, Stream deviceStream) = CreateDuplexPair();
+        var clientTransport = new StreamAdbTransport(clientStream);
+        await using var deviceTransport = new StreamAdbTransport(deviceStream);
+
+        var deviceTask = Task.Run(async () =>
+        {
+            using (var pkt = await deviceTransport.ReadPacketAsync())
+                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);
+            var banner = "device::features=shell_v2\0"u8.ToArray();
+            await deviceTransport.WritePacketAsync(
+                new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload,
+                    (uint)banner.Length, 0), banner);
+        });
+
+        await using var conn = await AdbConnection.ConnectAsync(clientTransport, [], new AdbConnectOptions());
+        await deviceTask;
+
+        // Position seeked to (or past) end → 0 (or negative) bytes remaining. Without the
+        // guard this would advertise a non-positive -S size to cmd package install.
+        using var empty = new MemoryStream(new byte[10]);
+        empty.Seek(0, SeekOrigin.End);
+        await Assert.That(async () => await conn.InstallAsync(empty))
+            .ThrowsExactly<ArgumentException>();
+    }
+
+    [Test]
     public async Task InstallAsyncRejectsNonSeekableStream()
     {
         (Stream clientStream, Stream deviceStream) = CreateDuplexPair();

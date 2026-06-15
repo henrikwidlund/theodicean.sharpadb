@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Globalization;
 using System.Text;
 
 namespace Theodicean.SharpAdb.Services;
@@ -96,7 +97,14 @@ public static class PackageExtensions
             if (!apk.CanSeek)
                 throw new ArgumentException("APK stream must be seekable so its size can be advertised to cmd package install.", nameof(apk));
 
+            // Stream.Position is settable past Length on writable streams; guard so we don't
+            // hand cmd package install a negative -S value (it would refuse the install with a
+            // confusing diagnostic at best, undefined behavior at worst).
             var size = apk.Length - apk.Position;
+            if (size <= 0)
+                throw new ArgumentException(
+                    string.Create(CultureInfo.InvariantCulture, $"APK stream has {size} bytes remaining from its current position ({apk.Position} / {apk.Length})."),
+                    nameof(apk));
 
             var args = new List<string>(8) { "cmd", "package", "install" };
             if (replaceExisting)
