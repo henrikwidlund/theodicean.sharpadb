@@ -1,3 +1,7 @@
+using System.Buffers;
+using System.Globalization;
+using System.Text;
+
 namespace Theodicean.SharpAdb.Services;
 
 /// <summary>
@@ -68,10 +72,16 @@ public static class PackageExtensions
     extension(AdbConnection connection)
     {
         /// <summary>
-        /// Installs an APK by streaming it to <c>/data/local/tmp</c> and invoking
-        /// <c>pm install</c>. The temporary file is always cleaned up, even if the install
-        /// itself fails.
+        /// Installs an APK by streaming it through <c>cmd package install</c> over a shell_v2
+        /// stdin channel. No temporary file is written to the device — the APK bytes go
+        /// straight from <paramref name="apk"/> into the installer.
         /// </summary>
+        /// <param name="apk">APK contents. Must be seekable so the size can be passed to
+        /// <c>cmd package install -S &lt;size&gt;</c>; <see cref="ArgumentException"/> is thrown
+        /// otherwise.</param>
+        /// <param name="replaceExisting">Pass <c>-r</c> to replace an already-installed package.</param>
+        /// <param name="grantAllPermissions">Pass <c>-g</c> to grant all runtime permissions on install.</param>
+        /// <param name="cancellationToken">Cancels the install.</param>
         /// <returns>
         /// An <see cref="AdbPackageOperationResult"/> with <c>IsSuccess</c> reflecting whether
         /// the device reported <c>"Success"</c>; on failure, <c>FailureReason</c> carries the
@@ -84,38 +94,78 @@ public static class PackageExtensions
         {
             ArgumentNullException.ThrowIfNull(connection);
             ArgumentNullException.ThrowIfNull(apk);
+            if (!apk.CanRead)
+                throw new ArgumentException("APK stream must be readable.", nameof(apk));
+            if (!apk.CanSeek)
+                throw new ArgumentException("APK stream must be seekable so its size can be advertised to cmd package install.", nameof(apk));
 
-            var remotePath = $"/data/local/tmp/sharpadb_install_{Guid.NewGuid():N}.apk";
+            // Stream.Position is settable past Length on writable streams; guard so we don't
+            // hand cmd package install a negative -S value (it would refuse the install with a
+            // confusing diagnostic at best, undefined behavior at worst).
+            var size = apk.Length - apk.Position;
+            if (size <= 0)
+                throw new ArgumentException(
+                    string.Create(CultureInfo.InvariantCulture, $"APK stream has {size} bytes remaining from its current position ({apk.Position} / {apk.Length})."),
+                    nameof(apk));
 
-            // Single try/finally so the rm -f always runs — including the case where
-            // PushAsync throws partway through and leaves a partial APK on the device.
+            var args = new List<string>(8) { "cmd", "package", "install" };
+            if (replaceExisting)
+                args.Add("-r");
+            if (grantAllPermissions)
+                args.Add("-g");
+            args.Add("-S");
+            args.Add(size.ToString(CultureInfo.InvariantCulture));
+            args.Add("-");
+            var command = string.Join(' ', args);
+
+            await using var session = await connection.OpenShellAsync(command, cancellationToken);
+            using var stdoutMs = new MemoryStream();
+            using var stderrMs = new MemoryStream();
+
+            // Linked CTS so a fault on the stdin pump (e.g. the source stream EOF'd before
+            // declared size) unblocks the concurrent stdout/stderr CopyToAsync calls. Without
+            // it, Task.WhenAll would hang forever waiting for pipes the device will never
+            // close — the device is still expecting the rest of the APK on stdin.
+            using var workCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+            var stdinPump = PumpStdinAsync(session, apk, size, workCts.Token);
+            var stdoutCopy = session.Stdout.CopyToAsync(stdoutMs, workCts.Token);
+            var stderrCopy = session.Stderr.CopyToAsync(stderrMs, workCts.Token);
+
+            // Fault on ANY of the three => cancel the others. Pump faults on local errors
+            // (truncated source). stdoutCopy/stderrCopy fault if the shell_v2 read loop or
+            // transport tears down mid-install. In either direction we want the survivors
+            // unblocked so Task.WhenAll doesn't hang.
+            foreach (var task in (Task[])[stdinPump, stdoutCopy, stderrCopy])
+            {
+                _ = task.ContinueWith(static (_, state) => ((CancellationTokenSource)state!).Cancel(),
+                    workCts, CancellationToken.None,
+                    TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default);
+            }
+
             try
             {
-                await using (var sync = await SyncSession.OpenAsync(connection, cancellationToken))
-                {
-                    await sync.PushAsync(apk, remotePath, cancellationToken: cancellationToken);
-                }
-
-                var args = new List<string>(4) { "install" };
-                if (replaceExisting)
-                    args.Add("-r");
-
-                if (grantAllPermissions)
-                    args.Add("-g");
-
-                args.Add(ShellEscape.SingleQuote(remotePath));
-
-                var raw = await connection.ExecuteAsync($"pm {string.Join(' ', args)}", cancellationToken);
-                return AdbPackageOperationResult.Parse(raw);
+                await Task.WhenAll(stdinPump, stdoutCopy, stderrCopy);
             }
-            finally
+            catch when (stdinPump.IsFaulted)
             {
-                try
-                {
-                    await connection.ExecuteAsync($"rm -f {ShellEscape.SingleQuote(remotePath)}", CancellationToken.None);
-                }
-                catch { /* best effort */ }
+                // Prefer the pump's specific exception (e.g. truncated source stream) over the
+                // generic OperationCanceledException that the linked-CTS will have raised in
+                // stdoutCopy / stderrCopy. WhenAll's InnerExceptions order is completion-order;
+                // when continuations fire synchronously the OCE can land first, masking the
+                // diagnostic the caller actually wants to see.
+                await stdinPump;
+                throw; // unreachable — stdinPump.IsFaulted guarantees the await above throws.
             }
+
+            var exitCode = await session.ExitCodeTask.WaitAsync(cancellationToken);
+
+            var raw = new AdbShellResult(
+                Encoding.UTF8.GetString(stdoutMs.GetBuffer(), 0, (int)stdoutMs.Length),
+                Encoding.UTF8.GetString(stderrMs.GetBuffer(), 0, (int)stderrMs.Length),
+                exitCode);
+            return AdbPackageOperationResult.Parse(raw);
         }
 
         /// <summary>
@@ -189,6 +239,69 @@ public static class PackageExtensions
                 if (!(char.IsAsciiLetterOrDigit(c) || c is '.' or '_'))
                     throw new ArgumentException($"Invalid package name '{name}'", nameof(name));
             }
+        }
+    }
+
+    private static async Task PumpStdinAsync(ShellSession session, Stream apk, long size, CancellationToken cancellationToken)
+    {
+        // Stream the APK in 256 KiB chunks. ADB's WRTE flow control is OKAY-per-WRTE, so over
+        // TCP the achievable throughput is bounded by `chunk size / round-trip-time`. At a
+        // typical Wi-Fi RTT of ~10 ms, 64 KiB caps at ~6 MB/s; 256 KiB gives ~25 MB/s. Larger
+        // chunks help further (up to the negotiated MaxPayload, usually 1 MiB) at the cost
+        // of bigger ArrayPool rentals inside WriteStdinAsync. 256 KiB is the balance point.
+        const int chunkSize = 256 * 1024;
+        var buf = ArrayPool<byte>.Shared.Rent(chunkSize);
+        var remaining = size;
+        try
+        {
+            while (remaining > 0)
+            {
+                // Cap each read at the bytes we still owe the device. `cmd package install -S N`
+                // reads exactly N bytes; anything we ship past N would back up in the kernel
+                // TCP buffer (the server stopped reading), hanging the next WriteStdinAsync.
+                var toRead = (int)Math.Min(remaining, chunkSize);
+                var n = await apk.ReadAsync(buf.AsMemory(0, toRead), cancellationToken);
+                if (n == 0)
+                {
+                    // Source stream ended before producing the advertised size — the device
+                    // is still waiting for the remaining bytes, so just CloseStdin would
+                    // leave it to fail with a vaguer diagnostic. Surface the truncation
+                    // explicitly so the caller knows their input lied about its length.
+                    throw new IOException(string.Create(CultureInfo.InvariantCulture,
+                        $"APK stream ended after {size - remaining} bytes; advertised size was {size}."));
+                }
+
+                try
+                {
+                    await session.WriteStdinAsync(buf.AsMemory(0, n), cancellationToken);
+                }
+                catch (IOException)
+                {
+                    // Stdin write failed: either the device closed our stream after emitting
+                    // a Failure (race — EXIT may not yet have arrived through the read loop)
+                    // or the transport itself is dying. In both cases the concurrent
+                    // stdoutCopy / stderrCopy / ExitCodeTask will surface the real outcome —
+                    // a parsed Failure on the device-side error path, or a genuine fault on
+                    // the transport-failure path. Swallow here so the install result isn't
+                    // masked by a broken-pipe IOException from this pump.
+                    return;
+                }
+
+                remaining -= n;
+            }
+
+            try
+            {
+                await session.CloseStdinAsync(cancellationToken);
+            }
+            catch (IOException)
+            {
+                // Same race as above: server may already have closed the stream after EXIT.
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buf);
         }
     }
 }
