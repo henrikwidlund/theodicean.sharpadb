@@ -2,17 +2,27 @@
   "version": 1,
   "dependencies": {
     "net10.0": {
+      "Microsoft.NET.Test.Sdk": {
+        "type": "Direct",
+        "requested": "[18.6.0, )",
+        "resolved": "18.6.0",
+        "contentHash": "kAIBt0MsYR0o2RULmlW5BhQ1ha50aGEgLKG4f1p0kePBGLJCprqs3S+NxRrYN8UH7mSQRPKpeiH9mwPMEKUObQ==",
+        "dependencies": {
+          "Microsoft.CodeCoverage": "18.6.0",
+          "Microsoft.TestPlatform.TestHost": "18.6.0"
+        }
+      },
       "TUnit": {
         "type": "Direct",
-        "requested": "[1.53.0, )",
-        "resolved": "1.53.0",
-        "contentHash": "1VRThuUAXomQvpRjm3jDGnyptv1W1c5gIU0Dkwd0ef5wHT/TsTJjd+BwoAEdpfdNarZBMbC9iaApN/8H1z+qag==",
+        "requested": "[1.55.2, )",
+        "resolved": "1.55.2",
+        "contentHash": "M5m2pxvy6tEiSNRNPCCPYWPe4NF+HPrAUIB8LiJL8s+7Eezse/Cwtxu+1WZ7aI6W+bXzf/aYzm/voW7AzbEM2A==",
         "dependencies": {
           "Microsoft.Testing.Extensions.CodeCoverage": "18.8.0",
           "Microsoft.Testing.Extensions.Telemetry": "2.2.3",
           "Microsoft.Testing.Extensions.TrxReport": "2.2.3",
-          "TUnit.Assertions": "1.53.0",
-          "TUnit.Engine": "1.53.0"
+          "TUnit.Assertions": "1.55.2",
+          "TUnit.Engine": "1.55.2"
         }
       },
       "EnumerableAsyncProcessor": {
@@ -24,6 +34,11 @@
         "type": "Transitive",
         "resolved": "2.23.0",
         "contentHash": "nWArUZTdU7iqZLycLKWe0TDms48KKGE6pONH2terYNa8REXiqixrMOkf1sk5DHGMaUTqONU2YkS4SAXBhLStgw=="
+      },
+      "Microsoft.CodeCoverage": {
+        "type": "Transitive",
+        "resolved": "18.6.0",
+        "contentHash": "bkmCXn/65Cd0LdO2zTb/ValGAJ1H8y/CgYOiBb3jsDyHI3Y1ljKx6RBvhvn3e5D/4R4I00RRwLf+Bd2Sn6bJjA=="
       },
       "Microsoft.DiaSymReader": {
         "type": "Transitive",
@@ -97,26 +112,45 @@
           "Microsoft.Testing.Platform": "2.2.3"
         }
       },
+      "Microsoft.TestPlatform.ObjectModel": {
+        "type": "Transitive",
+        "resolved": "18.6.0",
+        "contentHash": "gQTW4BIfM2ZLxixo9ITXoulLKjn20FiiHtqTsx9PENqTrX7368ZeJ5L0QZJyReXDWORPRV8jXwZR6Aar8JOyaA=="
+      },
+      "Microsoft.TestPlatform.TestHost": {
+        "type": "Transitive",
+        "resolved": "18.6.0",
+        "contentHash": "em1eLz5Q46+hsCtAXdXggWAPd9gQyT4ngdsQ7k1eWvQgpsjtS/wAOJ/5TteieFdiAvrEq1iVn00LtusAxRaVmQ==",
+        "dependencies": {
+          "Microsoft.TestPlatform.ObjectModel": "18.6.0",
+          "Newtonsoft.Json": "13.0.3"
+        }
+      },
+      "Newtonsoft.Json": {
+        "type": "Transitive",
+        "resolved": "13.0.3",
+        "contentHash": "HrC5BXdl00IP9zeV+0Z848QWPAoCr9P3bDEZguI+gkLcBKAOxix/tLEAAHC+UvDNPv4a2d18lOReHMOagPa+zQ=="
+      },
       "TUnit.Assertions": {
         "type": "Transitive",
-        "resolved": "1.53.0",
-        "contentHash": "UNIuCvg5VihbQ2CYIlfzYnePcF1ugexMUdQaWog7FNwiwhit96SgAUr+7PWEEocqEenfZ0L5JuMxlue1bGMX7w=="
+        "resolved": "1.55.2",
+        "contentHash": "7LvrlV/X2rUBPQ8DHRAHRk+IsoM2MLNY30+e8ApcdmLCQfHwlpCAwrQXrXbezG84+EE9JPlzf3ffux4HI5EaeQ=="
       },
       "TUnit.Core": {
         "type": "Transitive",
-        "resolved": "1.53.0",
-        "contentHash": "HMuA2yU5F4e2SnKzPUPCawZSRU/e1qZHdtaTEtSB7hA2B5w+wypqijGiNbrkAK/hR/ugXfwva/tJOZNlOc7+PQ=="
+        "resolved": "1.55.2",
+        "contentHash": "i5At3HGDi++qvp2HhDdbG09DLXUbaTy3wkJT3qDb7334vNHk0896fYv+2+Nqkazvhm1eYqtJASe7sWTbiQ6+Qg=="
       },
       "TUnit.Engine": {
         "type": "Transitive",
-        "resolved": "1.53.0",
-        "contentHash": "pcDkz8OYW5QI8/Q9/psAK81Fm9BlohVQgAKYVecJvxT7AyrbVEs991i+hLCnhwiIiz5APQt2qnC875HpGPTqAQ==",
+        "resolved": "1.55.2",
+        "contentHash": "1kby7NmfPto70DWnQvE065kdRcTv1ihiAmKH4eZlJ6TPeo17nv/LXawfpkc+MtjM6madGYtYkygPJ8V0GlGtzg==",
         "dependencies": {
           "EnumerableAsyncProcessor": "3.8.4",
           "Microsoft.Testing.Extensions.TrxReport.Abstractions": "2.2.3",
           "Microsoft.Testing.Platform": "2.2.3",
           "Microsoft.Testing.Platform.MSBuild": "2.2.3",
-          "TUnit.Core": "1.53.0"
+          "TUnit.Core": "1.55.2"
         }
       },
       "theodicean.sharpadb": {
