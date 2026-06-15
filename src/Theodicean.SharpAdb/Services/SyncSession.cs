@@ -37,8 +37,11 @@ public sealed class SyncSession : IAsyncDisposable
 
     /// <summary>
     /// Returns metadata for a remote path using <c>LST2</c> (lstat semantics — symlinks are
-    /// reported as symlinks rather than dereferenced). Returns a zero-mode
-    /// <see cref="AdbFileStat"/> if the file does not exist.
+    /// reported as symlinks rather than dereferenced). If the device could not stat the path
+    /// (missing file, permission denied, etc.), the returned <see cref="AdbFileStat"/> has
+    /// <see cref="AdbFileStat.Error"/> set to the device's errno and <see cref="AdbFileStat.Exists"/>
+    /// returns <see langword="false"/>. Check <see cref="AdbFileStat.Error"/> to distinguish
+    /// ENOENT (2) from other failures.
     /// </summary>
     public async Task<AdbFileStat> StatAsync(string remotePath, CancellationToken cancellationToken = default)
     {
