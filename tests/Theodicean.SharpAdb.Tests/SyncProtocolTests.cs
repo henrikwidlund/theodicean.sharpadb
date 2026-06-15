@@ -1,4 +1,6 @@
+using System;
 using System.Buffers.Binary;
+using System.Threading.Tasks;
 
 using Theodicean.SharpAdb.Services;
 

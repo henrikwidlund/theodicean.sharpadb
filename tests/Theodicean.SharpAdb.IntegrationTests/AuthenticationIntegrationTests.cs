@@ -1,3 +1,6 @@
+using System;
+using System.Threading.Tasks;
+
 using Theodicean.SharpAdb.Auth;
 using Theodicean.SharpAdb.Services;
 

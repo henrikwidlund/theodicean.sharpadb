@@ -1,5 +1,7 @@
+using System;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 
 using Theodicean.SharpAdb.Auth;
 using Theodicean.SharpAdb.Protocol;
@@ -63,7 +65,7 @@ public class AdbAuthKeyTests
 
     [Test]
     public async Task LoadFromPemRejectsInvalidInput() =>
-        await Assert.That(() => AdbAuthKey.LoadFromPem("not-a-pem-key")).Throws<ArgumentException>();
+        await Assert.That(static () => AdbAuthKey.LoadFromPem("not-a-pem-key")).Throws<ArgumentException>();
 
     [Test]
     public async Task EncodedPublicKeyContainsCorrectModulusWordCount()

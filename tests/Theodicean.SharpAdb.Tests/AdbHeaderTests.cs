@@ -1,3 +1,7 @@
+using System;
+using System.IO;
+using System.Threading.Tasks;
+
 using Theodicean.SharpAdb.Protocol;
 
 namespace Theodicean.SharpAdb.Tests;
