@@ -18,6 +18,8 @@ and you get a multiplexed stream over which you can run shell commands, push and
 
 ## Status
 
+Minimum device: Android 9 (API 28). The library requires the `shell_v2` and `sendrecv_v2` adbd features, both of which were released in Android 7 and 9 respectively.
+
 Working:
 
 - TCP transport (port 5555 after `adb tcpip`, or any IP:port the device is reachable on)
@@ -25,8 +27,9 @@ Working:
 - RSA-2048 authentication (signature path + RSAPUBLICKEY enrollment)
 - STLS upgrade for devices that require TLS on the debug socket
 - Multiplexed `AdbStream` with the per-write OKAY ack the protocol requires
-- `shell:` and `exec:` services, line-streaming and stream-out variants
-- `sync:` (LIST, STAT, RECV, SEND) for file transfer
+- `shell,v2,raw:` and `exec:` services with separate stdout/stderr and exit code (`AdbShellResult`)
+- `sync:` v2 (LST2, LIS2, SND2, RCV2) for file transfer, with 64-bit sizes and full POSIX stat fields
+- Streaming APK install via `cmd package install -S <size> -` — no `/data/local/tmp` staging
 - Helpers: reboot, package install/uninstall/list, properties, processes, logcat (raw + parsed), screencap, key events, text input, taps/swipes, app start/stop, port forward
 - Fault propagation from the read loop to open streams and to subsequent `OpenAsync` calls
 
@@ -34,8 +37,8 @@ Not implemented:
 
 - Wireless pairing with the 6-digit PIN (Android 11+). Requires SPAKE2 over Ed25519 with BoringSSL's specific M/N constants, and a real device to validate against (which I do not have). Workaround: pair once with Google's `adb pair`, then Theodicean.SharpAdb takes over.
 - USB transport. The protocol layer is transport-agnostic (`IAdbTransport`), so a USB transport using libusb or a platform-specific API can plug in without touching the rest.
-- `shell,v2:` framing (separate stdout/stderr, exit code). Use `shell:` for combined output.
 - mDNS device discovery.
+- Sync v2 transparent compression (Brotli/LZ4/Zstd). Compression flag is sent as 0.
 
 ## Install
 
@@ -68,8 +71,9 @@ await using var conn = await AdbConnection.ConnectTcpAsync("192.168.1.42", 5555,
 
 Console.WriteLine($"connected to {conn.DeviceInfo.Model} ({conn.DeviceInfo.Product})");
 
-var output = await conn.ExecuteAsync("getprop ro.build.version.release");
-Console.WriteLine($"android {output.Trim()}");
+var result = await conn.ExecuteAsync("getprop ro.build.version.release");
+if (result.IsSuccess)
+    Console.WriteLine($"android {result.Stdout.Trim()}");
 ```
 
 ## Authentication
@@ -128,8 +132,10 @@ await foreach (var entry in sync.ListAsync("/sdcard"))
 var sdk = await conn.GetPropertyAsync("ro.build.version.sdk");
 var all = await conn.GetAllPropertiesAsync();
 
-// Packages
-await conn.InstallAsync("./app.apk");
+// Packages — streams the APK through `cmd package install` rather than staging on /data/local/tmp.
+var install = await conn.InstallAsync("./app.apk");
+if (!install.IsSuccess)
+    throw new InvalidOperationException(install.FailureReason);
 var packages = await conn.ListPackagesAsync();
 await conn.UninstallAsync("com.example.app");
 
