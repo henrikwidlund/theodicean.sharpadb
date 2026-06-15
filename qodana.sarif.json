@@ -77019,13 +77019,6 @@
                   ]
                 }
               ]
-            },
-            {
-              "id": ".CSharpErrors",
-              "defaultConfiguration": {
-                "enabled": true,
-                "level": "warning"
-              }
             }
           ],
           "taxa": [
@@ -78262,7 +78255,7 @@
       "versionControlProvenance": [
         {
           "repositoryUri": "https://github.com/henrikwidlund/theodicean.sharpadb.git",
-          "revisionId": "a45d9a3fcba87db2ea0d90f116470673fb203ab9",
+          "revisionId": "b08fc46a1a5da9095d8612840b5644924ba4799e",
           "branch": "main",
           "properties": {
             "repoUrl": "https://github.com/henrikwidlund/theodicean.sharpadb.git",
@@ -78281,6 +78274,34 @@
         }
       },
       "artifacts": [
+        {
+          "location": {
+            "uri": "tests/Theodicean.SharpAdb.IntegrationTests/AuthenticationIntegrationTests.cs",
+            "uriBaseId": "solutionDir"
+          },
+          "hashes": {}
+        },
+        {
+          "location": {
+            "uri": "tests/Theodicean.SharpAdb.IntegrationTests/HelperServicesIntegrationTests.cs",
+            "uriBaseId": "solutionDir"
+          },
+          "hashes": {}
+        },
+        {
+          "location": {
+            "uri": "tests/Theodicean.SharpAdb.IntegrationTests/SyncIntegrationTests.cs",
+            "uriBaseId": "solutionDir"
+          },
+          "hashes": {}
+        },
+        {
+          "location": {
+            "uri": "tests/Theodicean.SharpAdb.Tests/AdbAuthKeyTests.cs",
+            "uriBaseId": "solutionDir"
+          },
+          "hashes": {}
+        },
         {
           "location": {
             "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
@@ -78304,6 +78325,13 @@
         },
         {
           "location": {
+            "uri": "tests/Theodicean.SharpAdb.Tests/StreamAdbTransportTests.cs",
+            "uriBaseId": "solutionDir"
+          },
+          "hashes": {}
+        },
+        {
+          "location": {
             "uri": "tests/Theodicean.SharpAdb.Tests/StreamingInstallTests.cs",
             "uriBaseId": "solutionDir"
           },
@@ -78312,76 +78340,6 @@
         {
           "location": {
             "uri": "tests/Theodicean.SharpAdb.Tests/SyncSessionTests.cs",
-            "uriBaseId": "solutionDir"
-          },
-          "hashes": {}
-        },
-        {
-          "location": {
-            "uri": "tests/Theodicean.SharpAdb.Tests/AdbHeaderTests.cs",
-            "uriBaseId": "solutionDir"
-          },
-          "hashes": {}
-        },
-        {
-          "location": {
-            "uri": "tests/Theodicean.SharpAdb.Tests/ParserTests.cs",
-            "uriBaseId": "solutionDir"
-          },
-          "hashes": {}
-        },
-        {
-          "location": {
-            "uri": "tests/Theodicean.SharpAdb.Tests/SyncProtocolTests.cs",
-            "uriBaseId": "solutionDir"
-          },
-          "hashes": {}
-        },
-        {
-          "location": {
-            "uri": "tests/Theodicean.SharpAdb.IntegrationTests/AuthenticationIntegrationTests.cs",
-            "uriBaseId": "solutionDir"
-          },
-          "hashes": {}
-        },
-        {
-          "location": {
-            "uri": "tests/Theodicean.SharpAdb.IntegrationTests/HelperServicesIntegrationTests.cs",
-            "uriBaseId": "solutionDir"
-          },
-          "hashes": {}
-        },
-        {
-          "location": {
-            "uri": "tests/Theodicean.SharpAdb.IntegrationTests/ShellIntegrationTests.cs",
-            "uriBaseId": "solutionDir"
-          },
-          "hashes": {}
-        },
-        {
-          "location": {
-            "uri": "tests/Theodicean.SharpAdb.IntegrationTests/SyncIntegrationTests.cs",
-            "uriBaseId": "solutionDir"
-          },
-          "hashes": {}
-        },
-        {
-          "location": {
-            "uri": "tests/Theodicean.SharpAdb.Tests/AdbAuthKeyTests.cs",
-            "uriBaseId": "solutionDir"
-          },
-          "hashes": {}
-        },
-        {
-          "location": {
-            "uri": "tests/Theodicean.SharpAdb.Tests/AndroidPublicKeyTests.cs",
-            "uriBaseId": "solutionDir"
-          },
-          "hashes": {}
-        },
-        {
-          "location": {
-            "uri": "tests/Theodicean.SharpAdb.Tests/StreamAdbTransportTests.cs",
             "uriBaseId": "solutionDir"
           },
           "hashes": {}
@@ -78401,26 +78359,25 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.IntegrationTests/AuthenticationIntegrationTests.cs",
-                  "uriBaseId": "solutionDir",
-                  "index": 8
+                  "uriBaseId": "solutionDir"
                 },
                 "region": {
-                  "startLine": 82,
+                  "startLine": 85,
                   "startColumn": 68,
-                  "endLine": 82,
+                  "endLine": 85,
                   "endColumn": 76,
-                  "charOffset": 3242,
+                  "charOffset": 3287,
                   "charLength": 8,
                   "snippet": {
                     "text": "stranger"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 81,
+                  "startLine": 84,
                   "startColumn": 1,
-                  "endLine": 83,
+                  "endLine": 86,
                   "endColumn": 32,
-                  "charOffset": 3165,
+                  "charOffset": 3210,
                   "charLength": 126,
                   "snippet": {
                     "text": "        {\n            await using var conn = await Fixture.ConnectWithAsync([stranger], opts);\n        }).Throws<Exception>();"
@@ -78455,25 +78412,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.IntegrationTests/HelperServicesIntegrationTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 9
+                  "index": 1
                 },
                 "region": {
-                  "startLine": 144,
+                  "startLine": 147,
                   "startColumn": 19,
-                  "endLine": 144,
+                  "endLine": 147,
                   "endColumn": 23,
-                  "charOffset": 5081,
+                  "charOffset": 5149,
                   "charLength": 4,
                   "snippet": {
                     "text": "conn"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 143,
+                  "startLine": 146,
                   "startColumn": 1,
-                  "endLine": 145,
+                  "endLine": 148,
                   "endColumn": 35,
-                  "charOffset": 5053,
+                  "charOffset": 5121,
                   "charLength": 93,
                   "snippet": {
                     "text": "        {\n            await conn.StartAppAsync(candidate);\n            await Task.Delay(500);"
@@ -78508,25 +78465,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.IntegrationTests/HelperServicesIntegrationTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 9
+                  "index": 1
                 },
                 "region": {
-                  "startLine": 146,
+                  "startLine": 149,
                   "startColumn": 19,
-                  "endLine": 146,
+                  "endLine": 149,
                   "endColumn": 23,
-                  "charOffset": 5165,
+                  "charOffset": 5233,
                   "charLength": 4,
                   "snippet": {
                     "text": "conn"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 145,
+                  "startLine": 148,
                   "startColumn": 1,
-                  "endLine": 147,
+                  "endLine": 150,
                   "endColumn": 28,
-                  "charOffset": 5112,
+                  "charOffset": 5180,
                   "charLength": 110,
                   "snippet": {
                     "text": "            await Task.Delay(500);\n            await conn.StopAppAsync(candidate);\n        }).ThrowsNothing();"
@@ -78561,25 +78518,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.IntegrationTests/SyncIntegrationTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 11
+                  "index": 2
                 },
                 "region": {
-                  "startLine": 106,
+                  "startLine": 109,
                   "startColumn": 19,
-                  "endLine": 106,
+                  "endLine": 109,
                   "endColumn": 23,
-                  "charOffset": 3483,
+                  "charOffset": 3544,
                   "charLength": 4,
                   "snippet": {
                     "text": "sync"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 105,
+                  "startLine": 108,
                   "startColumn": 1,
-                  "endLine": 107,
+                  "endLine": 110,
                   "endColumn": 6,
-                  "charOffset": 3427,
+                  "charOffset": 3488,
                   "charLength": 152,
                   "snippet": {
                     "text": "        await Assert.That(async () =>\n            await sync.PullAsync(\"/data/local/tmp/__sharpadb_missing__\", dst)).ThrowsExactly<IOException>();\n    }"
@@ -78614,25 +78571,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.IntegrationTests/SyncIntegrationTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 11
+                  "index": 2
                 },
                 "region": {
-                  "startLine": 106,
+                  "startLine": 109,
                   "startColumn": 19,
-                  "endLine": 106,
+                  "endLine": 109,
                   "endColumn": 23,
-                  "charOffset": 3483,
+                  "charOffset": 3544,
                   "charLength": 4,
                   "snippet": {
                     "text": "sync"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 105,
+                  "startLine": 108,
                   "startColumn": 1,
-                  "endLine": 107,
+                  "endLine": 110,
                   "endColumn": 6,
-                  "charOffset": 3427,
+                  "charOffset": 3488,
                   "charLength": 152,
                   "snippet": {
                     "text": "        await Assert.That(async () =>\n            await sync.PullAsync(\"/data/local/tmp/__sharpadb_missing__\", dst)).ThrowsExactly<IOException>();\n    }"
@@ -78666,25 +78623,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 22,
+                  "startLine": 25,
                   "startColumn": 35,
-                  "endLine": 22,
+                  "endLine": 25,
                   "endColumn": 50,
-                  "charOffset": 671,
+                  "charOffset": 732,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 21,
+                  "startLine": 24,
                   "startColumn": 1,
-                  "endLine": 23,
+                  "endLine": 26,
                   "endColumn": 78,
-                  "charOffset": 627,
+                  "charOffset": 688,
                   "charLength": 156,
                   "snippet": {
                     "text": "        {\n            using var pkt = await deviceTransport.ReadPacketAsync();\n            await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);"
@@ -78718,25 +78676,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 26,
+                  "startLine": 29,
                   "startColumn": 19,
-                  "endLine": 26,
+                  "endLine": 29,
                   "endColumn": 34,
-                  "charOffset": 897,
+                  "charOffset": 958,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 25,
+                  "startLine": 28,
                   "startColumn": 1,
-                  "endLine": 27,
+                  "endLine": 30,
                   "endColumn": 135,
-                  "charOffset": 785,
+                  "charOffset": 846,
                   "charLength": 280,
                   "snippet": {
                     "text": "            var banner = \"device::ro.product.name=test;ro.product.model=Pixel\\0\"u8.ToArray();\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload, (uint)banner.Length, 0),"
@@ -78770,25 +78729,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 49,
+                  "startLine": 52,
                   "startColumn": 36,
-                  "endLine": 49,
+                  "endLine": 52,
                   "endColumn": 51,
-                  "charOffset": 1903,
+                  "charOffset": 1964,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 48,
+                  "startLine": 51,
                   "startColumn": 1,
-                  "endLine": 50,
+                  "endLine": 53,
                   "endColumn": 82,
-                  "charOffset": 1858,
+                  "charOffset": 1919,
                   "charLength": 161,
                   "snippet": {
                     "text": "        {\n            using (var pkt = await deviceTransport.ReadPacketAsync())\n                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);"
@@ -78822,25 +78782,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 53,
+                  "startLine": 56,
                   "startColumn": 19,
-                  "endLine": 53,
+                  "endLine": 56,
                   "endColumn": 34,
-                  "charOffset": 2131,
+                  "charOffset": 2192,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 52,
+                  "startLine": 55,
                   "startColumn": 1,
-                  "endLine": 54,
+                  "endLine": 57,
                   "endColumn": 107,
-                  "charOffset": 2021,
+                  "charOffset": 2082,
                   "charLength": 250,
                   "snippet": {
                     "text": "            var token = RandomNumberGenerator.GetBytes(AdbProtocolConstants.AuthTokenSize);\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Auth, (uint)AdbAuthType.Token, 0, (uint)token.Length, 0), token);"
@@ -78874,25 +78835,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 56,
+                  "startLine": 59,
                   "startColumn": 36,
-                  "endLine": 56,
+                  "endLine": 59,
                   "endColumn": 51,
-                  "charOffset": 2308,
+                  "charOffset": 2369,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 55,
+                  "startLine": 58,
                   "startColumn": 1,
-                  "endLine": 57,
+                  "endLine": 60,
                   "endColumn": 14,
-                  "charOffset": 2272,
+                  "charOffset": 2333,
                   "charLength": 84,
                   "snippet": {
                     "text": "\n            using (var pkt = await deviceTransport.ReadPacketAsync())\n            {"
@@ -78926,25 +78888,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 62,
+                  "startLine": 65,
                   "startColumn": 35,
-                  "endLine": 62,
+                  "endLine": 65,
                   "endColumn": 38,
-                  "charOffset": 2611,
+                  "charOffset": 2672,
                   "charLength": 3,
                   "snippet": {
                     "text": "key"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 61,
+                  "startLine": 64,
                   "startColumn": 1,
-                  "endLine": 63,
+                  "endLine": 66,
                   "endColumn": 83,
-                  "charOffset": 2531,
+                  "charOffset": 2592,
                   "charLength": 190,
                   "snippet": {
                     "text": "                using var pub = RSA.Create();\n                pub.ImportFromPem(key.ExportPrivateKeyPem());\n                await Assert.That(pub.VerifyHash(token, pkt.PayloadSpan.ToArray(),"
@@ -78978,25 +78941,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 68,
+                  "startLine": 71,
                   "startColumn": 19,
-                  "endLine": 68,
+                  "endLine": 71,
                   "endColumn": 34,
-                  "charOffset": 2888,
+                  "charOffset": 2949,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 67,
+                  "startLine": 70,
                   "startColumn": 1,
-                  "endLine": 69,
+                  "endLine": 72,
                   "endColumn": 135,
-                  "charOffset": 2819,
+                  "charOffset": 2880,
                   "charLength": 237,
                   "snippet": {
                     "text": "            var banner = \"device::\\0\"u8.ToArray();\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload, (uint)banner.Length, 0),"
@@ -79030,25 +78994,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 49,
+                  "startLine": 52,
                   "startColumn": 36,
-                  "endLine": 49,
+                  "endLine": 52,
                   "endColumn": 51,
-                  "charOffset": 1903,
+                  "charOffset": 1964,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 48,
+                  "startLine": 51,
                   "startColumn": 1,
-                  "endLine": 50,
+                  "endLine": 53,
                   "endColumn": 82,
-                  "charOffset": 1858,
+                  "charOffset": 1919,
                   "charLength": 161,
                   "snippet": {
                     "text": "        {\n            using (var pkt = await deviceTransport.ReadPacketAsync())\n                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);"
@@ -79082,25 +79047,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 89,
+                  "startLine": 92,
                   "startColumn": 19,
-                  "endLine": 89,
+                  "endLine": 92,
                   "endColumn": 34,
-                  "charOffset": 3807,
+                  "charOffset": 3868,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 88,
+                  "startLine": 91,
                   "startColumn": 1,
-                  "endLine": 90,
+                  "endLine": 93,
                   "endColumn": 144,
-                  "charOffset": 3738,
+                  "charOffset": 3799,
                   "charLength": 246,
                   "snippet": {
                     "text": "            var banner = \"device::\\0\"u8.ToArray();\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload, (uint)banner.Length, 0), banner);"
@@ -79134,25 +79100,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 94,
+                  "startLine": 97,
                   "startColumn": 36,
-                  "endLine": 94,
+                  "endLine": 97,
                   "endColumn": 51,
-                  "charOffset": 4081,
+                  "charOffset": 4142,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 93,
+                  "startLine": 96,
                   "startColumn": 1,
-                  "endLine": 95,
+                  "endLine": 98,
                   "endColumn": 14,
-                  "charOffset": 4014,
+                  "charOffset": 4075,
                   "charLength": 115,
                   "snippet": {
                     "text": "            uint clientLocalId;\n            using (var pkt = await deviceTransport.ReadPacketAsync())\n            {"
@@ -79186,25 +79153,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 102,
+                  "startLine": 105,
                   "startColumn": 19,
-                  "endLine": 102,
+                  "endLine": 105,
                   "endColumn": 34,
-                  "charOffset": 4445,
+                  "charOffset": 4506,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 101,
+                  "startLine": 104,
                   "startColumn": 1,
-                  "endLine": 103,
+                  "endLine": 106,
                   "endColumn": 113,
-                  "charOffset": 4382,
+                  "charOffset": 4443,
                   "charLength": 209,
                   "snippet": {
                     "text": "            const uint deviceLocalId = 9999;\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Okay, deviceLocalId, clientLocalId, 0, 0), ReadOnlyMemory<byte>.Empty);"
@@ -79238,25 +79206,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 106,
+                  "startLine": 109,
                   "startColumn": 19,
-                  "endLine": 106,
+                  "endLine": 109,
                   "endColumn": 34,
-                  "charOffset": 4657,
+                  "charOffset": 4718,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 105,
+                  "startLine": 108,
                   "startColumn": 1,
-                  "endLine": 107,
+                  "endLine": 110,
                   "endColumn": 113,
-                  "charOffset": 4593,
+                  "charOffset": 4654,
                   "charLength": 210,
                   "snippet": {
                     "text": "            var payload = \"hi\\n\"u8.ToArray();\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Wrte, deviceLocalId, clientLocalId, (uint)payload.Length, 0), payload);"
@@ -79290,25 +79259,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 110,
+                  "startLine": 113,
                   "startColumn": 36,
-                  "endLine": 110,
+                  "endLine": 113,
                   "endColumn": 51,
-                  "charOffset": 4872,
+                  "charOffset": 4933,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 109,
+                  "startLine": 112,
                   "startColumn": 1,
-                  "endLine": 111,
+                  "endLine": 114,
                   "endColumn": 14,
-                  "charOffset": 4805,
+                  "charOffset": 4866,
                   "charLength": 115,
                   "snippet": {
                     "text": "            // Expect OKAY ack.\n            using (var ack = await deviceTransport.ReadPacketAsync())\n            {"
@@ -79342,25 +79312,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 117,
+                  "startLine": 120,
                   "startColumn": 19,
-                  "endLine": 117,
+                  "endLine": 120,
                   "endColumn": 34,
-                  "charOffset": 5190,
+                  "charOffset": 5251,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 116,
+                  "startLine": 119,
                   "startColumn": 1,
-                  "endLine": 118,
+                  "endLine": 121,
                   "endColumn": 113,
-                  "charOffset": 5171,
+                  "charOffset": 5232,
                   "charLength": 165,
                   "snippet": {
                     "text": "\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Clse, deviceLocalId, clientLocalId, 0, 0), ReadOnlyMemory<byte>.Empty);"
@@ -79394,25 +79365,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 49,
+                  "startLine": 52,
                   "startColumn": 36,
-                  "endLine": 49,
+                  "endLine": 52,
                   "endColumn": 51,
-                  "charOffset": 1903,
+                  "charOffset": 1964,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 48,
+                  "startLine": 51,
                   "startColumn": 1,
-                  "endLine": 50,
+                  "endLine": 53,
                   "endColumn": 82,
-                  "charOffset": 1858,
+                  "charOffset": 1919,
                   "charLength": 161,
                   "snippet": {
                     "text": "        {\n            using (var pkt = await deviceTransport.ReadPacketAsync())\n                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);"
@@ -79446,25 +79418,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 89,
+                  "startLine": 92,
                   "startColumn": 19,
-                  "endLine": 89,
+                  "endLine": 92,
                   "endColumn": 34,
-                  "charOffset": 3807,
+                  "charOffset": 3868,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 88,
+                  "startLine": 91,
                   "startColumn": 1,
-                  "endLine": 90,
+                  "endLine": 93,
                   "endColumn": 144,
-                  "charOffset": 3738,
+                  "charOffset": 3799,
                   "charLength": 246,
                   "snippet": {
                     "text": "            var banner = \"device::\\0\"u8.ToArray();\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload, (uint)banner.Length, 0), banner);"
@@ -79498,25 +79471,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 149,
+                  "startLine": 152,
                   "startColumn": 36,
-                  "endLine": 149,
+                  "endLine": 152,
                   "endColumn": 51,
-                  "charOffset": 6843,
+                  "charOffset": 6904,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 148,
+                  "startLine": 151,
                   "startColumn": 1,
-                  "endLine": 150,
+                  "endLine": 153,
                   "endColumn": 49,
-                  "charOffset": 6776,
+                  "charOffset": 6837,
                   "charLength": 150,
                   "snippet": {
                     "text": "            uint clientLocalId;\n            using (var pkt = await deviceTransport.ReadPacketAsync())\n                clientLocalId = pkt.Header.Arg0;"
@@ -79550,25 +79524,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 151,
+                  "startLine": 154,
                   "startColumn": 19,
-                  "endLine": 151,
+                  "endLine": 154,
                   "endColumn": 34,
-                  "charOffset": 6945,
+                  "charOffset": 7006,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 150,
+                  "startLine": 153,
                   "startColumn": 1,
-                  "endLine": 152,
+                  "endLine": 155,
                   "endColumn": 104,
-                  "charOffset": 6878,
+                  "charOffset": 6939,
                   "charLength": 204,
                   "snippet": {
                     "text": "                clientLocalId = pkt.Header.Arg0;\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Okay, 1234, clientLocalId, 0, 0), ReadOnlyMemory<byte>.Empty);"
@@ -79603,25 +79578,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/StlsUpgradeTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 2
+                  "index": 6
                 },
                 "region": {
-                  "startLine": 25,
+                  "startLine": 29,
                   "startColumn": 44,
-                  "endLine": 25,
+                  "endLine": 29,
                   "endColumn": 52,
-                  "charOffset": 831,
+                  "charOffset": 916,
                   "charLength": 8,
                   "snippet": {
                     "text": "listener"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 24,
+                  "startLine": 28,
                   "startColumn": 1,
-                  "endLine": 26,
+                  "endLine": 30,
                   "endColumn": 91,
-                  "charOffset": 778,
+                  "charOffset": 863,
                   "charLength": 173,
                   "snippet": {
                     "text": "        {\n            using var serverSocket = await listener.AcceptSocketAsync();\n            await using var rawStream = new NetworkStream(serverSocket, ownsSocket: true);"
@@ -79654,79 +79629,27 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "tests/Theodicean.SharpAdb.IntegrationTests/HelperServicesIntegrationTests.cs",
-                  "uriBaseId": "solutionDir",
-                  "index": 9
-                },
-                "region": {
-                  "startLine": 144,
-                  "startColumn": 19,
-                  "endLine": 144,
-                  "endColumn": 23,
-                  "charOffset": 5081,
-                  "charLength": 4,
-                  "snippet": {
-                    "text": "conn"
-                  }
-                },
-                "contextRegion": {
-                  "startLine": 143,
-                  "startColumn": 1,
-                  "endLine": 145,
-                  "endColumn": 35,
-                  "charOffset": 5053,
-                  "charLength": 93,
-                  "snippet": {
-                    "text": "        {\n            await conn.StartAppAsync(candidate);\n            await Task.Delay(500);"
-                  }
-                }
-              }
-            }
-          ],
-          "partialFingerprints": {
-            "equalIndicator/v1": "C3A5CDE8E1041534E79B88C52052749BA6EC1F5F3ED3A2C1919A9EB3062B9AC8"
-          },
-          "baselineState": "unchanged",
-          "properties": {
-            "qodanaSeverity": "High",
-            "tags": [
-              "C#",
-              ".NET 10.0"
-            ]
-          }
-        },
-        {
-          "ruleId": "AccessToDisposedClosure",
-          "ruleIndex": 1,
-          "kind": "fail",
-          "level": "warning",
-          "message": {
-            "text": "Captured variable is disposed in the outer scope"
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 49,
+                  "startLine": 52,
                   "startColumn": 36,
-                  "endLine": 49,
+                  "endLine": 52,
                   "endColumn": 51,
-                  "charOffset": 1903,
+                  "charOffset": 1964,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 48,
+                  "startLine": 51,
                   "startColumn": 1,
-                  "endLine": 50,
+                  "endLine": 53,
                   "endColumn": 82,
-                  "charOffset": 1858,
+                  "charOffset": 1919,
                   "charLength": 161,
                   "snippet": {
                     "text": "        {\n            using (var pkt = await deviceTransport.ReadPacketAsync())\n                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);"
@@ -79760,25 +79683,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 200,
+                  "startLine": 203,
                   "startColumn": 19,
-                  "endLine": 200,
+                  "endLine": 203,
                   "endColumn": 34,
-                  "charOffset": 9176,
+                  "charOffset": 9237,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 199,
+                  "startLine": 202,
                   "startColumn": 1,
-                  "endLine": 201,
+                  "endLine": 204,
                   "endColumn": 110,
-                  "charOffset": 9107,
+                  "charOffset": 9168,
                   "charLength": 212,
                   "snippet": {
                     "text": "            var banner = \"device::\\0\"u8.ToArray();\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload,"
@@ -79812,25 +79736,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 207,
+                  "startLine": 210,
                   "startColumn": 19,
-                  "endLine": 207,
+                  "endLine": 210,
                   "endColumn": 34,
-                  "charOffset": 9646,
+                  "charOffset": 9707,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 206,
+                  "startLine": 209,
                   "startColumn": 1,
-                  "endLine": 208,
+                  "endLine": 211,
                   "endColumn": 107,
-                  "charOffset": 9558,
+                  "charOffset": 9619,
                   "charLength": 228,
                   "snippet": {
                     "text": "            var token = new byte[AdbProtocolConstants.AuthTokenSize];\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Auth, (uint)AdbAuthType.Token, 0, (uint)token.Length, 0), token);"
@@ -79864,25 +79789,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 49,
+                  "startLine": 52,
                   "startColumn": 36,
-                  "endLine": 49,
+                  "endLine": 52,
                   "endColumn": 51,
-                  "charOffset": 1903,
+                  "charOffset": 1964,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 48,
+                  "startLine": 51,
                   "startColumn": 1,
-                  "endLine": 50,
+                  "endLine": 53,
                   "endColumn": 82,
-                  "charOffset": 1858,
+                  "charOffset": 1919,
                   "charLength": 161,
                   "snippet": {
                     "text": "        {\n            using (var pkt = await deviceTransport.ReadPacketAsync())\n                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);"
@@ -79916,25 +79842,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 200,
+                  "startLine": 203,
                   "startColumn": 19,
-                  "endLine": 200,
+                  "endLine": 203,
                   "endColumn": 34,
-                  "charOffset": 9176,
+                  "charOffset": 9237,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 199,
+                  "startLine": 202,
                   "startColumn": 1,
-                  "endLine": 201,
+                  "endLine": 204,
                   "endColumn": 110,
-                  "charOffset": 9107,
+                  "charOffset": 9168,
                   "charLength": 212,
                   "snippet": {
                     "text": "            var banner = \"device::\\0\"u8.ToArray();\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload,"
@@ -79968,25 +79895,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 94,
+                  "startLine": 97,
                   "startColumn": 36,
-                  "endLine": 94,
+                  "endLine": 97,
                   "endColumn": 51,
-                  "charOffset": 4081,
+                  "charOffset": 4142,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 93,
+                  "startLine": 96,
                   "startColumn": 1,
-                  "endLine": 95,
+                  "endLine": 98,
                   "endColumn": 14,
-                  "charOffset": 4014,
+                  "charOffset": 4075,
                   "charLength": 115,
                   "snippet": {
                     "text": "            uint clientLocalId;\n            using (var pkt = await deviceTransport.ReadPacketAsync())\n            {"
@@ -80020,25 +79948,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 254,
+                  "startLine": 257,
                   "startColumn": 19,
-                  "endLine": 254,
+                  "endLine": 257,
                   "endColumn": 34,
-                  "charOffset": 11930,
+                  "charOffset": 11991,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 253,
+                  "startLine": 256,
                   "startColumn": 1,
-                  "endLine": 255,
+                  "endLine": 258,
                   "endColumn": 104,
-                  "charOffset": 11911,
+                  "charOffset": 11972,
                   "charLength": 156,
                   "snippet": {
                     "text": "\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Okay, 4242, clientLocalId, 0, 0), ReadOnlyMemory<byte>.Empty);"
@@ -80072,25 +80001,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 49,
+                  "startLine": 52,
                   "startColumn": 36,
-                  "endLine": 49,
+                  "endLine": 52,
                   "endColumn": 51,
-                  "charOffset": 1903,
+                  "charOffset": 1964,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 48,
+                  "startLine": 51,
                   "startColumn": 1,
-                  "endLine": 50,
+                  "endLine": 53,
                   "endColumn": 82,
-                  "charOffset": 1858,
+                  "charOffset": 1919,
                   "charLength": 161,
                   "snippet": {
                     "text": "        {\n            using (var pkt = await deviceTransport.ReadPacketAsync())\n                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);"
@@ -80124,25 +80054,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 200,
+                  "startLine": 203,
                   "startColumn": 19,
-                  "endLine": 200,
+                  "endLine": 203,
                   "endColumn": 34,
-                  "charOffset": 9176,
+                  "charOffset": 9237,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 199,
+                  "startLine": 202,
                   "startColumn": 1,
-                  "endLine": 201,
+                  "endLine": 204,
                   "endColumn": 110,
-                  "charOffset": 9107,
+                  "charOffset": 9168,
                   "charLength": 212,
                   "snippet": {
                     "text": "            var banner = \"device::\\0\"u8.ToArray();\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload,"
@@ -80176,25 +80107,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 49,
+                  "startLine": 52,
                   "startColumn": 36,
-                  "endLine": 49,
+                  "endLine": 52,
                   "endColumn": 51,
-                  "charOffset": 1903,
+                  "charOffset": 1964,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 48,
+                  "startLine": 51,
                   "startColumn": 1,
-                  "endLine": 50,
+                  "endLine": 53,
                   "endColumn": 82,
-                  "charOffset": 1858,
+                  "charOffset": 1919,
                   "charLength": 161,
                   "snippet": {
                     "text": "        {\n            using (var pkt = await deviceTransport.ReadPacketAsync())\n                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);"
@@ -80228,25 +80160,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 149,
+                  "startLine": 152,
                   "startColumn": 36,
-                  "endLine": 149,
+                  "endLine": 152,
                   "endColumn": 51,
-                  "charOffset": 6843,
+                  "charOffset": 6904,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 148,
+                  "startLine": 151,
                   "startColumn": 1,
-                  "endLine": 150,
+                  "endLine": 153,
                   "endColumn": 49,
-                  "charOffset": 6776,
+                  "charOffset": 6837,
                   "charLength": 150,
                   "snippet": {
                     "text": "            uint clientLocalId;\n            using (var pkt = await deviceTransport.ReadPacketAsync())\n                clientLocalId = pkt.Header.Arg0;"
@@ -80280,25 +80213,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 49,
+                  "startLine": 52,
                   "startColumn": 36,
-                  "endLine": 49,
+                  "endLine": 52,
                   "endColumn": 51,
-                  "charOffset": 1903,
+                  "charOffset": 1964,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 48,
+                  "startLine": 51,
                   "startColumn": 1,
-                  "endLine": 50,
+                  "endLine": 53,
                   "endColumn": 82,
-                  "charOffset": 1858,
+                  "charOffset": 1919,
                   "charLength": 161,
                   "snippet": {
                     "text": "        {\n            using (var pkt = await deviceTransport.ReadPacketAsync())\n                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);"
@@ -80332,25 +80266,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 430,
+                  "startLine": 433,
                   "startColumn": 19,
-                  "endLine": 430,
+                  "endLine": 433,
                   "endColumn": 34,
-                  "charOffset": 20822,
+                  "charOffset": 20883,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 429,
+                  "startLine": 432,
                   "startColumn": 1,
-                  "endLine": 431,
+                  "endLine": 434,
                   "endColumn": 102,
-                  "charOffset": 20753,
+                  "charOffset": 20814,
                   "charLength": 204,
                   "snippet": {
                     "text": "            var banner = \"device::\\0\"u8.ToArray();\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, /* Arg1 = max_data */ 0,"
@@ -80385,25 +80320,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/StlsUpgradeTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 2
+                  "index": 6
                 },
                 "region": {
-                  "startLine": 100,
+                  "startLine": 104,
                   "startColumn": 48,
-                  "endLine": 100,
+                  "endLine": 104,
                   "endColumn": 56,
-                  "charOffset": 4353,
+                  "charOffset": 4438,
                   "charLength": 8,
                   "snippet": {
                     "text": "listener"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 99,
+                  "startLine": 103,
                   "startColumn": 1,
-                  "endLine": 101,
+                  "endLine": 105,
                   "endColumn": 96,
-                  "charOffset": 4292,
+                  "charOffset": 4377,
                   "charLength": 202,
                   "snippet": {
                     "text": "            {\n                using var serverSocket = await listener.AcceptSocketAsync(serverDone.Token);\n                // Disable Nagle so the single combined write below isn't held back waiting for"
@@ -80438,25 +80373,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/StlsUpgradeTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 2
+                  "index": 6
                 },
                 "region": {
-                  "startLine": 100,
+                  "startLine": 104,
                   "startColumn": 48,
-                  "endLine": 100,
+                  "endLine": 104,
                   "endColumn": 56,
-                  "charOffset": 4353,
+                  "charOffset": 4438,
                   "charLength": 8,
                   "snippet": {
                     "text": "listener"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 99,
+                  "startLine": 103,
                   "startColumn": 1,
-                  "endLine": 101,
+                  "endLine": 105,
                   "endColumn": 96,
-                  "charOffset": 4292,
+                  "charOffset": 4377,
                   "charLength": 202,
                   "snippet": {
                     "text": "            {\n                using var serverSocket = await listener.AcceptSocketAsync(serverDone.Token);\n                // Disable Nagle so the single combined write below isn't held back waiting for"
@@ -80491,25 +80426,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/StlsUpgradeTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 2
+                  "index": 6
                 },
                 "region": {
-                  "startLine": 108,
+                  "startLine": 112,
                   "startColumn": 72,
-                  "endLine": 108,
+                  "endLine": 112,
                   "endColumn": 82,
-                  "charOffset": 4963,
+                  "charOffset": 5048,
                   "charLength": 10,
                   "snippet": {
                     "text": "serverDone"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 107,
+                  "startLine": 111,
                   "startColumn": 1,
-                  "endLine": 109,
+                  "endLine": 113,
                   "endColumn": 86,
-                  "charOffset": 4891,
+                  "charOffset": 4976,
                   "charLength": 176,
                   "snippet": {
                     "text": "\n                using (var pkt = await deviceTransport.ReadPacketAsync(serverDone.Token))\n                    await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);"
@@ -80544,25 +80479,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/StlsUpgradeTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 2
+                  "index": 6
                 },
                 "region": {
-                  "startLine": 118,
+                  "startLine": 122,
                   "startColumn": 54,
-                  "endLine": 118,
+                  "endLine": 122,
                   "endColumn": 64,
-                  "charOffset": 5738,
+                  "charOffset": 5823,
                   "charLength": 10,
                   "snippet": {
                     "text": "serverDone"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 117,
+                  "startLine": 121,
                   "startColumn": 1,
-                  "endLine": 119,
+                  "endLine": 123,
                   "endColumn": 62,
-                  "charOffset": 5607,
+                  "charOffset": 5692,
                   "charLength": 211,
                   "snippet": {
                     "text": "                new AdbHeader(AdbCommand.Stls, 1, 0, 0, 0).WriteTo(combined);\n                await rawStream.WriteAsync(combined, serverDone.Token);\n                await rawStream.FlushAsync(serverDone.Token);"
@@ -80597,25 +80532,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/StlsUpgradeTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 2
+                  "index": 6
                 },
                 "region": {
-                  "startLine": 119,
+                  "startLine": 123,
                   "startColumn": 44,
-                  "endLine": 119,
+                  "endLine": 123,
                   "endColumn": 54,
-                  "charOffset": 5800,
+                  "charOffset": 5885,
                   "charLength": 10,
                   "snippet": {
                     "text": "serverDone"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 118,
+                  "startLine": 122,
                   "startColumn": 1,
-                  "endLine": 120,
+                  "endLine": 124,
                   "endColumn": 1,
-                  "charOffset": 5685,
+                  "charOffset": 5770,
                   "charLength": 134,
                   "snippet": {
                     "text": "                await rawStream.WriteAsync(combined, serverDone.Token);\n                await rawStream.FlushAsync(serverDone.Token);\n"
@@ -80650,25 +80585,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/StlsUpgradeTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 2
+                  "index": 6
                 },
                 "region": {
-                  "startLine": 123,
+                  "startLine": 127,
                   "startColumn": 52,
-                  "endLine": 123,
+                  "endLine": 127,
                   "endColumn": 62,
-                  "charOffset": 6051,
+                  "charOffset": 6136,
                   "charLength": 10,
                   "snippet": {
                     "text": "serverDone"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 122,
+                  "startLine": 126,
                   "startColumn": 1,
-                  "endLine": 124,
+                  "endLine": 128,
                   "endColumn": 14,
-                  "charOffset": 5915,
+                  "charOffset": 6000,
                   "charLength": 168,
                   "snippet": {
                     "text": "                // the client's read of Socket.Available against the server closing.\n                await Task.Delay(Timeout.Infinite, serverDone.Token);\n            }"
@@ -80702,25 +80637,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 300,
+                  "startLine": 303,
                   "startColumn": 40,
-                  "endLine": 300,
+                  "endLine": 303,
                   "endColumn": 55,
-                  "charOffset": 14088,
+                  "charOffset": 14149,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 299,
+                  "startLine": 302,
                   "startColumn": 1,
-                  "endLine": 301,
+                  "endLine": 304,
                   "endColumn": 86,
-                  "charOffset": 14048,
+                  "charOffset": 14109,
                   "charLength": 160,
                   "snippet": {
                     "text": "\n                using (var pkt = await deviceTransport.ReadPacketAsync())\n                    await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);"
@@ -80754,25 +80690,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 303,
+                  "startLine": 306,
                   "startColumn": 23,
-                  "endLine": 303,
+                  "endLine": 306,
                   "endColumn": 38,
-                  "charOffset": 14286,
+                  "charOffset": 14347,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 302,
+                  "startLine": 305,
                   "startColumn": 1,
-                  "endLine": 304,
+                  "endLine": 307,
                   "endColumn": 114,
-                  "charOffset": 14209,
+                  "charOffset": 14270,
                   "charLength": 224,
                   "snippet": {
                     "text": "                var banner = \"device::\\0\"u8.ToArray();\n                await deviceTransport.WritePacketAsync(\n                    new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload,"
@@ -80806,25 +80743,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 307,
+                  "startLine": 310,
                   "startColumn": 40,
-                  "endLine": 307,
+                  "endLine": 310,
                   "endColumn": 55,
-                  "charOffset": 14532,
+                  "charOffset": 14593,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 306,
+                  "startLine": 309,
                   "startColumn": 1,
-                  "endLine": 308,
+                  "endLine": 311,
                   "endColumn": 18,
-                  "charOffset": 14492,
+                  "charOffset": 14553,
                   "charLength": 92,
                   "snippet": {
                     "text": "\n                using (var pkt = await deviceTransport.ReadPacketAsync())\n                {"
@@ -80858,25 +80796,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 312,
+                  "startLine": 315,
                   "startColumn": 23,
-                  "endLine": 312,
+                  "endLine": 315,
                   "endColumn": 38,
-                  "charOffset": 14765,
+                  "charOffset": 14826,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 311,
+                  "startLine": 314,
                   "startColumn": 1,
-                  "endLine": 313,
+                  "endLine": 316,
                   "endColumn": 119,
-                  "charOffset": 14725,
+                  "charOffset": 14786,
                   "charLength": 192,
                   "snippet": {
                     "text": "                }\n                await deviceTransport.WritePacketAsync(\n                    new AdbHeader(AdbCommand.Okay, deviceLocalIdA, clientLocalIdA, 0, 0), ReadOnlyMemory<byte>.Empty);"
@@ -80910,25 +80849,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 307,
+                  "startLine": 310,
                   "startColumn": 40,
-                  "endLine": 307,
+                  "endLine": 310,
                   "endColumn": 55,
-                  "charOffset": 14532,
+                  "charOffset": 14593,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 306,
+                  "startLine": 309,
                   "startColumn": 1,
-                  "endLine": 308,
+                  "endLine": 311,
                   "endColumn": 18,
-                  "charOffset": 14492,
+                  "charOffset": 14553,
                   "charLength": 92,
                   "snippet": {
                     "text": "\n                using (var pkt = await deviceTransport.ReadPacketAsync())\n                {"
@@ -80962,25 +80902,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 320,
+                  "startLine": 323,
                   "startColumn": 23,
-                  "endLine": 320,
+                  "endLine": 323,
                   "endColumn": 38,
-                  "charOffset": 15191,
+                  "charOffset": 15252,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 319,
+                  "startLine": 322,
                   "startColumn": 1,
-                  "endLine": 321,
+                  "endLine": 324,
                   "endColumn": 119,
-                  "charOffset": 15151,
+                  "charOffset": 15212,
                   "charLength": 192,
                   "snippet": {
                     "text": "                }\n                await deviceTransport.WritePacketAsync(\n                    new AdbHeader(AdbCommand.Okay, deviceLocalIdB, clientLocalIdB, 0, 0), ReadOnlyMemory<byte>.Empty);"
@@ -81014,25 +80955,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 328,
+                  "startLine": 331,
                   "startColumn": 23,
-                  "endLine": 328,
+                  "endLine": 331,
                   "endColumn": 38,
-                  "charOffset": 15772,
+                  "charOffset": 15833,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 327,
+                  "startLine": 330,
                   "startColumn": 1,
-                  "endLine": 329,
+                  "endLine": 332,
                   "endColumn": 121,
-                  "charOffset": 15697,
+                  "charOffset": 15758,
                   "charLength": 229,
                   "snippet": {
                     "text": "                var payloadA = new byte[128 * 1024];\n                await deviceTransport.WritePacketAsync(\n                    new AdbHeader(AdbCommand.Wrte, deviceLocalIdA, clientLocalIdA, (uint)payloadA.Length, 0), payloadA);"
@@ -81066,25 +81008,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 332,
+                  "startLine": 335,
                   "startColumn": 23,
-                  "endLine": 332,
+                  "endLine": 335,
                   "endColumn": 38,
-                  "charOffset": 16009,
+                  "charOffset": 16070,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 331,
+                  "startLine": 334,
                   "startColumn": 1,
-                  "endLine": 333,
+                  "endLine": 336,
                   "endColumn": 121,
-                  "charOffset": 15928,
+                  "charOffset": 15989,
                   "charLength": 235,
                   "snippet": {
                     "text": "                var payloadB = \"hello from B\"u8.ToArray();\n                await deviceTransport.WritePacketAsync(\n                    new AdbHeader(AdbCommand.Wrte, deviceLocalIdB, clientLocalIdB, (uint)payloadB.Length, 0), payloadB);"
@@ -81118,25 +81061,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 94,
+                  "startLine": 97,
                   "startColumn": 36,
-                  "endLine": 94,
+                  "endLine": 97,
                   "endColumn": 51,
-                  "charOffset": 4081,
+                  "charOffset": 4142,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 93,
+                  "startLine": 96,
                   "startColumn": 1,
-                  "endLine": 95,
+                  "endLine": 98,
                   "endColumn": 14,
-                  "charOffset": 4014,
+                  "charOffset": 4075,
                   "charLength": 115,
                   "snippet": {
                     "text": "            uint clientLocalId;\n            using (var pkt = await deviceTransport.ReadPacketAsync())\n            {"
@@ -81170,25 +81114,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 391,
+                  "startLine": 394,
                   "startColumn": 19,
-                  "endLine": 391,
+                  "endLine": 394,
                   "endColumn": 34,
-                  "charOffset": 18847,
+                  "charOffset": 18908,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 390,
+                  "startLine": 393,
                   "startColumn": 1,
-                  "endLine": 392,
+                  "endLine": 395,
                   "endColumn": 104,
-                  "charOffset": 18815,
+                  "charOffset": 18876,
                   "charLength": 169,
                   "snippet": {
                     "text": "            }\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Okay, 4321, clientLocalId, 0, 0), ReadOnlyMemory<byte>.Empty);"
@@ -81223,25 +81168,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/ShellV2Tests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 1
+                  "index": 5
                 },
                 "region": {
-                  "startLine": 31,
+                  "startLine": 34,
                   "startColumn": 36,
-                  "endLine": 31,
+                  "endLine": 34,
                   "endColumn": 51,
-                  "charOffset": 1069,
+                  "charOffset": 1130,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 30,
+                  "startLine": 33,
                   "startColumn": 1,
-                  "endLine": 32,
+                  "endLine": 35,
                   "endColumn": 82,
-                  "charOffset": 975,
+                  "charOffset": 1036,
                   "charLength": 210,
                   "snippet": {
                     "text": "            // Handshake with shell_v2 feature advertised.\n            using (var pkt = await deviceTransport.ReadPacketAsync())\n                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);"
@@ -81276,25 +81221,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/ShellV2Tests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 1
+                  "index": 5
                 },
                 "region": {
-                  "startLine": 35,
+                  "startLine": 38,
                   "startColumn": 19,
-                  "endLine": 35,
+                  "endLine": 38,
                   "endColumn": 34,
-                  "charOffset": 1273,
+                  "charOffset": 1334,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 34,
+                  "startLine": 37,
                   "startColumn": 1,
-                  "endLine": 36,
+                  "endLine": 39,
                   "endColumn": 110,
-                  "charOffset": 1187,
+                  "charOffset": 1248,
                   "charLength": 229,
                   "snippet": {
                     "text": "            var banner = \"device::features=shell_v2\\0\"u8.ToArray();\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload,"
@@ -81328,25 +81273,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 94,
+                  "startLine": 97,
                   "startColumn": 36,
-                  "endLine": 94,
+                  "endLine": 97,
                   "endColumn": 51,
-                  "charOffset": 4081,
+                  "charOffset": 4142,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 93,
+                  "startLine": 96,
                   "startColumn": 1,
-                  "endLine": 95,
+                  "endLine": 98,
                   "endColumn": 14,
-                  "charOffset": 4014,
+                  "charOffset": 4075,
                   "charLength": 115,
                   "snippet": {
                     "text": "            uint clientLocalId;\n            using (var pkt = await deviceTransport.ReadPacketAsync())\n            {"
@@ -81381,25 +81327,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/ShellV2Tests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 1
+                  "index": 5
                 },
                 "region": {
-                  "startLine": 50,
+                  "startLine": 53,
                   "startColumn": 19,
-                  "endLine": 50,
+                  "endLine": 53,
                   "endColumn": 34,
-                  "charOffset": 2007,
+                  "charOffset": 2068,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 49,
+                  "startLine": 52,
                   "startColumn": 1,
-                  "endLine": 51,
+                  "endLine": 54,
                   "endColumn": 113,
-                  "charOffset": 1946,
+                  "charOffset": 2007,
                   "charLength": 207,
                   "snippet": {
                     "text": "            const uint deviceLocalId = 42;\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Okay, deviceLocalId, clientLocalId, 0, 0), ReadOnlyMemory<byte>.Empty);"
@@ -81434,25 +81380,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/ShellV2Tests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 1
+                  "index": 5
                 },
                 "region": {
-                  "startLine": 70,
+                  "startLine": 73,
                   "startColumn": 19,
-                  "endLine": 70,
+                  "endLine": 73,
                   "endColumn": 34,
-                  "charOffset": 3226,
+                  "charOffset": 3287,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 69,
+                  "startLine": 72,
                   "startColumn": 1,
-                  "endLine": 71,
+                  "endLine": 74,
                   "endColumn": 113,
-                  "charOffset": 3207,
+                  "charOffset": 3268,
                   "charLength": 165,
                   "snippet": {
                     "text": "\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Wrte, deviceLocalId, clientLocalId, (uint)payload.Length, 0), payload);"
@@ -81487,25 +81433,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/ShellV2Tests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 1
+                  "index": 5
                 },
                 "region": {
-                  "startLine": 74,
+                  "startLine": 77,
                   "startColumn": 36,
-                  "endLine": 74,
+                  "endLine": 77,
                   "endColumn": 51,
-                  "charOffset": 3439,
+                  "charOffset": 3500,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 73,
+                  "startLine": 76,
                   "startColumn": 1,
-                  "endLine": 75,
+                  "endLine": 78,
                   "endColumn": 82,
-                  "charOffset": 3374,
+                  "charOffset": 3435,
                   "charLength": 181,
                   "snippet": {
                     "text": "            // Read OKAY ack.\n            using (var ack = await deviceTransport.ReadPacketAsync())\n                await Assert.That(ack.Header.Command).IsEqualTo(AdbCommand.Okay);"
@@ -81540,25 +81486,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/ShellV2Tests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 1
+                  "index": 5
                 },
                 "region": {
-                  "startLine": 78,
+                  "startLine": 81,
                   "startColumn": 19,
-                  "endLine": 78,
+                  "endLine": 81,
                   "endColumn": 34,
-                  "charOffset": 3640,
+                  "charOffset": 3701,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 77,
+                  "startLine": 80,
                   "startColumn": 1,
-                  "endLine": 79,
+                  "endLine": 82,
                   "endColumn": 113,
-                  "charOffset": 3557,
+                  "charOffset": 3618,
                   "charLength": 229,
                   "snippet": {
                     "text": "            // CLSE the stream so the client side can wind down.\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Clse, deviceLocalId, clientLocalId, 0, 0), ReadOnlyMemory<byte>.Empty);"
@@ -81593,25 +81539,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/ShellV2Tests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 1
+                  "index": 5
                 },
                 "region": {
-                  "startLine": 105,
+                  "startLine": 108,
                   "startColumn": 19,
-                  "endLine": 105,
+                  "endLine": 108,
                   "endColumn": 34,
-                  "charOffset": 4859,
+                  "charOffset": 4920,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 104,
+                  "startLine": 107,
                   "startColumn": 1,
-                  "endLine": 106,
+                  "endLine": 109,
                   "endColumn": 110,
-                  "charOffset": 4778,
+                  "charOffset": 4839,
                   "charLength": 224,
                   "snippet": {
                     "text": "            var banner = \"device::features=cmd\\0\"u8.ToArray();\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload,"
@@ -81645,25 +81591,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 49,
+                  "startLine": 52,
                   "startColumn": 36,
-                  "endLine": 49,
+                  "endLine": 52,
                   "endColumn": 51,
-                  "charOffset": 1903,
+                  "charOffset": 1964,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 48,
+                  "startLine": 51,
                   "startColumn": 1,
-                  "endLine": 50,
+                  "endLine": 53,
                   "endColumn": 82,
-                  "charOffset": 1858,
+                  "charOffset": 1919,
                   "charLength": 161,
                   "snippet": {
                     "text": "        {\n            using (var pkt = await deviceTransport.ReadPacketAsync())\n                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);"
@@ -81698,25 +81645,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/ShellV2Tests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 1
+                  "index": 5
                 },
                 "region": {
-                  "startLine": 35,
+                  "startLine": 38,
                   "startColumn": 19,
-                  "endLine": 35,
+                  "endLine": 38,
                   "endColumn": 34,
-                  "charOffset": 1273,
+                  "charOffset": 1334,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 34,
+                  "startLine": 37,
                   "startColumn": 1,
-                  "endLine": 36,
+                  "endLine": 39,
                   "endColumn": 110,
-                  "charOffset": 1187,
+                  "charOffset": 1248,
                   "charLength": 229,
                   "snippet": {
                     "text": "            var banner = \"device::features=shell_v2\\0\"u8.ToArray();\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload,"
@@ -81751,25 +81698,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/ShellV2Tests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 1
+                  "index": 5
                 },
                 "region": {
-                  "startLine": 139,
+                  "startLine": 142,
                   "startColumn": 19,
-                  "endLine": 139,
+                  "endLine": 142,
                   "endColumn": 34,
-                  "charOffset": 6365,
+                  "charOffset": 6426,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 138,
+                  "startLine": 141,
                   "startColumn": 1,
-                  "endLine": 140,
+                  "endLine": 143,
                   "endColumn": 113,
-                  "charOffset": 6304,
+                  "charOffset": 6365,
                   "charLength": 207,
                   "snippet": {
                     "text": "            const uint deviceLocalId = 99;\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Okay, deviceLocalId, clientLocalId, 0, 0), ReadOnlyMemory<byte>.Empty);"
@@ -81804,25 +81751,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/ShellV2Tests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 1
+                  "index": 5
                 },
                 "region": {
-                  "startLine": 143,
+                  "startLine": 146,
                   "startColumn": 19,
-                  "endLine": 143,
+                  "endLine": 146,
                   "endColumn": 34,
-                  "charOffset": 6591,
+                  "charOffset": 6652,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 142,
+                  "startLine": 145,
                   "startColumn": 1,
-                  "endLine": 144,
+                  "endLine": 147,
                   "endColumn": 113,
-                  "charOffset": 6513,
+                  "charOffset": 6574,
                   "charLength": 224,
                   "snippet": {
                     "text": "            // Close immediately — no stdout, no exit code.\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Clse, deviceLocalId, clientLocalId, 0, 0), ReadOnlyMemory<byte>.Empty);"
@@ -81857,25 +81804,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/StreamingInstallTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 3
+                  "index": 8
                 },
                 "region": {
-                  "startLine": 32,
+                  "startLine": 36,
                   "startColumn": 40,
-                  "endLine": 32,
+                  "endLine": 36,
                   "endColumn": 55,
-                  "charOffset": 1292,
+                  "charOffset": 1372,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 31,
+                  "startLine": 35,
                   "startColumn": 1,
-                  "endLine": 33,
+                  "endLine": 37,
                   "endColumn": 86,
-                  "charOffset": 1239,
+                  "charOffset": 1319,
                   "charLength": 173,
                   "snippet": {
                     "text": "            {\n                using (var pkt = await deviceTransport.ReadPacketAsync())\n                    await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);"
@@ -81910,25 +81857,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/StreamingInstallTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 3
+                  "index": 8
                 },
                 "region": {
-                  "startLine": 36,
+                  "startLine": 40,
                   "startColumn": 23,
-                  "endLine": 36,
+                  "endLine": 40,
                   "endColumn": 38,
-                  "charOffset": 1508,
+                  "charOffset": 1588,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 35,
+                  "startLine": 39,
                   "startColumn": 1,
-                  "endLine": 37,
+                  "endLine": 41,
                   "endColumn": 114,
-                  "charOffset": 1414,
+                  "charOffset": 1494,
                   "charLength": 241,
                   "snippet": {
                     "text": "                var banner = \"device::features=shell_v2\\0\"u8.ToArray();\n                await deviceTransport.WritePacketAsync(\n                    new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload,"
@@ -81963,25 +81910,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/StreamingInstallTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 3
+                  "index": 8
                 },
                 "region": {
-                  "startLine": 42,
+                  "startLine": 46,
                   "startColumn": 40,
-                  "endLine": 42,
+                  "endLine": 46,
                   "endColumn": 55,
-                  "charOffset": 1864,
+                  "charOffset": 1944,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 41,
+                  "startLine": 45,
                   "startColumn": 1,
-                  "endLine": 43,
+                  "endLine": 47,
                   "endColumn": 18,
-                  "charOffset": 1789,
+                  "charOffset": 1869,
                   "charLength": 127,
                   "snippet": {
                     "text": "                uint clientLocalId;\n                using (var pkt = await deviceTransport.ReadPacketAsync())\n                {"
@@ -82016,25 +81963,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/StreamingInstallTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 3
+                  "index": 8
                 },
                 "region": {
-                  "startLine": 50,
+                  "startLine": 54,
                   "startColumn": 23,
-                  "endLine": 50,
+                  "endLine": 54,
                   "endColumn": 38,
-                  "charOffset": 2249,
+                  "charOffset": 2329,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 49,
+                  "startLine": 53,
                   "startColumn": 1,
-                  "endLine": 51,
+                  "endLine": 55,
                   "endColumn": 117,
-                  "charOffset": 2178,
+                  "charOffset": 2258,
                   "charLength": 221,
                   "snippet": {
                     "text": "                const uint deviceLocalId = 5555;\n                await deviceTransport.WritePacketAsync(\n                    new AdbHeader(AdbCommand.Okay, deviceLocalId, clientLocalId, 0, 0), ReadOnlyMemory<byte>.Empty);"
@@ -82069,25 +82016,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/StreamingInstallTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 3
+                  "index": 8
                 },
                 "region": {
-                  "startLine": 57,
+                  "startLine": 61,
                   "startColumn": 43,
-                  "endLine": 57,
+                  "endLine": 61,
                   "endColumn": 58,
-                  "charOffset": 2638,
+                  "charOffset": 2718,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 56,
+                  "startLine": 60,
                   "startColumn": 1,
-                  "endLine": 58,
+                  "endLine": 62,
                   "endColumn": 63,
-                  "charOffset": 2578,
+                  "charOffset": 2658,
                   "charLength": 157,
                   "snippet": {
                     "text": "                {\n                    using var pkt = await deviceTransport.ReadPacketAsync();\n                    if (pkt.Header.Command != AdbCommand.Wrte)"
@@ -82122,25 +82069,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/StreamingInstallTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 3
+                  "index": 8
                 },
                 "region": {
-                  "startLine": 77,
+                  "startLine": 81,
                   "startColumn": 27,
-                  "endLine": 77,
+                  "endLine": 81,
                   "endColumn": 42,
-                  "charOffset": 3656,
+                  "charOffset": 3736,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 76,
+                  "startLine": 80,
                   "startColumn": 1,
-                  "endLine": 78,
+                  "endLine": 82,
                   "endColumn": 121,
-                  "charOffset": 3552,
+                  "charOffset": 3632,
                   "charLength": 258,
                   "snippet": {
                     "text": "                    // Acknowledge the WRTE so the client can keep streaming.\n                    await deviceTransport.WritePacketAsync(\n                        new AdbHeader(AdbCommand.Okay, deviceLocalId, clientLocalId, 0, 0), ReadOnlyMemory<byte>.Empty);"
@@ -82175,25 +82122,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/StreamingInstallTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 3
+                  "index": 8
                 },
                 "region": {
-                  "startLine": 92,
+                  "startLine": 96,
                   "startColumn": 23,
-                  "endLine": 92,
+                  "endLine": 96,
                   "endColumn": 38,
-                  "charOffset": 4601,
+                  "charOffset": 4681,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 91,
+                  "startLine": 95,
                   "startColumn": 1,
-                  "endLine": 93,
+                  "endLine": 97,
                   "endColumn": 127,
-                  "charOffset": 4578,
+                  "charOffset": 4658,
                   "charLength": 183,
                   "snippet": {
                     "text": "\n                await deviceTransport.WritePacketAsync(\n                    new AdbHeader(AdbCommand.Wrte, deviceLocalId, clientLocalId, (uint)replyPayload.Length, 0), replyPayload);"
@@ -82228,25 +82175,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/StreamingInstallTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 3
+                  "index": 8
                 },
                 "region": {
-                  "startLine": 95,
+                  "startLine": 99,
                   "startColumn": 40,
-                  "endLine": 95,
+                  "endLine": 99,
                   "endColumn": 55,
-                  "charOffset": 4802,
+                  "charOffset": 4882,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 94,
+                  "startLine": 98,
                   "startColumn": 1,
-                  "endLine": 96,
+                  "endLine": 100,
                   "endColumn": 86,
-                  "charOffset": 4762,
+                  "charOffset": 4842,
                   "charLength": 160,
                   "snippet": {
                     "text": "\n                using (var ack = await deviceTransport.ReadPacketAsync())\n                    await Assert.That(ack.Header.Command).IsEqualTo(AdbCommand.Okay);"
@@ -82281,25 +82228,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/StreamingInstallTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 3
+                  "index": 8
                 },
                 "region": {
-                  "startLine": 98,
+                  "startLine": 102,
                   "startColumn": 23,
-                  "endLine": 98,
+                  "endLine": 102,
                   "endColumn": 38,
-                  "charOffset": 4946,
+                  "charOffset": 5026,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 97,
+                  "startLine": 101,
                   "startColumn": 1,
-                  "endLine": 99,
+                  "endLine": 103,
                   "endColumn": 117,
-                  "charOffset": 4923,
+                  "charOffset": 5003,
                   "charLength": 173,
                   "snippet": {
                     "text": "\n                await deviceTransport.WritePacketAsync(\n                    new AdbHeader(AdbCommand.Clse, deviceLocalId, clientLocalId, 0, 0), ReadOnlyMemory<byte>.Empty);"
@@ -82333,25 +82280,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 49,
+                  "startLine": 52,
                   "startColumn": 36,
-                  "endLine": 49,
+                  "endLine": 52,
                   "endColumn": 51,
-                  "charOffset": 1903,
+                  "charOffset": 1964,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 48,
+                  "startLine": 51,
                   "startColumn": 1,
-                  "endLine": 50,
+                  "endLine": 53,
                   "endColumn": 82,
-                  "charOffset": 1858,
+                  "charOffset": 1919,
                   "charLength": 161,
                   "snippet": {
                     "text": "        {\n            using (var pkt = await deviceTransport.ReadPacketAsync())\n                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);"
@@ -82386,25 +82334,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/ShellV2Tests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 1
+                  "index": 5
                 },
                 "region": {
-                  "startLine": 35,
+                  "startLine": 38,
                   "startColumn": 19,
-                  "endLine": 35,
+                  "endLine": 38,
                   "endColumn": 34,
-                  "charOffset": 1273,
+                  "charOffset": 1334,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 34,
+                  "startLine": 37,
                   "startColumn": 1,
-                  "endLine": 36,
+                  "endLine": 39,
                   "endColumn": 110,
-                  "charOffset": 1187,
+                  "charOffset": 1248,
                   "charLength": 229,
                   "snippet": {
                     "text": "            var banner = \"device::features=shell_v2\\0\"u8.ToArray();\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload,"
@@ -82438,25 +82386,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 49,
+                  "startLine": 52,
                   "startColumn": 36,
-                  "endLine": 49,
+                  "endLine": 52,
                   "endColumn": 51,
-                  "charOffset": 1903,
+                  "charOffset": 1964,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 48,
+                  "startLine": 51,
                   "startColumn": 1,
-                  "endLine": 50,
+                  "endLine": 53,
                   "endColumn": 82,
-                  "charOffset": 1858,
+                  "charOffset": 1919,
                   "charLength": 161,
                   "snippet": {
                     "text": "        {\n            using (var pkt = await deviceTransport.ReadPacketAsync())\n                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);"
@@ -82491,25 +82440,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/ShellV2Tests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 1
+                  "index": 5
                 },
                 "region": {
-                  "startLine": 35,
+                  "startLine": 38,
                   "startColumn": 19,
-                  "endLine": 35,
+                  "endLine": 38,
                   "endColumn": 34,
-                  "charOffset": 1273,
+                  "charOffset": 1334,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 34,
+                  "startLine": 37,
                   "startColumn": 1,
-                  "endLine": 36,
+                  "endLine": 39,
                   "endColumn": 110,
-                  "charOffset": 1187,
+                  "charOffset": 1248,
                   "charLength": 229,
                   "snippet": {
                     "text": "            var banner = \"device::features=shell_v2\\0\"u8.ToArray();\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload,"
@@ -82544,25 +82493,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/StreamingInstallTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 3
+                  "index": 8
                 },
                 "region": {
-                  "startLine": 170,
+                  "startLine": 174,
                   "startColumn": 39,
-                  "endLine": 170,
+                  "endLine": 174,
                   "endColumn": 54,
-                  "charOffset": 8605,
+                  "charOffset": 8685,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 169,
+                  "startLine": 173,
                   "startColumn": 1,
-                  "endLine": 171,
+                  "endLine": 175,
                   "endColumn": 82,
-                  "charOffset": 8514,
+                  "charOffset": 8594,
                   "charLength": 207,
                   "snippet": {
                     "text": "            // pump didn't notice the EOF and throw.\n            using var openPkt = await deviceTransport.ReadPacketAsync();\n            await Assert.That(openPkt.Header.Command).IsEqualTo(AdbCommand.Open);"
@@ -82597,25 +82546,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/StreamingInstallTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 3
+                  "index": 8
                 },
                 "region": {
-                  "startLine": 172,
+                  "startLine": 176,
                   "startColumn": 19,
-                  "endLine": 172,
+                  "endLine": 176,
                   "endColumn": 34,
-                  "charOffset": 8740,
+                  "charOffset": 8820,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 171,
+                  "startLine": 175,
                   "startColumn": 1,
-                  "endLine": 173,
+                  "endLine": 177,
                   "endColumn": 110,
-                  "charOffset": 8640,
+                  "charOffset": 8720,
                   "charLength": 243,
                   "snippet": {
                     "text": "            await Assert.That(openPkt.Header.Command).IsEqualTo(AdbCommand.Open);\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Okay, 9999, openPkt.Header.Arg0, 0, 0), ReadOnlyMemory<byte>.Empty);"
@@ -82649,25 +82598,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 49,
+                  "startLine": 52,
                   "startColumn": 36,
-                  "endLine": 49,
+                  "endLine": 52,
                   "endColumn": 51,
-                  "charOffset": 1903,
+                  "charOffset": 1964,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 48,
+                  "startLine": 51,
                   "startColumn": 1,
-                  "endLine": 50,
+                  "endLine": 53,
                   "endColumn": 82,
-                  "charOffset": 1858,
+                  "charOffset": 1919,
                   "charLength": 161,
                   "snippet": {
                     "text": "        {\n            using (var pkt = await deviceTransport.ReadPacketAsync())\n                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);"
@@ -82702,25 +82652,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/ShellV2Tests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 1
+                  "index": 5
                 },
                 "region": {
-                  "startLine": 35,
+                  "startLine": 38,
                   "startColumn": 19,
-                  "endLine": 35,
+                  "endLine": 38,
                   "endColumn": 34,
-                  "charOffset": 1273,
+                  "charOffset": 1334,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 34,
+                  "startLine": 37,
                   "startColumn": 1,
-                  "endLine": 36,
+                  "endLine": 39,
                   "endColumn": 110,
-                  "charOffset": 1187,
+                  "charOffset": 1248,
                   "charLength": 229,
                   "snippet": {
                     "text": "            var banner = \"device::features=shell_v2\\0\"u8.ToArray();\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload,"
@@ -82754,25 +82704,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 49,
+                  "startLine": 52,
                   "startColumn": 36,
-                  "endLine": 49,
+                  "endLine": 52,
                   "endColumn": 51,
-                  "charOffset": 1903,
+                  "charOffset": 1964,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 48,
+                  "startLine": 51,
                   "startColumn": 1,
-                  "endLine": 50,
+                  "endLine": 53,
                   "endColumn": 82,
-                  "charOffset": 1858,
+                  "charOffset": 1919,
                   "charLength": 161,
                   "snippet": {
                     "text": "        {\n            using (var pkt = await deviceTransport.ReadPacketAsync())\n                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);"
@@ -82807,25 +82758,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/ShellV2Tests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 1
+                  "index": 5
                 },
                 "region": {
-                  "startLine": 35,
+                  "startLine": 38,
                   "startColumn": 19,
-                  "endLine": 35,
+                  "endLine": 38,
                   "endColumn": 34,
-                  "charOffset": 1273,
+                  "charOffset": 1334,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 34,
+                  "startLine": 37,
                   "startColumn": 1,
-                  "endLine": 36,
+                  "endLine": 39,
                   "endColumn": 110,
-                  "charOffset": 1187,
+                  "charOffset": 1248,
                   "charLength": 229,
                   "snippet": {
                     "text": "            var banner = \"device::features=shell_v2\\0\"u8.ToArray();\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload,"
@@ -82860,25 +82811,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/SyncSessionTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 4
+                  "index": 9
                 },
                 "region": {
-                  "startLine": 39,
+                  "startLine": 44,
                   "startColumn": 37,
-                  "endLine": 39,
+                  "endLine": 44,
                   "endColumn": 52,
-                  "charOffset": 1446,
+                  "charOffset": 1560,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 38,
+                  "startLine": 43,
                   "startColumn": 1,
-                  "endLine": 40,
+                  "endLine": 45,
                   "endColumn": 32,
-                  "charOffset": 1400,
+                  "charOffset": 1514,
                   "charLength": 129,
                   "snippet": {
                     "text": "        {\n            await RunHandshakeAsync(deviceTransport, features: \"shell_v2,sendrecv_v2\");\n            uint clientLocalId;"
@@ -82912,25 +82863,26 @@
               "physicalLocation": {
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
-                  "uriBaseId": "solutionDir"
+                  "uriBaseId": "solutionDir",
+                  "index": 4
                 },
                 "region": {
-                  "startLine": 94,
+                  "startLine": 97,
                   "startColumn": 36,
-                  "endLine": 94,
+                  "endLine": 97,
                   "endColumn": 51,
-                  "charOffset": 4081,
+                  "charOffset": 4142,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 93,
+                  "startLine": 96,
                   "startColumn": 1,
-                  "endLine": 95,
+                  "endLine": 98,
                   "endColumn": 14,
-                  "charOffset": 4014,
+                  "charOffset": 4075,
                   "charLength": 115,
                   "snippet": {
                     "text": "            uint clientLocalId;\n            using (var pkt = await deviceTransport.ReadPacketAsync())\n            {"
@@ -82965,25 +82917,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/SyncSessionTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 4
+                  "index": 9
                 },
                 "region": {
-                  "startLine": 48,
+                  "startLine": 53,
                   "startColumn": 19,
-                  "endLine": 48,
+                  "endLine": 53,
                   "endColumn": 34,
-                  "charOffset": 1877,
+                  "charOffset": 1991,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 47,
+                  "startLine": 52,
                   "startColumn": 1,
-                  "endLine": 49,
+                  "endLine": 54,
                   "endColumn": 104,
-                  "charOffset": 1858,
+                  "charOffset": 1972,
                   "charLength": 156,
                   "snippet": {
                     "text": "\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Okay, 7777, clientLocalId, 0, 0), ReadOnlyMemory<byte>.Empty);"
@@ -83018,25 +82970,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/SyncSessionTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 4
+                  "index": 9
                 },
                 "region": {
-                  "startLine": 77,
+                  "startLine": 82,
                   "startColumn": 63,
-                  "endLine": 77,
+                  "endLine": 82,
                   "endColumn": 78,
-                  "charOffset": 3180,
+                  "charOffset": 3294,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 76,
+                  "startLine": 81,
                   "startColumn": 1,
-                  "endLine": 78,
+                  "endLine": 83,
                   "endColumn": 1,
-                  "charOffset": 3104,
+                  "charOffset": 3218,
                   "charLength": 109,
                   "snippet": {
                     "text": "            {\n                var clientLocalId = await OpenSyncStreamAsync(deviceTransport, deviceLocalId);\n"
@@ -83071,25 +83023,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/SyncSessionTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 4
+                  "index": 9
                 },
                 "region": {
-                  "startLine": 80,
+                  "startLine": 85,
                   "startColumn": 54,
-                  "endLine": 80,
+                  "endLine": 85,
                   "endColumn": 69,
-                  "charOffset": 3354,
+                  "charOffset": 3468,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 79,
+                  "startLine": 84,
                   "startColumn": 1,
-                  "endLine": 81,
+                  "endLine": 86,
                   "endColumn": 48,
-                  "charOffset": 3214,
+                  "charOffset": 3328,
                   "charLength": 248,
                   "snippet": {
                     "text": "                // Read the LST2 + namelen + path frame from one or more WRTE packets.\n                var req = await ReadStreamFrameAsync(deviceTransport, deviceLocalId, clientLocalId, minBytes: 8);\n                observedRequest.SetResult(req);"
@@ -83124,25 +83076,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/SyncSessionTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 4
+                  "index": 9
                 },
                 "region": {
-                  "startLine": 101,
+                  "startLine": 106,
                   "startColumn": 23,
-                  "endLine": 101,
+                  "endLine": 106,
                   "endColumn": 38,
-                  "charOffset": 4893,
+                  "charOffset": 5007,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 100,
+                  "startLine": 105,
                   "startColumn": 1,
-                  "endLine": 102,
+                  "endLine": 107,
                   "endColumn": 113,
-                  "charOffset": 4870,
+                  "charOffset": 4984,
                   "charLength": 169,
                   "snippet": {
                     "text": "\n                await deviceTransport.WritePacketAsync(\n                    new AdbHeader(AdbCommand.Wrte, deviceLocalId, clientLocalId, (uint)reply.Length, 0), reply);"
@@ -83177,25 +83129,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/SyncSessionTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 4
+                  "index": 9
                 },
                 "region": {
-                  "startLine": 104,
+                  "startLine": 109,
                   "startColumn": 39,
-                  "endLine": 104,
+                  "endLine": 109,
                   "endColumn": 54,
-                  "charOffset": 5079,
+                  "charOffset": 5193,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 103,
+                  "startLine": 108,
                   "startColumn": 1,
-                  "endLine": 105,
+                  "endLine": 110,
                   "endColumn": 82,
-                  "charOffset": 5040,
+                  "charOffset": 5154,
                   "charLength": 155,
                   "snippet": {
                     "text": "\n                using var ack = await deviceTransport.ReadPacketAsync();\n                await Assert.That(ack.Header.Command).IsEqualTo(AdbCommand.Okay);"
@@ -83230,25 +83182,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/SyncSessionTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 4
+                  "index": 9
                 },
                 "region": {
-                  "startLine": 150,
+                  "startLine": 155,
                   "startColumn": 59,
-                  "endLine": 150,
+                  "endLine": 155,
                   "endColumn": 74,
-                  "charOffset": 7266,
+                  "charOffset": 7380,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 149,
+                  "startLine": 154,
                   "startColumn": 1,
-                  "endLine": 151,
+                  "endLine": 156,
                   "endColumn": 104,
-                  "charOffset": 7198,
+                  "charOffset": 7312,
                   "charLength": 204,
                   "snippet": {
                     "text": "        {\n            var clientLocalId = await OpenSyncStreamAsync(deviceTransport, deviceLocalId);\n            _ = await ReadStreamFrameAsync(deviceTransport, deviceLocalId, clientLocalId, minBytes: 8);"
@@ -83283,25 +83235,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/SyncSessionTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 4
+                  "index": 9
                 },
                 "region": {
-                  "startLine": 151,
+                  "startLine": 156,
                   "startColumn": 44,
-                  "endLine": 151,
+                  "endLine": 156,
                   "endColumn": 59,
-                  "charOffset": 7342,
+                  "charOffset": 7456,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 150,
+                  "startLine": 155,
                   "startColumn": 1,
-                  "endLine": 152,
+                  "endLine": 157,
                   "endColumn": 1,
-                  "charOffset": 7208,
+                  "charOffset": 7322,
                   "charLength": 195,
                   "snippet": {
                     "text": "            var clientLocalId = await OpenSyncStreamAsync(deviceTransport, deviceLocalId);\n            _ = await ReadStreamFrameAsync(deviceTransport, deviceLocalId, clientLocalId, minBytes: 8);\n"
@@ -83336,25 +83288,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/SyncSessionTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 4
+                  "index": 9
                 },
                 "region": {
-                  "startLine": 158,
+                  "startLine": 163,
                   "startColumn": 19,
-                  "endLine": 158,
+                  "endLine": 163,
                   "endColumn": 34,
-                  "charOffset": 7727,
+                  "charOffset": 7841,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 157,
+                  "startLine": 162,
                   "startColumn": 1,
-                  "endLine": 159,
+                  "endLine": 164,
                   "endColumn": 109,
-                  "charOffset": 7708,
+                  "charOffset": 7822,
                   "charLength": 161,
                   "snippet": {
                     "text": "\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Wrte, deviceLocalId, clientLocalId, (uint)reply.Length, 0), reply);"
@@ -83389,25 +83341,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/SyncSessionTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 4
+                  "index": 9
                 },
                 "region": {
-                  "startLine": 160,
+                  "startLine": 165,
                   "startColumn": 35,
-                  "endLine": 160,
+                  "endLine": 165,
                   "endColumn": 50,
-                  "charOffset": 7904,
+                  "charOffset": 8018,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 159,
+                  "startLine": 164,
                   "startColumn": 1,
-                  "endLine": 161,
+                  "endLine": 166,
                   "endColumn": 78,
-                  "charOffset": 7761,
+                  "charOffset": 7875,
                   "charLength": 255,
                   "snippet": {
                     "text": "                new AdbHeader(AdbCommand.Wrte, deviceLocalId, clientLocalId, (uint)reply.Length, 0), reply);\n            using var ack = await deviceTransport.ReadPacketAsync();\n            await Assert.That(ack.Header.Command).IsEqualTo(AdbCommand.Okay);"
@@ -83442,25 +83394,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/SyncSessionTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 4
+                  "index": 9
                 },
                 "region": {
-                  "startLine": 185,
+                  "startLine": 190,
                   "startColumn": 59,
-                  "endLine": 185,
+                  "endLine": 190,
                   "endColumn": 74,
-                  "charOffset": 8952,
+                  "charOffset": 9066,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 184,
+                  "startLine": 189,
                   "startColumn": 1,
-                  "endLine": 186,
+                  "endLine": 191,
                   "endColumn": 1,
-                  "charOffset": 8884,
+                  "charOffset": 8998,
                   "charLength": 101,
                   "snippet": {
                     "text": "        {\n            var clientLocalId = await OpenSyncStreamAsync(deviceTransport, deviceLocalId);\n"
@@ -83495,25 +83447,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/SyncSessionTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 4
+                  "index": 9
                 },
                 "region": {
-                  "startLine": 188,
+                  "startLine": 193,
                   "startColumn": 44,
-                  "endLine": 188,
+                  "endLine": 193,
                   "endColumn": 59,
-                  "charOffset": 9068,
+                  "charOffset": 9182,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 187,
+                  "startLine": 192,
                   "startColumn": 1,
-                  "endLine": 189,
+                  "endLine": 194,
                   "endColumn": 1,
-                  "charOffset": 8986,
+                  "charOffset": 9100,
                   "charLength": 143,
                   "snippet": {
                     "text": "            // Drain the LIS2 request.\n            _ = await ReadStreamFrameAsync(deviceTransport, deviceLocalId, clientLocalId, minBytes: 8);\n"
@@ -83548,25 +83500,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/SyncSessionTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 4
+                  "index": 9
                 },
                 "region": {
-                  "startLine": 197,
+                  "startLine": 202,
                   "startColumn": 19,
-                  "endLine": 197,
+                  "endLine": 202,
                   "endColumn": 34,
-                  "charOffset": 9479,
+                  "charOffset": 9593,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 196,
+                  "startLine": 201,
                   "startColumn": 1,
-                  "endLine": 198,
+                  "endLine": 203,
                   "endColumn": 105,
-                  "charOffset": 9420,
+                  "charOffset": 9534,
                   "charLength": 197,
                   "snippet": {
                     "text": "            var arr = payload.ToArray();\n            await deviceTransport.WritePacketAsync(\n                new AdbHeader(AdbCommand.Wrte, deviceLocalId, clientLocalId, (uint)arr.Length, 0), arr);"
@@ -83601,25 +83553,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/SyncSessionTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 4
+                  "index": 9
                 },
                 "region": {
-                  "startLine": 199,
+                  "startLine": 204,
                   "startColumn": 35,
-                  "endLine": 199,
+                  "endLine": 204,
                   "endColumn": 50,
-                  "charOffset": 9652,
+                  "charOffset": 9766,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 198,
+                  "startLine": 203,
                   "startColumn": 1,
-                  "endLine": 200,
+                  "endLine": 205,
                   "endColumn": 78,
-                  "charOffset": 9513,
+                  "charOffset": 9627,
                   "charLength": 251,
                   "snippet": {
                     "text": "                new AdbHeader(AdbCommand.Wrte, deviceLocalId, clientLocalId, (uint)arr.Length, 0), arr);\n            using var ack = await deviceTransport.ReadPacketAsync();\n            await Assert.That(ack.Header.Command).IsEqualTo(AdbCommand.Okay);"
@@ -83654,25 +83606,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/SyncSessionTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 4
+                  "index": 9
                 },
                 "region": {
-                  "startLine": 77,
+                  "startLine": 82,
                   "startColumn": 63,
-                  "endLine": 77,
+                  "endLine": 82,
                   "endColumn": 78,
-                  "charOffset": 3180,
+                  "charOffset": 3294,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 76,
+                  "startLine": 81,
                   "startColumn": 1,
-                  "endLine": 78,
+                  "endLine": 83,
                   "endColumn": 1,
-                  "charOffset": 3104,
+                  "charOffset": 3218,
                   "charLength": 109,
                   "snippet": {
                     "text": "            {\n                var clientLocalId = await OpenSyncStreamAsync(deviceTransport, deviceLocalId);\n"
@@ -83707,25 +83659,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/SyncSessionTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 4
+                  "index": 9
                 },
                 "region": {
-                  "startLine": 237,
+                  "startLine": 242,
                   "startColumn": 60,
-                  "endLine": 237,
+                  "endLine": 242,
                   "endColumn": 75,
-                  "charOffset": 11337,
+                  "charOffset": 11451,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 236,
+                  "startLine": 241,
                   "startColumn": 1,
-                  "endLine": 238,
+                  "endLine": 243,
                   "endColumn": 118,
-                  "charOffset": 11184,
+                  "charOffset": 11298,
                   "charLength": 331,
                   "snippet": {
                     "text": "                // Expect: RCV2 + namelen(4) + path, then sync_recv_v2 (8 bytes: id + flags).\n                var pathFrame = await ReadStreamFrameAsync(deviceTransport, deviceLocalId, clientLocalId, minBytes: 8);\n                await Assert.That(BinaryPrimitives.ReadUInt32LittleEndian(pathFrame)).IsEqualTo(SyncProtocol.RecvV2);"
@@ -83760,25 +83712,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/SyncSessionTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 4
+                  "index": 9
                 },
                 "region": {
-                  "startLine": 248,
+                  "startLine": 253,
                   "startColumn": 59,
-                  "endLine": 248,
+                  "endLine": 253,
                   "endColumn": 74,
-                  "charOffset": 12161,
+                  "charOffset": 12275,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 247,
+                  "startLine": 252,
                   "startColumn": 1,
-                  "endLine": 249,
+                  "endLine": 254,
                   "endColumn": 43,
-                  "charOffset": 12085,
+                  "charOffset": 12199,
                   "charLength": 179,
                   "snippet": {
                     "text": "                {\n                    var more = await ReadStreamFrameAsync(deviceTransport, deviceLocalId, clientLocalId, minBytes: 1);\n                    collected.Write(more);"
@@ -83813,25 +83765,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/SyncSessionTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 4
+                  "index": 9
                 },
                 "region": {
-                  "startLine": 262,
+                  "startLine": 267,
                   "startColumn": 23,
-                  "endLine": 262,
+                  "endLine": 267,
                   "endColumn": 38,
-                  "charOffset": 12903,
+                  "charOffset": 13017,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 261,
+                  "startLine": 266,
                   "startColumn": 1,
-                  "endLine": 263,
+                  "endLine": 268,
                   "endColumn": 109,
-                  "charOffset": 12836,
+                  "charOffset": 12950,
                   "charLength": 209,
                   "snippet": {
                     "text": "                var arr = payload.ToArray();\n                await deviceTransport.WritePacketAsync(\n                    new AdbHeader(AdbCommand.Wrte, deviceLocalId, clientLocalId, (uint)arr.Length, 0), arr);"
@@ -83866,25 +83818,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/SyncSessionTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 4
+                  "index": 9
                 },
                 "region": {
-                  "startLine": 264,
+                  "startLine": 269,
                   "startColumn": 39,
-                  "endLine": 264,
+                  "endLine": 269,
                   "endColumn": 54,
-                  "charOffset": 13084,
+                  "charOffset": 13198,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 263,
+                  "startLine": 268,
                   "startColumn": 1,
-                  "endLine": 265,
+                  "endLine": 270,
                   "endColumn": 82,
-                  "charOffset": 12937,
+                  "charOffset": 13051,
                   "charLength": 263,
                   "snippet": {
                     "text": "                    new AdbHeader(AdbCommand.Wrte, deviceLocalId, clientLocalId, (uint)arr.Length, 0), arr);\n                using var ack = await deviceTransport.ReadPacketAsync();\n                await Assert.That(ack.Header.Command).IsEqualTo(AdbCommand.Okay);"
@@ -83919,25 +83871,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/SyncSessionTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 4
+                  "index": 9
                 },
                 "region": {
-                  "startLine": 77,
+                  "startLine": 82,
                   "startColumn": 63,
-                  "endLine": 77,
+                  "endLine": 82,
                   "endColumn": 78,
-                  "charOffset": 3180,
+                  "charOffset": 3294,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 76,
+                  "startLine": 81,
                   "startColumn": 1,
-                  "endLine": 78,
+                  "endLine": 83,
                   "endColumn": 1,
-                  "charOffset": 3104,
+                  "charOffset": 3218,
                   "charLength": 109,
                   "snippet": {
                     "text": "            {\n                var clientLocalId = await OpenSyncStreamAsync(deviceTransport, deviceLocalId);\n"
@@ -83972,25 +83924,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/SyncSessionTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 4
+                  "index": 9
                 },
                 "region": {
-                  "startLine": 248,
+                  "startLine": 253,
                   "startColumn": 59,
-                  "endLine": 248,
+                  "endLine": 253,
                   "endColumn": 74,
-                  "charOffset": 12161,
+                  "charOffset": 12275,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 247,
+                  "startLine": 252,
                   "startColumn": 1,
-                  "endLine": 249,
+                  "endLine": 254,
                   "endColumn": 43,
-                  "charOffset": 12085,
+                  "charOffset": 12199,
                   "charLength": 179,
                   "snippet": {
                     "text": "                {\n                    var more = await ReadStreamFrameAsync(deviceTransport, deviceLocalId, clientLocalId, minBytes: 1);\n                    collected.Write(more);"
@@ -84025,25 +83977,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/SyncSessionTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 4
+                  "index": 9
                 },
                 "region": {
-                  "startLine": 342,
+                  "startLine": 347,
                   "startColumn": 23,
-                  "endLine": 342,
+                  "endLine": 347,
                   "endColumn": 38,
-                  "charOffset": 16863,
+                  "charOffset": 16977,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 341,
+                  "startLine": 346,
                   "startColumn": 1,
-                  "endLine": 343,
+                  "endLine": 348,
                   "endColumn": 117,
-                  "charOffset": 16763,
+                  "charOffset": 16877,
                   "charLength": 250,
                   "snippet": {
                     "text": "                SyncProtocol.WriteFrameHeader(okBytes, SyncProtocol.Okay, 0);\n                await deviceTransport.WritePacketAsync(\n                    new AdbHeader(AdbCommand.Wrte, deviceLocalId, clientLocalId, (uint)okBytes.Length, 0), okBytes);"
@@ -84078,25 +84030,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/SyncSessionTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 4
+                  "index": 9
                 },
                 "region": {
-                  "startLine": 344,
+                  "startLine": 349,
                   "startColumn": 39,
-                  "endLine": 344,
+                  "endLine": 349,
                   "endColumn": 54,
-                  "charOffset": 17052,
+                  "charOffset": 17166,
                   "charLength": 15,
                   "snippet": {
                     "text": "deviceTransport"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 343,
+                  "startLine": 348,
                   "startColumn": 1,
-                  "endLine": 345,
+                  "endLine": 350,
                   "endColumn": 82,
-                  "charOffset": 16897,
+                  "charOffset": 17011,
                   "charLength": 271,
                   "snippet": {
                     "text": "                    new AdbHeader(AdbCommand.Wrte, deviceLocalId, clientLocalId, (uint)okBytes.Length, 0), okBytes);\n                using var ack = await deviceTransport.ReadPacketAsync();\n                await Assert.That(ack.Header.Command).IsEqualTo(AdbCommand.Okay);"
@@ -84131,25 +84083,25 @@
                 "artifactLocation": {
                   "uri": "tests/Theodicean.SharpAdb.Tests/StreamingInstallTests.cs",
                   "uriBaseId": "solutionDir",
-                  "index": 3
+                  "index": 8
                 },
                 "region": {
-                  "startLine": 264,
+                  "startLine": 268,
                   "startColumn": 9,
-                  "endLine": 264,
+                  "endLine": 268,
                   "endColumn": 57,
-                  "charOffset": 13211,
+                  "charOffset": 13291,
                   "charLength": 48,
                   "snippet": {
                     "text": "private readonly int _actualBytes = actualBytes;"
                   }
                 },
                 "contextRegion": {
-                  "startLine": 263,
+                  "startLine": 267,
                   "startColumn": 1,
-                  "endLine": 265,
+                  "endLine": 269,
                   "endColumn": 32,
-                  "charOffset": 13197,
+                  "charOffset": 13277,
                   "charLength": 94,
                   "snippet": {
                     "text": "    {\n        private readonly int _actualBytes = actualBytes;\n        private long _position;"
@@ -84169,13 +84121,1020 @@
               ".NET 10.0"
             ]
           }
+        },
+        {
+          "ruleId": "AccessToDisposedClosure",
+          "ruleIndex": 1,
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Captured variable is disposed in the outer scope"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/Theodicean.SharpAdb.IntegrationTests/HelperServicesIntegrationTests.cs",
+                  "uriBaseId": "solutionDir",
+                  "index": 1
+                },
+                "region": {
+                  "startLine": 117,
+                  "startColumn": 45,
+                  "endLine": 117,
+                  "endColumn": 49,
+                  "charOffset": 3982,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "conn"
+                  }
+                },
+                "contextRegion": {
+                  "startLine": 116,
+                  "startColumn": 1,
+                  "endLine": 118,
+                  "endColumn": 6,
+                  "charOffset": 3848,
+                  "charLength": 194,
+                  "snippet": {
+                    "text": "        // Idempotent + side effect on screen; verify command completes without throwing.\n        await Assert.That(async () => await conn.SendKeyEventAsync(KeyCode.Home)).ThrowsNothing();\n    }"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "equalIndicator/v1": "B88C7724DAEF388808E01C018E79C45A1B31A617C2529E38EF52FEAFB7AF4485"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "qodanaSeverity": "High",
+            "tags": [
+              "C#",
+              ".NET 10.0"
+            ]
+          }
+        },
+        {
+          "ruleId": "AccessToDisposedClosure",
+          "ruleIndex": 1,
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Captured variable is disposed in the outer scope"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/Theodicean.SharpAdb.Tests/AdbAuthKeyTests.cs",
+                  "uriBaseId": "solutionDir",
+                  "index": 3
+                },
+                "region": {
+                  "startLine": 25,
+                  "startColumn": 48,
+                  "endLine": 25,
+                  "endColumn": 51,
+                  "charOffset": 621,
+                  "charLength": 3,
+                  "snippet": {
+                    "text": "rsa"
+                  }
+                },
+                "contextRegion": {
+                  "startLine": 24,
+                  "startColumn": 1,
+                  "endLine": 26,
+                  "endColumn": 6,
+                  "charOffset": 532,
+                  "charLength": 136,
+                  "snippet": {
+                    "text": "        using var rsa = RSA.Create(1024);\n        await Assert.That(() => new AdbAuthKey(rsa)).ThrowsExactly<ArgumentException>();\n    }"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "equalIndicator/v1": "E8E6CAA92BFF4784184D78F83123A6FA4F1C9F023BE61147BD4218773884E4CA"
+          },
+          "baselineState": "new",
+          "properties": {
+            "qodanaSeverity": "High",
+            "tags": [
+              "C#",
+              ".NET 10.0"
+            ]
+          }
+        },
+        {
+          "ruleId": "AccessToDisposedClosure",
+          "ruleIndex": 1,
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Captured variable is disposed in the outer scope"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/Theodicean.SharpAdb.Tests/AdbAuthKeyTests.cs",
+                  "uriBaseId": "solutionDir",
+                  "index": 3
+                },
+                "region": {
+                  "startLine": 32,
+                  "startColumn": 33,
+                  "endLine": 32,
+                  "endColumn": 36,
+                  "charOffset": 818,
+                  "charLength": 3,
+                  "snippet": {
+                    "text": "key"
+                  }
+                },
+                "contextRegion": {
+                  "startLine": 31,
+                  "startColumn": 1,
+                  "endLine": 33,
+                  "endColumn": 6,
+                  "charOffset": 739,
+                  "charLength": 149,
+                  "snippet": {
+                    "text": "        using var key = AdbAuthKey.Generate();\n        await Assert.That(() => key.SignToken(new byte[10])).ThrowsExactly<ArgumentException>();\n    }"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "equalIndicator/v1": "46FA4F1129EE66CA4BBAEC46F6F79A207716080C35AF7EAD254B378A9C8EC7E8"
+          },
+          "baselineState": "new",
+          "properties": {
+            "qodanaSeverity": "High",
+            "tags": [
+              "C#",
+              ".NET 10.0"
+            ]
+          }
+        },
+        {
+          "ruleId": "AccessToDisposedClosure",
+          "ruleIndex": 1,
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Captured variable is disposed in the outer scope"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
+                  "uriBaseId": "solutionDir",
+                  "index": 4
+                },
+                "region": {
+                  "startLine": 186,
+                  "startColumn": 45,
+                  "endLine": 186,
+                  "endColumn": 49,
+                  "charOffset": 8541,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "conn"
+                  }
+                },
+                "contextRegion": {
+                  "startLine": 185,
+                  "startColumn": 1,
+                  "endLine": 187,
+                  "endColumn": 6,
+                  "charOffset": 8437,
+                  "charLength": 169,
+                  "snippet": {
+                    "text": "        await Assert.That(conn.FaultException).IsNotNull();\n        await Assert.That(async () => await conn.OpenAsync(\"shell:noop\")).ThrowsExactly<IOException>();\n    }"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "equalIndicator/v1": "A453C751C13151E31F081ADC91E0091E9C191F8375D8E501F25E4A4B05974C52"
+          },
+          "baselineState": "new",
+          "properties": {
+            "qodanaSeverity": "High",
+            "tags": [
+              "C#",
+              ".NET 10.0"
+            ]
+          }
+        },
+        {
+          "ruleId": "AccessToDisposedClosure",
+          "ruleIndex": 1,
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Captured variable is disposed in the outer scope"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/Theodicean.SharpAdb.Tests/AdbConnectionTests.cs",
+                  "uriBaseId": "solutionDir",
+                  "index": 4
+                },
+                "region": {
+                  "startLine": 226,
+                  "startColumn": 45,
+                  "endLine": 226,
+                  "endColumn": 49,
+                  "charOffset": 10511,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "conn"
+                  }
+                },
+                "contextRegion": {
+                  "startLine": 225,
+                  "startColumn": 1,
+                  "endLine": 227,
+                  "endColumn": 6,
+                  "charOffset": 10382,
+                  "charLength": 194,
+                  "snippet": {
+                    "text": "        // Subsequent OpenAsync must surface the recorded fault rather than hanging.\n        await Assert.That(async () => await conn.OpenAsync(\"shell:noop\")).ThrowsExactly<IOException>();\n    }"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "equalIndicator/v1": "01E0138FFD4101818EBAACAD9C34FF83064CD4BCC1511196DB78B53168FF7661"
+          },
+          "baselineState": "new",
+          "properties": {
+            "qodanaSeverity": "High",
+            "tags": [
+              "C#",
+              ".NET 10.0"
+            ]
+          }
+        },
+        {
+          "ruleId": "AccessToDisposedClosure",
+          "ruleIndex": 1,
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Captured variable is disposed in the outer scope"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/Theodicean.SharpAdb.Tests/ShellV2Tests.cs",
+                  "uriBaseId": "solutionDir",
+                  "index": 5
+                },
+                "region": {
+                  "startLine": 116,
+                  "startColumn": 45,
+                  "endLine": 116,
+                  "endColumn": 49,
+                  "charOffset": 5313,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "conn"
+                  }
+                },
+                "contextRegion": {
+                  "startLine": 115,
+                  "startColumn": 1,
+                  "endLine": 117,
+                  "endColumn": 53,
+                  "charOffset": 5268,
+                  "charLength": 122,
+                  "snippet": {
+                    "text": "\n        await Assert.That(async () => await conn.ExecuteAsync(\"ls\"))\n            .ThrowsExactly<NotSupportedException>();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "equalIndicator/v1": "3CE39660FDAA5A2E7364F9D46A1878A8D210C87F529F6C2083FAE3BE88E80A21"
+          },
+          "baselineState": "new",
+          "properties": {
+            "qodanaSeverity": "High",
+            "tags": [
+              "C#",
+              ".NET 10.0"
+            ]
+          }
+        },
+        {
+          "ruleId": "AccessToDisposedClosure",
+          "ruleIndex": 1,
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Captured variable is disposed in the outer scope"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/Theodicean.SharpAdb.Tests/ShellV2Tests.cs",
+                  "uriBaseId": "solutionDir",
+                  "index": 5
+                },
+                "region": {
+                  "startLine": 154,
+                  "startColumn": 45,
+                  "endLine": 154,
+                  "endColumn": 52,
+                  "charOffset": 7098,
+                  "charLength": 7,
+                  "snippet": {
+                    "text": "session"
+                  }
+                },
+                "contextRegion": {
+                  "startLine": 153,
+                  "startColumn": 1,
+                  "endLine": 155,
+                  "endColumn": 43,
+                  "charOffset": 7053,
+                  "charLength": 144,
+                  "snippet": {
+                    "text": "\n        await Assert.That(async () => await session.ExitCodeTask.WaitAsync(TimeSpan.FromSeconds(2)))\n            .ThrowsExactly<IOException>();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "equalIndicator/v1": "F38C80B735A8264CC95AF897510A43A68ED5E5F34068DFAF327521C9941EB3C8"
+          },
+          "baselineState": "new",
+          "properties": {
+            "qodanaSeverity": "High",
+            "tags": [
+              "C#",
+              ".NET 10.0"
+            ]
+          }
+        },
+        {
+          "ruleId": "AccessToDisposedClosure",
+          "ruleIndex": 1,
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Captured variable is disposed in the outer scope"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/Theodicean.SharpAdb.Tests/StlsUpgradeTests.cs",
+                  "uriBaseId": "solutionDir",
+                  "index": 6
+                },
+                "region": {
+                  "startLine": 138,
+                  "startColumn": 99,
+                  "endLine": 138,
+                  "endColumn": 108,
+                  "charOffset": 6541,
+                  "charLength": 9,
+                  "snippet": {
+                    "text": "clientKey"
+                  }
+                },
+                "contextRegion": {
+                  "startLine": 137,
+                  "startColumn": 1,
+                  "endLine": 139,
+                  "endColumn": 56,
+                  "charOffset": 6433,
+                  "charLength": 219,
+                  "snippet": {
+                    "text": "        {\n            await Assert.That(async () => await AdbConnection.ConnectTcpAsync(\"127.0.0.1\", port, [clientKey], cancellationToken: CancellationToken.None))\n                .ThrowsExactly<InvalidDataException>();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "equalIndicator/v1": "3747BFA624F7724AA9DE4110AD50C9A84020220F79457E93BE99D295BEFF51BF"
+          },
+          "baselineState": "new",
+          "properties": {
+            "qodanaSeverity": "High",
+            "tags": [
+              "C#",
+              ".NET 10.0"
+            ]
+          }
+        },
+        {
+          "ruleId": "AccessToDisposedClosure",
+          "ruleIndex": 1,
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Captured variable is disposed in the outer scope"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/Theodicean.SharpAdb.Tests/StreamAdbTransportTests.cs",
+                  "uriBaseId": "solutionDir",
+                  "index": 7
+                },
+                "region": {
+                  "startLine": 64,
+                  "startColumn": 45,
+                  "endLine": 64,
+                  "endColumn": 53,
+                  "charOffset": 2506,
+                  "charLength": 8,
+                  "snippet": {
+                    "text": "receiver"
+                  }
+                },
+                "contextRegion": {
+                  "startLine": 63,
+                  "startColumn": 1,
+                  "endLine": 65,
+                  "endColumn": 6,
+                  "charOffset": 2461,
+                  "charLength": 117,
+                  "snippet": {
+                    "text": "\n        await Assert.That(async () => await receiver.ReadPacketAsync()).ThrowsExactly<InvalidDataException>();\n    }"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "equalIndicator/v1": "40F72CBF01DF47C6B4A6434CB14129A2BD67F61686FF8A5A4B91A45176BFB097"
+          },
+          "baselineState": "new",
+          "properties": {
+            "qodanaSeverity": "High",
+            "tags": [
+              "C#",
+              ".NET 10.0"
+            ]
+          }
+        },
+        {
+          "ruleId": "AccessToDisposedClosure",
+          "ruleIndex": 1,
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Captured variable is disposed in the outer scope"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/Theodicean.SharpAdb.Tests/StreamAdbTransportTests.cs",
+                  "uriBaseId": "solutionDir",
+                  "index": 7
+                },
+                "region": {
+                  "startLine": 76,
+                  "startColumn": 45,
+                  "endLine": 76,
+                  "endColumn": 53,
+                  "charOffset": 2947,
+                  "charLength": 8,
+                  "snippet": {
+                    "text": "receiver"
+                  }
+                },
+                "contextRegion": {
+                  "startLine": 75,
+                  "startColumn": 1,
+                  "endLine": 77,
+                  "endColumn": 6,
+                  "charOffset": 2902,
+                  "charLength": 117,
+                  "snippet": {
+                    "text": "\n        await Assert.That(async () => await receiver.ReadPacketAsync()).ThrowsExactly<EndOfStreamException>();\n    }"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "equalIndicator/v1": "CE4481A1C14BB80D49B930048A705D0FB149B271E8CFD6266736EC74933A0094"
+          },
+          "baselineState": "new",
+          "properties": {
+            "qodanaSeverity": "High",
+            "tags": [
+              "C#",
+              ".NET 10.0"
+            ]
+          }
+        },
+        {
+          "ruleId": "AccessToDisposedClosure",
+          "ruleIndex": 1,
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Captured variable is disposed in the outer scope"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/Theodicean.SharpAdb.Tests/StreamingInstallTests.cs",
+                  "uriBaseId": "solutionDir",
+                  "index": 8
+                },
+                "region": {
+                  "startLine": 152,
+                  "startColumn": 45,
+                  "endLine": 152,
+                  "endColumn": 49,
+                  "charOffset": 7605,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "conn"
+                  }
+                },
+                "contextRegion": {
+                  "startLine": 151,
+                  "startColumn": 1,
+                  "endLine": 153,
+                  "endColumn": 49,
+                  "charOffset": 7522,
+                  "charLength": 157,
+                  "snippet": {
+                    "text": "        empty.Seek(0, SeekOrigin.End);\n        await Assert.That(async () => await conn.InstallAsync(empty))\n            .ThrowsExactly<ArgumentException>();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "equalIndicator/v1": "9E5D80B33E4B7B9804D930F0C01372C0FADAEFBFBF65655669B635EE1504820C"
+          },
+          "baselineState": "new",
+          "properties": {
+            "qodanaSeverity": "High",
+            "tags": [
+              "C#",
+              ".NET 10.0"
+            ]
+          }
+        },
+        {
+          "ruleId": "AccessToDisposedClosure",
+          "ruleIndex": 1,
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Captured variable is disposed in the outer scope"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/Theodicean.SharpAdb.Tests/StreamingInstallTests.cs",
+                  "uriBaseId": "solutionDir",
+                  "index": 8
+                },
+                "region": {
+                  "startLine": 152,
+                  "startColumn": 63,
+                  "endLine": 152,
+                  "endColumn": 68,
+                  "charOffset": 7623,
+                  "charLength": 5,
+                  "snippet": {
+                    "text": "empty"
+                  }
+                },
+                "contextRegion": {
+                  "startLine": 151,
+                  "startColumn": 1,
+                  "endLine": 153,
+                  "endColumn": 49,
+                  "charOffset": 7522,
+                  "charLength": 157,
+                  "snippet": {
+                    "text": "        empty.Seek(0, SeekOrigin.End);\n        await Assert.That(async () => await conn.InstallAsync(empty))\n            .ThrowsExactly<ArgumentException>();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "equalIndicator/v1": "9E5D80B33E4B7B9804D930F0C01372C0FADAEFBFBF65655669B635EE1504820C"
+          },
+          "baselineState": "new",
+          "properties": {
+            "qodanaSeverity": "High",
+            "tags": [
+              "C#",
+              ".NET 10.0"
+            ]
+          }
+        },
+        {
+          "ruleId": "AccessToDisposedClosure",
+          "ruleIndex": 1,
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Captured variable is disposed in the outer scope"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/Theodicean.SharpAdb.Tests/StreamingInstallTests.cs",
+                  "uriBaseId": "solutionDir",
+                  "index": 8
+                },
+                "region": {
+                  "startLine": 186,
+                  "startColumn": 45,
+                  "endLine": 186,
+                  "endColumn": 49,
+                  "charOffset": 9503,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "conn"
+                  }
+                },
+                "contextRegion": {
+                  "startLine": 185,
+                  "startColumn": 1,
+                  "endLine": 187,
+                  "endColumn": 43,
+                  "charOffset": 9363,
+                  "charLength": 212,
+                  "snippet": {
+                    "text": "        await using var truncated = new TruncatedStream(advertisedLength: 100, actualBytes: 0);\n        await Assert.That(async () => await conn.InstallAsync(truncated))\n            .ThrowsExactly<IOException>();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "equalIndicator/v1": "A849A05BF1EE38044DA9D491C6A7298550E8E9D6B80EF1F9777231AF3B47AAE3"
+          },
+          "baselineState": "new",
+          "properties": {
+            "qodanaSeverity": "High",
+            "tags": [
+              "C#",
+              ".NET 10.0"
+            ]
+          }
+        },
+        {
+          "ruleId": "AccessToDisposedClosure",
+          "ruleIndex": 1,
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Captured variable is disposed in the outer scope"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/Theodicean.SharpAdb.Tests/StreamingInstallTests.cs",
+                  "uriBaseId": "solutionDir",
+                  "index": 8
+                },
+                "region": {
+                  "startLine": 186,
+                  "startColumn": 63,
+                  "endLine": 186,
+                  "endColumn": 72,
+                  "charOffset": 9521,
+                  "charLength": 9,
+                  "snippet": {
+                    "text": "truncated"
+                  }
+                },
+                "contextRegion": {
+                  "startLine": 185,
+                  "startColumn": 1,
+                  "endLine": 187,
+                  "endColumn": 43,
+                  "charOffset": 9363,
+                  "charLength": 212,
+                  "snippet": {
+                    "text": "        await using var truncated = new TruncatedStream(advertisedLength: 100, actualBytes: 0);\n        await Assert.That(async () => await conn.InstallAsync(truncated))\n            .ThrowsExactly<IOException>();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "equalIndicator/v1": "A849A05BF1EE38044DA9D491C6A7298550E8E9D6B80EF1F9777231AF3B47AAE3"
+          },
+          "baselineState": "new",
+          "properties": {
+            "qodanaSeverity": "High",
+            "tags": [
+              "C#",
+              ".NET 10.0"
+            ]
+          }
+        },
+        {
+          "ruleId": "AccessToDisposedClosure",
+          "ruleIndex": 1,
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Captured variable is disposed in the outer scope"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/Theodicean.SharpAdb.Tests/StreamingInstallTests.cs",
+                  "uriBaseId": "solutionDir",
+                  "index": 8
+                },
+                "region": {
+                  "startLine": 215,
+                  "startColumn": 45,
+                  "endLine": 215,
+                  "endColumn": 49,
+                  "charOffset": 10842,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "conn"
+                  }
+                },
+                "contextRegion": {
+                  "startLine": 214,
+                  "startColumn": 1,
+                  "endLine": 216,
+                  "endColumn": 49,
+                  "charOffset": 10731,
+                  "charLength": 189,
+                  "snippet": {
+                    "text": "        await using var writeOnly = new WriteOnlySeekableStream();\n        await Assert.That(async () => await conn.InstallAsync(writeOnly))\n            .ThrowsExactly<ArgumentException>();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "equalIndicator/v1": "E673A21148DE3665FA6FDED3D1E626B59BE245C18025B4B166655A9C4890032C"
+          },
+          "baselineState": "new",
+          "properties": {
+            "qodanaSeverity": "High",
+            "tags": [
+              "C#",
+              ".NET 10.0"
+            ]
+          }
+        },
+        {
+          "ruleId": "AccessToDisposedClosure",
+          "ruleIndex": 1,
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Captured variable is disposed in the outer scope"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/Theodicean.SharpAdb.Tests/StreamingInstallTests.cs",
+                  "uriBaseId": "solutionDir",
+                  "index": 8
+                },
+                "region": {
+                  "startLine": 215,
+                  "startColumn": 63,
+                  "endLine": 215,
+                  "endColumn": 72,
+                  "charOffset": 10860,
+                  "charLength": 9,
+                  "snippet": {
+                    "text": "writeOnly"
+                  }
+                },
+                "contextRegion": {
+                  "startLine": 214,
+                  "startColumn": 1,
+                  "endLine": 216,
+                  "endColumn": 49,
+                  "charOffset": 10731,
+                  "charLength": 189,
+                  "snippet": {
+                    "text": "        await using var writeOnly = new WriteOnlySeekableStream();\n        await Assert.That(async () => await conn.InstallAsync(writeOnly))\n            .ThrowsExactly<ArgumentException>();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "equalIndicator/v1": "E673A21148DE3665FA6FDED3D1E626B59BE245C18025B4B166655A9C4890032C"
+          },
+          "baselineState": "new",
+          "properties": {
+            "qodanaSeverity": "High",
+            "tags": [
+              "C#",
+              ".NET 10.0"
+            ]
+          }
+        },
+        {
+          "ruleId": "AccessToDisposedClosure",
+          "ruleIndex": 1,
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Captured variable is disposed in the outer scope"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/Theodicean.SharpAdb.Tests/StreamingInstallTests.cs",
+                  "uriBaseId": "solutionDir",
+                  "index": 8
+                },
+                "region": {
+                  "startLine": 241,
+                  "startColumn": 45,
+                  "endLine": 241,
+                  "endColumn": 49,
+                  "charOffset": 12028,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "conn"
+                  }
+                },
+                "contextRegion": {
+                  "startLine": 240,
+                  "startColumn": 1,
+                  "endLine": 242,
+                  "endColumn": 49,
+                  "charOffset": 11921,
+                  "charLength": 187,
+                  "snippet": {
+                    "text": "        await using var notSeekable = new NonSeekableStream();\n        await Assert.That(async () => await conn.InstallAsync(notSeekable))\n            .ThrowsExactly<ArgumentException>();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "equalIndicator/v1": "FEFA0FF6FC5828DEB59902CB86301943C289AEFE7E96DFB7476423AC3ACB7131"
+          },
+          "baselineState": "new",
+          "properties": {
+            "qodanaSeverity": "High",
+            "tags": [
+              "C#",
+              ".NET 10.0"
+            ]
+          }
+        },
+        {
+          "ruleId": "AccessToDisposedClosure",
+          "ruleIndex": 1,
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Captured variable is disposed in the outer scope"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/Theodicean.SharpAdb.Tests/StreamingInstallTests.cs",
+                  "uriBaseId": "solutionDir",
+                  "index": 8
+                },
+                "region": {
+                  "startLine": 241,
+                  "startColumn": 63,
+                  "endLine": 241,
+                  "endColumn": 74,
+                  "charOffset": 12046,
+                  "charLength": 11,
+                  "snippet": {
+                    "text": "notSeekable"
+                  }
+                },
+                "contextRegion": {
+                  "startLine": 240,
+                  "startColumn": 1,
+                  "endLine": 242,
+                  "endColumn": 49,
+                  "charOffset": 11921,
+                  "charLength": 187,
+                  "snippet": {
+                    "text": "        await using var notSeekable = new NonSeekableStream();\n        await Assert.That(async () => await conn.InstallAsync(notSeekable))\n            .ThrowsExactly<ArgumentException>();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "equalIndicator/v1": "FEFA0FF6FC5828DEB59902CB86301943C289AEFE7E96DFB7476423AC3ACB7131"
+          },
+          "baselineState": "new",
+          "properties": {
+            "qodanaSeverity": "High",
+            "tags": [
+              "C#",
+              ".NET 10.0"
+            ]
+          }
+        },
+        {
+          "ruleId": "AccessToDisposedClosure",
+          "ruleIndex": 1,
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Captured variable is disposed in the outer scope"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/Theodicean.SharpAdb.Tests/SyncSessionTests.cs",
+                  "uriBaseId": "solutionDir",
+                  "index": 9
+                },
+                "region": {
+                  "startLine": 29,
+                  "startColumn": 67,
+                  "endLine": 29,
+                  "endColumn": 71,
+                  "charOffset": 977,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "conn"
+                  }
+                },
+                "contextRegion": {
+                  "startLine": 28,
+                  "startColumn": 1,
+                  "endLine": 30,
+                  "endColumn": 53,
+                  "charOffset": 910,
+                  "charLength": 126,
+                  "snippet": {
+                    "text": "\n        await Assert.That(async () => await SyncSession.OpenAsync(conn))\n            .ThrowsExactly<NotSupportedException>();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "equalIndicator/v1": "6A530A05836721CC3A4CCBD2BA38F389DC97AE15539119D259301E151D6C0CFF"
+          },
+          "baselineState": "new",
+          "properties": {
+            "qodanaSeverity": "High",
+            "tags": [
+              "C#",
+              ".NET 10.0"
+            ]
+          }
         }
       ],
       "automationDetails": {
         "id": "QDNETC/qodana/2026-06-15",
-        "guid": "a5301a94-f146-46cf-9799-d2682a2e9525",
+        "guid": "eaa12161-5273-47bf-936a-fcdcc6b12548",
         "properties": {
-          "jobUrl": "https://github.com/henrikwidlund/theodicean.sharpadb/actions/runs/27554833608"
+          "jobUrl": "https://github.com/henrikwidlund/theodicean.sharpadb/actions/runs/27563116122"
         }
       },
       "newlineSequences": [
