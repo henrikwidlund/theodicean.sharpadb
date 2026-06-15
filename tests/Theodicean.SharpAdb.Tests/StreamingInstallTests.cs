@@ -17,7 +17,10 @@ public class StreamingInstallTests
         var clientTransport = new StreamAdbTransport(clientStream);
         await using var deviceTransport = new StreamAdbTransport(deviceStream);
 
-        var apkBytes = Enumerable.Range(0, 200_000).Select(static i => (byte)i).ToArray();
+        // 600 KiB → 3 stdin chunks at the 256 KiB chunk size used by PumpStdinAsync, so the
+        // multi-chunk loop + ordering behavior is exercised (a single-chunk payload would
+        // skip everything after the first iteration).
+        var apkBytes = Enumerable.Range(0, 600 * 1024).Select(static i => (byte)i).ToArray();
 
         var observedService = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
         var observedStdin = new MemoryStream();
