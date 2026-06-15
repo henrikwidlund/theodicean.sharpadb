@@ -132,15 +132,32 @@ public static class PackageExtensions
             var stdoutCopy = session.Stdout.CopyToAsync(stdoutMs, workCts.Token);
             var stderrCopy = session.Stderr.CopyToAsync(stderrMs, workCts.Token);
 
-            // Fault on pump => cancel siblings. The pump only faults on local errors (source
-            // stream truncated, etc.); device-side problems propagate via the IOException
-            // swallow inside the pump and surface through ExitCodeTask/stdout instead.
-            _ = stdinPump.ContinueWith(static (_, state) => ((CancellationTokenSource)state!).Cancel(),
-                workCts, CancellationToken.None,
-                TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
-                TaskScheduler.Default);
+            // Fault on ANY of the three => cancel the others. Pump faults on local errors
+            // (truncated source). stdoutCopy/stderrCopy fault if the shell_v2 read loop or
+            // transport tears down mid-install. In either direction we want the survivors
+            // unblocked so Task.WhenAll doesn't hang.
+            foreach (var task in (Task[])[stdinPump, stdoutCopy, stderrCopy])
+            {
+                _ = task.ContinueWith(static (_, state) => ((CancellationTokenSource)state!).Cancel(),
+                    workCts, CancellationToken.None,
+                    TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default);
+            }
 
-            await Task.WhenAll(stdinPump, stdoutCopy, stderrCopy);
+            try
+            {
+                await Task.WhenAll(stdinPump, stdoutCopy, stderrCopy);
+            }
+            catch when (stdinPump.IsFaulted)
+            {
+                // Prefer the pump's specific exception (e.g. truncated source stream) over the
+                // generic OperationCanceledException that the linked-CTS will have raised in
+                // stdoutCopy / stderrCopy. WhenAll's InnerExceptions order is completion-order;
+                // when continuations fire synchronously the OCE can land first, masking the
+                // diagnostic the caller actually wants to see.
+                await stdinPump;
+                throw; // unreachable — stdinPump.IsFaulted guarantees the await above throws.
+            }
 
             var exitCode = await session.ExitCodeTask.WaitAsync(cancellationToken);
 
