@@ -120,7 +120,7 @@ public static class PackageExtensions
             using var stdoutMs = new MemoryStream();
             using var stderrMs = new MemoryStream();
 
-            var stdinPump = PumpStdinAsync(session, apk, cancellationToken);
+            var stdinPump = PumpStdinAsync(session, apk, size, cancellationToken);
             var stdoutCopy = session.Stdout.CopyToAsync(stdoutMs, cancellationToken);
             var stderrCopy = session.Stderr.CopyToAsync(stderrMs, cancellationToken);
             await Task.WhenAll(stdinPump, stdoutCopy, stderrCopy);
@@ -208,7 +208,7 @@ public static class PackageExtensions
         }
     }
 
-    private static async Task PumpStdinAsync(ShellSession session, Stream apk, CancellationToken cancellationToken)
+    private static async Task PumpStdinAsync(ShellSession session, Stream apk, long size, CancellationToken cancellationToken)
     {
         // Stream the APK in 64 KiB chunks. The shell_v2 stdin packet header costs only 5 bytes
         // per chunk, and AdbStream's WRTE flow control (OKAY-per-write) means we're already
@@ -216,15 +216,42 @@ public static class PackageExtensions
         // ArrayPool rentals inside WriteStdinAsync.
         const int chunkSize = 64 * 1024;
         var buf = ArrayPool<byte>.Shared.Rent(chunkSize);
+        var remaining = size;
         try
         {
-            while (true)
+            while (remaining > 0)
             {
-                var n = await apk.ReadAsync(buf.AsMemory(0, chunkSize), cancellationToken);
+                // Cap each read at the bytes we still owe the device. `cmd package install -S N`
+                // reads exactly N bytes; anything we ship past N would back up in the kernel
+                // TCP buffer (the server stopped reading), hanging the next WriteStdinAsync.
+                var toRead = (int)Math.Min(remaining, chunkSize);
+                var n = await apk.ReadAsync(buf.AsMemory(0, toRead), cancellationToken);
                 if (n == 0) break;
-                await session.WriteStdinAsync(buf.AsMemory(0, n), cancellationToken);
+
+                try
+                {
+                    await session.WriteStdinAsync(buf.AsMemory(0, n), cancellationToken);
+                }
+                catch (IOException) when (session.ExitCodeTask.IsCompleted)
+                {
+                    // Server exited mid-pump (rejected the APK early, ran out of disk, etc.)
+                    // and closed our stdin. Don't propagate the broken-pipe error — the
+                    // concurrent stdoutCopy / stderrCopy / ExitCode path will surface the
+                    // actual install diagnostic the device emitted.
+                    return;
+                }
+
+                remaining -= n;
             }
-            await session.CloseStdinAsync(cancellationToken);
+
+            try
+            {
+                await session.CloseStdinAsync(cancellationToken);
+            }
+            catch (IOException) when (session.ExitCodeTask.IsCompleted)
+            {
+                // Same race: server already finished. CloseStdin is moot.
+            }
         }
         finally
         {
