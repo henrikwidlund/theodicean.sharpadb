@@ -30,8 +30,9 @@ internal static class SyncProtocol
     public const int MaxDataChunk = 64 * 1024;
     public const int FrameHeaderSize = 8; // tag(4) + length(4)
 
-    // Size of the fixed sync_stat_v2 / sync_dent_v2 metadata payload that follows the tag.
+    // Size of the fixed stat payload that follows the 4-byte tag in a sync_stat_v2 reply.
     // = error(4) + dev(8) + ino(8) + mode(4) + nlink(4) + uid(4) + gid(4) + size(8) + atime(8) + mtime(8) + ctime(8)
+    // sync_dent_v2 reuses these same 68 bytes but appends namelen(4) + name bytes after them.
     public const int StatV2PayloadSize = 68;
 
     public static void WriteFrameHeader(Span<byte> dest, uint tag, uint length)

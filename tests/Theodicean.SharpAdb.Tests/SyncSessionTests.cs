@@ -158,6 +158,7 @@ public class SyncSessionTests
             await deviceTransport.WritePacketAsync(
                 new AdbHeader(AdbCommand.Wrte, deviceLocalId, clientLocalId, (uint)reply.Length, 0), reply);
             using var ack = await deviceTransport.ReadPacketAsync();
+            await Assert.That(ack.Header.Command).IsEqualTo(AdbCommand.Okay);
         });
 
         await using var conn = await AdbConnection.ConnectAsync(clientTransport, [], new AdbConnectOptions());
