@@ -18,7 +18,7 @@ and you get a multiplexed stream over which you can run shell commands, push and
 
 ## Status
 
-Minimum device: Android 9 (API 28). The library requires the `shell_v2` and `sendrecv_v2` adbd features, both of which were released in Android 7 and 9 respectively.
+Minimum device: Android 7+ for shell (`shell_v2`). File transfer via `sync:` v2 requires Android 9+ (API 28) due to the `sendrecv_v2` adbd feature.
 
 Working:
 
