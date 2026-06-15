@@ -172,9 +172,10 @@ public class StreamingInstallTests
 
         await using var conn = await AdbConnection.ConnectAsync(clientTransport, [], new AdbConnectOptions());
 
-        // Stream that lies about its size: Length=100, but the underlying byte array is only 10
-        // bytes long so ReadAsync will hit EOF at position 10.
-        await using var truncated = new TruncatedStream(advertisedLength: 100, actualBytes: 10);
+        // Stream lies about its size: Length=100 but actually produces 0 bytes. ReadAsync
+        // returns 0 on the first call so the pump throws before ever issuing a WRTE — keeps
+        // the test free of any dependency on the mock device acknowledging stdin chunks.
+        await using var truncated = new TruncatedStream(advertisedLength: 100, actualBytes: 0);
         await Assert.That(async () => await conn.InstallAsync(truncated))
             .ThrowsExactly<IOException>();
 

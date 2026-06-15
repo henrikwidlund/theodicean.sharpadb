@@ -122,9 +122,24 @@ public static class PackageExtensions
             using var stdoutMs = new MemoryStream();
             using var stderrMs = new MemoryStream();
 
-            var stdinPump = PumpStdinAsync(session, apk, size, cancellationToken);
-            var stdoutCopy = session.Stdout.CopyToAsync(stdoutMs, cancellationToken);
-            var stderrCopy = session.Stderr.CopyToAsync(stderrMs, cancellationToken);
+            // Linked CTS so a fault on the stdin pump (e.g. the source stream EOF'd before
+            // declared size) unblocks the concurrent stdout/stderr CopyToAsync calls. Without
+            // it, Task.WhenAll would hang forever waiting for pipes the device will never
+            // close — the device is still expecting the rest of the APK on stdin.
+            using var workCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+            var stdinPump = PumpStdinAsync(session, apk, size, workCts.Token);
+            var stdoutCopy = session.Stdout.CopyToAsync(stdoutMs, workCts.Token);
+            var stderrCopy = session.Stderr.CopyToAsync(stderrMs, workCts.Token);
+
+            // Fault on pump => cancel siblings. The pump only faults on local errors (source
+            // stream truncated, etc.); device-side problems propagate via the IOException
+            // swallow inside the pump and surface through ExitCodeTask/stdout instead.
+            _ = stdinPump.ContinueWith(static (_, state) => ((CancellationTokenSource)state!).Cancel(),
+                workCts, CancellationToken.None,
+                TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default);
+
             await Task.WhenAll(stdinPump, stdoutCopy, stderrCopy);
 
             var exitCode = await session.ExitCodeTask.WaitAsync(cancellationToken);
