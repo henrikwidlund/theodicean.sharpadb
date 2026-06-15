@@ -18,6 +18,13 @@ and you get a multiplexed stream over which you can run shell commands, push and
 
 ## Status
 
+Minimum device versions, by feature:
+
+- Shell + helpers (`ExecuteAsync`, install, properties, input, logcat, …): Android 7 (API 24), via the `shell_v2` adbd feature.
+- File transfer (`SyncSession`): Android 9 (API 28), via the `sendrecv_v2` adbd feature.
+
+`SyncSession.OpenAsync` throws `NotSupportedException` if the device does not advertise `sendrecv_v2`; everything else works against Android 7+.
+
 Working:
 
 - TCP transport (port 5555 after `adb tcpip`, or any IP:port the device is reachable on)
@@ -25,8 +32,10 @@ Working:
 - RSA-2048 authentication (signature path + RSAPUBLICKEY enrollment)
 - STLS upgrade for devices that require TLS on the debug socket
 - Multiplexed `AdbStream` with the per-write OKAY ack the protocol requires
-- `shell:` and `exec:` services, line-streaming and stream-out variants
-- `sync:` (LIST, STAT, RECV, SEND) for file transfer
+- `shell,v2,raw:` for interactive commands with separate stdout/stderr and exit code (`AdbShellResult`)
+- `exec:` for raw byte-stream services (e.g. `screencap -p` → PNG bytes); no stdout/stderr split or exit code
+- `sync:` v2 (LST2, LIS2, SND2, RCV2) for file transfer, with 64-bit sizes and full POSIX stat fields
+- Streaming APK install via `cmd package install -S <size> -` — no `/data/local/tmp` staging
 - Helpers: reboot, package install/uninstall/list, properties, processes, logcat (raw + parsed), screencap, key events, text input, taps/swipes, app start/stop, port forward
 - Fault propagation from the read loop to open streams and to subsequent `OpenAsync` calls
 
@@ -34,8 +43,8 @@ Not implemented:
 
 - Wireless pairing with the 6-digit PIN (Android 11+). Requires SPAKE2 over Ed25519 with BoringSSL's specific M/N constants, and a real device to validate against (which I do not have). Workaround: pair once with Google's `adb pair`, then Theodicean.SharpAdb takes over.
 - USB transport. The protocol layer is transport-agnostic (`IAdbTransport`), so a USB transport using libusb or a platform-specific API can plug in without touching the rest.
-- `shell,v2:` framing (separate stdout/stderr, exit code). Use `shell:` for combined output.
 - mDNS device discovery.
+- Sync v2 transparent compression (Brotli/LZ4/Zstd). Compression flag is sent as 0.
 
 ## Install
 
@@ -68,8 +77,9 @@ await using var conn = await AdbConnection.ConnectTcpAsync("192.168.1.42", 5555,
 
 Console.WriteLine($"connected to {conn.DeviceInfo.Model} ({conn.DeviceInfo.Product})");
 
-var output = await conn.ExecuteAsync("getprop ro.build.version.release");
-Console.WriteLine($"android {output.Trim()}");
+var result = await conn.ExecuteAsync("getprop ro.build.version.release");
+if (result.IsSuccess)
+    Console.WriteLine($"android {result.Stdout.Trim()}");
 ```
 
 ## Authentication
@@ -128,8 +138,13 @@ await foreach (var entry in sync.ListAsync("/sdcard"))
 var sdk = await conn.GetPropertyAsync("ro.build.version.sdk");
 var all = await conn.GetAllPropertiesAsync();
 
-// Packages
-await conn.InstallAsync("./app.apk");
+// Packages — streams the APK through `cmd package install` rather than staging on /data/local/tmp.
+// FailureReason can be null when adbd printed "Failure" without a bracketed reason; fall back to
+// the raw shell output (Raw.Stdout + Raw.Stderr) so the diagnostic isn't empty.
+var install = await conn.InstallAsync("./app.apk");
+if (!install.IsSuccess)
+    throw new InvalidOperationException(
+        install.FailureReason ?? $"install failed: {install.Raw.Stdout}{install.Raw.Stderr}");
 var packages = await conn.ListPackagesAsync();
 await conn.UninstallAsync("com.example.app");
 
