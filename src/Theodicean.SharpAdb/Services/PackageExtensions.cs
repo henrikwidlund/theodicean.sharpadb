@@ -86,13 +86,16 @@ public static class PackageExtensions
             ArgumentNullException.ThrowIfNull(apk);
 
             var remotePath = $"/data/local/tmp/sharpadb_install_{Guid.NewGuid():N}.apk";
-            await using (var sync = await SyncSession.OpenAsync(connection, cancellationToken))
-            {
-                await sync.PushAsync(apk, remotePath, cancellationToken: cancellationToken);
-            }
 
+            // Single try/finally so the rm -f always runs — including the case where
+            // PushAsync throws partway through and leaves a partial APK on the device.
             try
             {
+                await using (var sync = await SyncSession.OpenAsync(connection, cancellationToken))
+                {
+                    await sync.PushAsync(apk, remotePath, cancellationToken: cancellationToken);
+                }
+
                 var args = new List<string>(4) { "install" };
                 if (replaceExisting)
                     args.Add("-r");

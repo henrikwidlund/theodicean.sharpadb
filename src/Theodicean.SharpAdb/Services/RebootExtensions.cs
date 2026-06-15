@@ -6,9 +6,9 @@ namespace Theodicean.SharpAdb.Services;
 public enum RebootMode : byte
 {
     /// <summary>
-    /// Reboots to normal Android.
+    /// Reboots to normal Android. Default value of <see cref="RebootMode"/>.
     /// </summary>
-    Normal = 1,
+    Normal = 0,
 
     /// <summary>
     /// Reboots into the device bootloader (fastboot/download mode on most devices).

@@ -46,6 +46,15 @@ public sealed class ShellSession : IAsyncDisposable
         // other wrappers broken. Single instance per pipe avoids that footgun.
         Stdout = _stdout.Reader.AsStream();
         Stderr = _stderr.Reader.AsStream();
+
+        // Pre-attach a fault observer to ExitCodeTask. Callers that consume only the streams
+        // (e.g. ExecuteLinesAsync) never await ExitCodeTask, so a fault set inside the read
+        // loop would otherwise surface as an UnobservedTaskException at GC time.
+        _ = _exit.Task.ContinueWith(static t => _ = t.Exception,
+            CancellationToken.None,
+            TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+            TaskScheduler.Default);
+
         _readLoop = Task.Run(ReadLoopAsync);
     }
 
