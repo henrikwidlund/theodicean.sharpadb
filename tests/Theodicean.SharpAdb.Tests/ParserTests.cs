@@ -192,4 +192,137 @@ public class ParserTests
         await Assert.That(LogcatParser.TryParseThreadTime(line, out var entry)).IsTrue();
         await Assert.That(entry.Priority).IsEqualTo(LogcatPriority.Unknown);
     }
+
+    [Test]
+    public async Task PackageOperationParseRecognisesSuccess()
+    {
+        var raw = new AdbShellResult(Stdout: "Success\n", Stderr: "", ExitCode: 0);
+        var result = AdbPackageOperationResult.Parse(raw);
+        await Assert.That(result.IsSuccess).IsTrue();
+        await Assert.That(result.FailureReason).IsNull();
+        await Assert.That(result.Raw).IsSameReferenceAs(raw);
+    }
+
+    [Test]
+    public async Task PackageOperationParseExtractsFailureReasonFromStdout()
+    {
+        var raw = new AdbShellResult(
+            Stdout: "pkg: /data/local/tmp/x.apk\nFailure [INSTALL_FAILED_INSUFFICIENT_STORAGE]\n",
+            Stderr: "",
+            ExitCode: 1);
+        var result = AdbPackageOperationResult.Parse(raw);
+        await Assert.That(result.IsSuccess).IsFalse();
+        await Assert.That(result.FailureReason).IsEqualTo("INSTALL_FAILED_INSUFFICIENT_STORAGE");
+    }
+
+    [Test]
+    public async Task PackageOperationParseExtractsFailureReasonFromStderr()
+    {
+        // Some Android builds route the "Failure [...]" line to stderr instead of stdout.
+        var raw = new AdbShellResult(
+            Stdout: "",
+            Stderr: "Failure [DELETE_FAILED_INTERNAL_ERROR]\n",
+            ExitCode: 1);
+        var result = AdbPackageOperationResult.Parse(raw);
+        await Assert.That(result.IsSuccess).IsFalse();
+        await Assert.That(result.FailureReason).IsEqualTo("DELETE_FAILED_INTERNAL_ERROR");
+    }
+
+    [Test]
+    public async Task PackageOperationParseFailureWithoutBracketedReasonYieldsNullReason()
+    {
+        var raw = new AdbShellResult(
+            Stdout: "Failure\n",
+            Stderr: "",
+            ExitCode: 1);
+        var result = AdbPackageOperationResult.Parse(raw);
+        await Assert.That(result.IsSuccess).IsFalse();
+        await Assert.That(result.FailureReason).IsNull();
+    }
+
+    [Test]
+    public async Task PackageOperationParseNonZeroExitBeatsSuccessStringPresence()
+    {
+        // Defensive: if the device prints "Success" on stdout but still exits non-zero,
+        // treat it as failure. Real adbd is consistent, but the parser should not be
+        // fooled by stray output appearing in test fixtures or unusual builds.
+        var raw = new AdbShellResult(
+            Stdout: "Success\n",
+            Stderr: "",
+            ExitCode: 1);
+        var result = AdbPackageOperationResult.Parse(raw);
+        await Assert.That(result.IsSuccess).IsFalse();
+    }
+
+    [Test]
+    public async Task PackageOperationParseRequiresExactSuccessLine()
+    {
+        // pm install prints "Success" as its own line. Make sure we don't false-positive on
+        // commands that just happen to mention the word.
+        var raw = new AdbShellResult(
+            Stdout: "Success-ish? not really\n",
+            Stderr: "",
+            ExitCode: 0);
+        var result = AdbPackageOperationResult.Parse(raw);
+        await Assert.That(result.IsSuccess).IsFalse();
+    }
+
+    [Test]
+    public async Task PackageOperationParseAcceptsSuccessLineAmongstOtherOutput()
+    {
+        // Real pm install prints "Success" preceded by progress noise on some builds.
+        // The parser must still recognise the standalone line.
+        var raw = new AdbShellResult(
+            Stdout: "Performing Streamed Install\nSuccess\n",
+            Stderr: "",
+            ExitCode: 0);
+        var result = AdbPackageOperationResult.Parse(raw);
+        await Assert.That(result.IsSuccess).IsTrue();
+    }
+
+    [Test]
+    public async Task AppLaunchParseRecognisesSuccessfulMonkey()
+    {
+        var raw = new AdbShellResult(
+            Stdout: "Events injected: 1\n## Network stats: elapsed time=0ms (0ms mobile, 0ms wifi, 0ms not connected)\n",
+            Stderr: "",
+            ExitCode: 0);
+        var result = AdbAppLaunchResult.Parse(raw);
+        await Assert.That(result.IsLaunched).IsTrue();
+        await Assert.That(result.FailureReason).IsNull();
+    }
+
+    [Test]
+    public async Task AppLaunchParseDetectsNoActivitiesFoundOnStdout()
+    {
+        // monkey emits this with exit 0 — the parser must not be fooled by the clean exit.
+        var raw = new AdbShellResult(
+            Stdout: "** No activities found to run, monkey aborted.\n",
+            Stderr: "",
+            ExitCode: 0);
+        var result = AdbAppLaunchResult.Parse(raw);
+        await Assert.That(result.IsLaunched).IsFalse();
+        await Assert.That(result.FailureReason).IsEqualTo("No activities found");
+    }
+
+    [Test]
+    public async Task AppLaunchParseDetectsNoActivitiesFoundOnStderr()
+    {
+        var raw = new AdbShellResult(
+            Stdout: "",
+            Stderr: "No activities found\n",
+            ExitCode: 0);
+        var result = AdbAppLaunchResult.Parse(raw);
+        await Assert.That(result.IsLaunched).IsFalse();
+        await Assert.That(result.FailureReason).IsEqualTo("No activities found");
+    }
+
+    [Test]
+    public async Task AppLaunchParseNonZeroExitMarksFailure()
+    {
+        var raw = new AdbShellResult(Stdout: "", Stderr: "", ExitCode: 137);
+        var result = AdbAppLaunchResult.Parse(raw);
+        await Assert.That(result.IsLaunched).IsFalse();
+        await Assert.That(result.FailureReason).IsEqualTo("monkey exited with code 137");
+    }
 }

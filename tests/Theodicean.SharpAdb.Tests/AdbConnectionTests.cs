@@ -3,7 +3,6 @@ using System.Text;
 
 using Theodicean.SharpAdb.Auth;
 using Theodicean.SharpAdb.Protocol;
-using Theodicean.SharpAdb.Services;
 using Theodicean.SharpAdb.Transport;
 
 namespace Theodicean.SharpAdb.Tests;
@@ -120,9 +119,13 @@ public class AdbConnectionTests
         });
 
         await using var conn = await AdbConnection.ConnectAsync(clientTransport, [], new AdbConnectOptions());
-        var output = await conn.ExecuteAsync("echo hi");
+        // Use OpenAsync directly so this test exercises the OPEN/WRTE/OKAY/CLSE round trip
+        // without depending on shell_v2 protocol framing.
+        await using var stream = await conn.OpenAsync("shell:echo hi");
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
         await deviceTask;
-        await Assert.That(output).IsEqualTo("hi\n");
+        await Assert.That(Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length)).IsEqualTo("hi\n");
     }
 
     [Test]

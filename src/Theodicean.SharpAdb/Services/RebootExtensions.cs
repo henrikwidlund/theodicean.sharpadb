@@ -3,12 +3,12 @@ namespace Theodicean.SharpAdb.Services;
 /// <summary>
 /// Target mode for <c>RebootAsync</c>. Maps to the suffix of the ADB <c>reboot:</c> service.
 /// </summary>
-public enum RebootMode
+public enum RebootMode : byte
 {
     /// <summary>
-    /// Reboots to normal Android.
+    /// Reboots to normal Android. Default value of <see cref="RebootMode"/>.
     /// </summary>
-    Normal,
+    Normal = 0,
 
     /// <summary>
     /// Reboots into the device bootloader (fastboot/download mode on most devices).

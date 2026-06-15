@@ -73,7 +73,7 @@ public sealed class AdbConnectOptions
 /// <summary>
 /// How the connection authenticated to the device.
 /// </summary>
-public enum AdbAuthenticationMethod
+public enum AdbAuthenticationMethod : byte
 {
     /// <summary>
     /// Device did not request authentication (rare; debug builds).
