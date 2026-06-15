@@ -255,15 +255,30 @@ public sealed class SyncSession : IAsyncDisposable
         return new AdbFileStat(
             mode,
             size,
-            DateTimeOffset.FromUnixTimeSeconds(mtime),
-            DateTimeOffset.FromUnixTimeSeconds(atime),
-            DateTimeOffset.FromUnixTimeSeconds(ctime),
+            ToDateTimeOffsetOrThrow(mtime, "mtime"),
+            ToDateTimeOffsetOrThrow(atime, "atime"),
+            ToDateTimeOffsetOrThrow(ctime, "ctime"),
             uid,
             gid,
             nlink,
             ino,
             dev,
             error);
+    }
+
+    // Surface a malformed device timestamp as IOException so sync callers only have to
+    // handle one exception type, rather than letting ArgumentOutOfRangeException leak out
+    // of DateTimeOffset.FromUnixTimeSeconds (range: -62_135_596_800..253_402_300_799).
+    private static DateTimeOffset ToDateTimeOffsetOrThrow(long unixSeconds, string field)
+    {
+        try
+        {
+            return DateTimeOffset.FromUnixTimeSeconds(unixSeconds);
+        }
+        catch (ArgumentOutOfRangeException ex)
+        {
+            throw new IOException($"sync_stat_v2 {field} out of range: {unixSeconds}", ex);
+        }
     }
 
     private async Task<string> ReadFailMessageAsync(uint length, CancellationToken cancellationToken)
