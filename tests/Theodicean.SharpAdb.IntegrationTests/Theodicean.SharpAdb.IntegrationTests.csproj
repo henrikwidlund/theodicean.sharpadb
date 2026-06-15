@@ -3,6 +3,7 @@
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
         <IsPackable>false</IsPackable>
     </PropertyGroup>
 
@@ -11,7 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\Theodicean.SharpAdb\Theodicean.SharpAdb.csproj" />
+        <ProjectReference Include="..\..\src\Theodicean.SharpAdb\Theodicean.SharpAdb.csproj" />
     </ItemGroup>
 
 </Project>
