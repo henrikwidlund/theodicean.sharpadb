@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.Buffers.Binary;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -280,7 +281,7 @@ public sealed class SyncSession : IAsyncDisposable
         }
         catch (ArgumentOutOfRangeException ex)
         {
-            throw new IOException($"sync_stat_v2 {field} out of range: {unixSeconds}", ex);
+            throw new IOException(string.Create(CultureInfo.InvariantCulture, $"sync_stat_v2 {field} out of range: {unixSeconds}"), ex);
         }
     }
 
