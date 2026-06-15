@@ -308,7 +308,7 @@ public class SyncSessionTests
                 {
                     var more = await ReadStreamFrameAsync(deviceTransport, deviceLocalId, clientLocalId, minBytes: 1);
                     collected.Write(more);
-                    if (TryFindDone(collected.ToArray(), out _))
+                    if (ContainsDoneFrame(collected.ToArray()))
                         break;
                 }
 
@@ -366,15 +366,12 @@ public class SyncSessionTests
         await Assert.That(got).IsEquivalentTo(sourceBytes, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
-    private static bool TryFindDone(byte[] bytes, out int doneOffset)
+    private static bool ContainsDoneFrame(byte[] bytes)
     {
         // Walk frames from start until we either hit DONE or run out of bytes for a full frame.
         // Layout from PushAsync: [SND2 cmd + namelen + path] [12B meta] [DATA*N] [DONE].
         if (bytes.Length < 8)
-        {
-            doneOffset = -1;
             return false;
-        }
 
         var pathLen = (int)BinaryPrimitives.ReadUInt32LittleEndian(bytes.AsSpan(4));
         var cursor = 8 + pathLen + 12;
@@ -382,27 +379,17 @@ public class SyncSessionTests
         {
             var tag = BinaryPrimitives.ReadUInt32LittleEndian(bytes.AsSpan(cursor));
             if (tag == SyncProtocol.Done)
-            {
-                doneOffset = cursor;
                 return true;
-            }
 
             if (tag != SyncProtocol.Data)
-            {
-                doneOffset = -1;
                 return false;
-            }
 
             var len = (int)BinaryPrimitives.ReadUInt32LittleEndian(bytes.AsSpan(cursor + 4));
             if (cursor + 8 + len > bytes.Length)
-            {
-                doneOffset = -1;
                 return false;
-            }
             cursor += 8 + len;
         }
 
-        doneOffset = -1;
         return false;
     }
 
