@@ -112,7 +112,7 @@ public static class PackageExtensions
             if (grantAllPermissions)
                 args.Add("-g");
             args.Add("-S");
-            args.Add(size.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            args.Add(size.ToString(CultureInfo.InvariantCulture));
             args.Add("-");
             var command = string.Join(' ', args);
 
