@@ -18,7 +18,12 @@ and you get a multiplexed stream over which you can run shell commands, push and
 
 ## Status
 
-Minimum device: Android 7+ for shell (`shell_v2`). File transfer via `sync:` v2 requires Android 9+ (API 28) due to the `sendrecv_v2` adbd feature.
+Minimum device versions, by feature:
+
+- Shell + helpers (`ExecuteAsync`, install, properties, input, logcat, …): Android 7 (API 24), via the `shell_v2` adbd feature.
+- File transfer (`SyncSession`): Android 9 (API 28), via the `sendrecv_v2` adbd feature.
+
+`SyncSession.OpenAsync` throws `NotSupportedException` if the device does not advertise `sendrecv_v2`; everything else works against Android 7+.
 
 Working:
 
@@ -27,7 +32,8 @@ Working:
 - RSA-2048 authentication (signature path + RSAPUBLICKEY enrollment)
 - STLS upgrade for devices that require TLS on the debug socket
 - Multiplexed `AdbStream` with the per-write OKAY ack the protocol requires
-- `shell,v2,raw:` and `exec:` services with separate stdout/stderr and exit code (`AdbShellResult`)
+- `shell,v2,raw:` for interactive commands with separate stdout/stderr and exit code (`AdbShellResult`)
+- `exec:` for raw byte-stream services (e.g. `screencap -p` → PNG bytes); no stdout/stderr split or exit code
 - `sync:` v2 (LST2, LIS2, SND2, RCV2) for file transfer, with 64-bit sizes and full POSIX stat fields
 - Streaming APK install via `cmd package install -S <size> -` — no `/data/local/tmp` staging
 - Helpers: reboot, package install/uninstall/list, properties, processes, logcat (raw + parsed), screencap, key events, text input, taps/swipes, app start/stop, port forward
@@ -133,9 +139,12 @@ var sdk = await conn.GetPropertyAsync("ro.build.version.sdk");
 var all = await conn.GetAllPropertiesAsync();
 
 // Packages — streams the APK through `cmd package install` rather than staging on /data/local/tmp.
+// FailureReason can be null when adbd printed "Failure" without a bracketed reason; fall back to
+// the raw shell output (Raw.Stdout + Raw.Stderr) so the diagnostic isn't empty.
 var install = await conn.InstallAsync("./app.apk");
 if (!install.IsSuccess)
-    throw new InvalidOperationException(install.FailureReason);
+    throw new InvalidOperationException(
+        install.FailureReason ?? $"install failed: {install.Raw.Stdout}{install.Raw.Stderr}");
 var packages = await conn.ListPackagesAsync();
 await conn.UninstallAsync("com.example.app");
 
