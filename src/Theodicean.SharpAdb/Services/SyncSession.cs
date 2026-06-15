@@ -91,9 +91,15 @@ public sealed class SyncSession : IAsyncDisposable
 
                 await ReadExactAsync(entryHdr.AsMemory(0, dentFixedSize), cancellationToken);
                 var stat = ParseStatV2(entryHdr.AsSpan(0, SyncProtocol.StatV2PayloadSize));
-                var nameLen = (int)BinaryPrimitives.ReadUInt32LittleEndian(
+                var nameLenU = BinaryPrimitives.ReadUInt32LittleEndian(
                     entryHdr.AsSpan(SyncProtocol.StatV2PayloadSize, 4));
 
+                // Cast uint→int can wrap negative; the wire field is uint32 but ArrayPool
+                // and Encoding.UTF8.GetString both take int counts.
+                if (nameLenU > int.MaxValue)
+                    throw new IOException($"DNT2 entry namelen exceeds int.MaxValue: {nameLenU}");
+
+                var nameLen = (int)nameLenU;
                 string name;
                 if (nameLen == 0)
                 {

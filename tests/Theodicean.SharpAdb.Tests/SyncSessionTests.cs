@@ -406,6 +406,7 @@ public class SyncSessionTests
     private static void WriteDoneTerminator(MemoryStream dest)
     {
         Span<byte> hdr = stackalloc byte[76];
+        hdr.Clear();
         BinaryPrimitives.WriteUInt32LittleEndian(hdr, SyncProtocol.Done);
         dest.Write(hdr);
     }
