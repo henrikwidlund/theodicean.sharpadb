@@ -109,7 +109,10 @@ public class StreamingInstallTests
 
         // OpenShellAsync wraps the command with shell,v2,raw: prefix.
         await Assert.That(await observedService.Task).IsEqualTo($"shell,v2,raw:cmd package install -r -S {apkBytes.Length} -");
-        await Assert.That(observedStdin.ToArray()).IsEquivalentTo(apkBytes);
+        // CollectionOrdering.Matching enforces an ordered, element-by-element comparison —
+        // important because the test's whole point is that stdin bytes arrive in apk order.
+        await Assert.That(observedStdin.ToArray())
+            .IsEquivalentTo(apkBytes, TUnit.Assertions.Enums.CollectionOrdering.Matching);
         await Assert.That(result.IsSuccess).IsTrue();
         await Assert.That(result.FailureReason).IsNull();
         await Assert.That(result.Raw.ExitCode).IsEqualTo(0);
