@@ -256,21 +256,15 @@ public class StreamingInstallTests
         public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
     }
 
-    private sealed class TruncatedStream : Stream
+    private sealed class TruncatedStream(long advertisedLength, int actualBytes) : Stream
     {
-        private readonly int _actualBytes;
+        private readonly int _actualBytes = actualBytes;
         private long _position;
-
-        public TruncatedStream(long advertisedLength, int actualBytes)
-        {
-            Length = advertisedLength;
-            _actualBytes = actualBytes;
-        }
 
         public override bool CanRead => true;
         public override bool CanSeek => true;
         public override bool CanWrite => false;
-        public override long Length { get; }
+        public override long Length { get; } = advertisedLength;
         public override long Position { get => _position; set => _position = value; }
         public override void Flush() { }
         public override int Read(byte[] buffer, int offset, int count)
