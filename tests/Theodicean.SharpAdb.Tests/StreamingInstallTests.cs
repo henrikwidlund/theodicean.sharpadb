@@ -147,6 +147,41 @@ public class StreamingInstallTests
     }
 
     [Test]
+    public async Task InstallAsyncFailsClearlyWhenStreamEndsBeforeDeclaredSize()
+    {
+        (Stream clientStream, Stream deviceStream) = CreateDuplexPair();
+        var clientTransport = new StreamAdbTransport(clientStream);
+        await using var deviceTransport = new StreamAdbTransport(deviceStream);
+
+        var deviceTask = Task.Run(async () =>
+        {
+            using (var pkt = await deviceTransport.ReadPacketAsync())
+                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);
+            var banner = "device::features=shell_v2\0"u8.ToArray();
+            await deviceTransport.WritePacketAsync(
+                new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload,
+                    (uint)banner.Length, 0), banner);
+
+            // Accept the OPEN but never respond further — install would hang on stdin if the
+            // pump didn't notice the EOF and throw.
+            using var openPkt = await deviceTransport.ReadPacketAsync();
+            await Assert.That(openPkt.Header.Command).IsEqualTo(AdbCommand.Open);
+            await deviceTransport.WritePacketAsync(
+                new AdbHeader(AdbCommand.Okay, 9999, openPkt.Header.Arg0, 0, 0), ReadOnlyMemory<byte>.Empty);
+        });
+
+        await using var conn = await AdbConnection.ConnectAsync(clientTransport, [], new AdbConnectOptions());
+
+        // Stream that lies about its size: Length=100, but the underlying byte array is only 10
+        // bytes long so ReadAsync will hit EOF at position 10.
+        await using var truncated = new TruncatedStream(advertisedLength: 100, actualBytes: 10);
+        await Assert.That(async () => await conn.InstallAsync(truncated))
+            .ThrowsExactly<IOException>();
+
+        await deviceTask.WaitAsync(TimeSpan.FromSeconds(5));
+    }
+
+    [Test]
     public async Task InstallAsyncRejectsWriteOnlyStream()
     {
         (Stream clientStream, Stream deviceStream) = CreateDuplexPair();
@@ -216,6 +251,46 @@ public class StreamingInstallTests
         public override void Flush() { }
         public override int Read(byte[] buffer, int offset, int count) => 0;
         public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+    }
+
+    private sealed class TruncatedStream : Stream
+    {
+        private readonly int _actualBytes;
+        private long _position;
+
+        public TruncatedStream(long advertisedLength, int actualBytes)
+        {
+            Length = advertisedLength;
+            _actualBytes = actualBytes;
+        }
+
+        public override bool CanRead => true;
+        public override bool CanSeek => true;
+        public override bool CanWrite => false;
+        public override long Length { get; }
+        public override long Position { get => _position; set => _position = value; }
+        public override void Flush() { }
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            if (_position >= _actualBytes) return 0;
+            var available = (int)Math.Min(count, _actualBytes - _position);
+            Array.Clear(buffer, offset, available);
+            _position += available;
+            return available;
+        }
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            _position = origin switch
+            {
+                SeekOrigin.Begin => offset,
+                SeekOrigin.Current => _position + offset,
+                SeekOrigin.End => Length + offset,
+                _ => throw new ArgumentOutOfRangeException(nameof(origin))
+            };
+            return _position;
+        }
         public override void SetLength(long value) => throw new NotSupportedException();
         public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
     }

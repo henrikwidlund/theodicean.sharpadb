@@ -229,7 +229,15 @@ public static class PackageExtensions
                 // TCP buffer (the server stopped reading), hanging the next WriteStdinAsync.
                 var toRead = (int)Math.Min(remaining, chunkSize);
                 var n = await apk.ReadAsync(buf.AsMemory(0, toRead), cancellationToken);
-                if (n == 0) break;
+                if (n == 0)
+                {
+                    // Source stream ended before producing the advertised size — the device
+                    // is still waiting for the remaining bytes, so just CloseStdin would
+                    // leave it to fail with a vaguer diagnostic. Surface the truncation
+                    // explicitly so the caller knows their input lied about its length.
+                    throw new IOException(string.Create(CultureInfo.InvariantCulture,
+                        $"APK stream ended after {size - remaining} bytes; advertised size was {size}."));
+                }
 
                 try
                 {
