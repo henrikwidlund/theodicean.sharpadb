@@ -74,7 +74,7 @@ public class SyncIntegrationTests
         {
             var stat = await sync.StatAsync(remotePath);
             await Assert.That(stat.Exists).IsTrue();
-            await Assert.That(stat.Size).IsEqualTo((uint)payload.Length);
+            await Assert.That(stat.Size).IsEqualTo((ulong)payload.Length);
         }
 
         byte[] roundTripped;

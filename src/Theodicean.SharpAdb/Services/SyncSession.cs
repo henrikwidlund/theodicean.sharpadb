@@ -62,7 +62,10 @@ public sealed class SyncSession : IAsyncDisposable
     }
 
     /// <summary>
-    /// Enumerates the entries of a remote directory using <c>LIS2</c>.
+    /// Enumerates the entries of a remote directory using <c>LIS2</c>. The caller must drain
+    /// the enumeration (or cancel before <see cref="StatAsync"/>/<see cref="PullAsync"/>/<see cref="PushAsync"/>
+    /// runs); abandoning iteration mid-stream leaves unread DNT2/DONE frames on the wire that
+    /// the next operation on this session would misinterpret.
     /// </summary>
     public async IAsyncEnumerable<AdbDirectoryEntry> ListAsync(string remotePath,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -142,7 +145,9 @@ public sealed class SyncSession : IAsyncDisposable
 
     /// <summary>
     /// Pulls <paramref name="remotePath"/> from the device using <c>RCV2</c>, writing its
-    /// bytes to <paramref name="destination"/>. Compression is not negotiated.
+    /// bytes to <paramref name="destination"/>. Compression is not negotiated. Cancelling
+    /// mid-transfer leaves unread DATA/DONE frames on the wire; do not reuse this session
+    /// after cancellation, dispose it instead.
     /// </summary>
     public async Task PullAsync(string remotePath, Stream destination, CancellationToken cancellationToken = default)
     {

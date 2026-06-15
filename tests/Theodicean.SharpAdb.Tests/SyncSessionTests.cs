@@ -137,6 +137,40 @@ public class SyncSessionTests
     }
 
     [Test]
+    public async Task StatAsyncReportsMissingPathWhenLst2CarriesEnoent()
+    {
+        (Stream clientStream, Stream deviceStream) = CreateDuplexPair();
+        var clientTransport = new StreamAdbTransport(clientStream);
+        await using var deviceTransport = new StreamAdbTransport(deviceStream);
+
+        const uint deviceLocalId = 5700;
+
+        var deviceTask = Task.Run(async () =>
+        {
+            var clientLocalId = await OpenSyncStreamAsync(deviceTransport, deviceLocalId);
+            _ = await ReadStreamFrameAsync(deviceTransport, deviceLocalId, clientLocalId, minBytes: 8);
+
+            // adbd response when lstat fails: LST2 tag + 68 zeroed bytes except error=ENOENT(2).
+            var reply = new byte[72];
+            BinaryPrimitives.WriteUInt32LittleEndian(reply, SyncProtocol.LStatV2);
+            BinaryPrimitives.WriteUInt32LittleEndian(reply.AsSpan(4), 2u); // ENOENT
+
+            await deviceTransport.WritePacketAsync(
+                new AdbHeader(AdbCommand.Wrte, deviceLocalId, clientLocalId, (uint)reply.Length, 0), reply);
+            using var ack = await deviceTransport.ReadPacketAsync();
+        });
+
+        await using var conn = await AdbConnection.ConnectAsync(clientTransport, [], new AdbConnectOptions());
+        await using var sync = await SyncSession.OpenAsync(conn);
+        var stat = await sync.StatAsync("/missing/path");
+        await deviceTask.WaitAsync(TimeSpan.FromSeconds(10));
+
+        await Assert.That(stat.Exists).IsFalse();
+        await Assert.That(stat.Error).IsEqualTo(2u);
+        await Assert.That(stat.Mode).IsEqualTo(0u);
+    }
+
+    [Test]
     public async Task ListAsyncParsesMultipleDnt2EntriesThenDone()
     {
         (Stream clientStream, Stream deviceStream) = CreateDuplexPair();
