@@ -94,6 +94,8 @@ public static class PackageExtensions
         {
             ArgumentNullException.ThrowIfNull(connection);
             ArgumentNullException.ThrowIfNull(apk);
+            if (!apk.CanRead)
+                throw new ArgumentException("APK stream must be readable.", nameof(apk));
             if (!apk.CanSeek)
                 throw new ArgumentException("APK stream must be seekable so its size can be advertised to cmd package install.", nameof(apk));
 
@@ -210,11 +212,12 @@ public static class PackageExtensions
 
     private static async Task PumpStdinAsync(ShellSession session, Stream apk, long size, CancellationToken cancellationToken)
     {
-        // Stream the APK in 64 KiB chunks. The shell_v2 stdin packet header costs only 5 bytes
-        // per chunk, and AdbStream's WRTE flow control (OKAY-per-write) means we're already
-        // bounded by the round-trip — bigger chunks don't help and they'd grow per-write
-        // ArrayPool rentals inside WriteStdinAsync.
-        const int chunkSize = 64 * 1024;
+        // Stream the APK in 256 KiB chunks. ADB's WRTE flow control is OKAY-per-WRTE, so over
+        // TCP the achievable throughput is bounded by `chunk size / round-trip-time`. At a
+        // typical Wi-Fi RTT of ~10 ms, 64 KiB caps at ~6 MB/s; 256 KiB gives ~25 MB/s. Larger
+        // chunks help further (up to the negotiated MaxPayload, usually 1 MiB) at the cost
+        // of bigger ArrayPool rentals inside WriteStdinAsync. 256 KiB is the balance point.
+        const int chunkSize = 256 * 1024;
         var buf = ArrayPool<byte>.Shared.Rent(chunkSize);
         var remaining = size;
         try

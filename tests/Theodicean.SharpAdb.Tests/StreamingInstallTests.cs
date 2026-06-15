@@ -144,6 +144,33 @@ public class StreamingInstallTests
     }
 
     [Test]
+    public async Task InstallAsyncRejectsWriteOnlyStream()
+    {
+        (Stream clientStream, Stream deviceStream) = CreateDuplexPair();
+        var clientTransport = new StreamAdbTransport(clientStream);
+        await using var deviceTransport = new StreamAdbTransport(deviceStream);
+
+        var deviceTask = Task.Run(async () =>
+        {
+            using (var pkt = await deviceTransport.ReadPacketAsync())
+                await Assert.That(pkt.Header.Command).IsEqualTo(AdbCommand.Cnxn);
+            var banner = "device::features=shell_v2\0"u8.ToArray();
+            await deviceTransport.WritePacketAsync(
+                new AdbHeader(AdbCommand.Cnxn, AdbProtocolConstants.Version, AdbProtocolConstants.MaxPayload,
+                    (uint)banner.Length, 0), banner);
+        });
+
+        await using var conn = await AdbConnection.ConnectAsync(clientTransport, [], new AdbConnectOptions());
+        await deviceTask;
+
+        // Seekable but write-only — would later blow up inside ReadAsync with a less helpful
+        // error if we hadn't guarded it up front.
+        await using var writeOnly = new WriteOnlySeekableStream();
+        await Assert.That(async () => await conn.InstallAsync(writeOnly))
+            .ThrowsExactly<ArgumentException>();
+    }
+
+    [Test]
     public async Task InstallAsyncRejectsNonSeekableStream()
     {
         (Stream clientStream, Stream deviceStream) = CreateDuplexPair();
@@ -188,5 +215,19 @@ public class StreamingInstallTests
         public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
         public override void SetLength(long value) => throw new NotSupportedException();
         public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+    }
+
+    private sealed class WriteOnlySeekableStream : Stream
+    {
+        public override bool CanRead => false;
+        public override bool CanSeek => true;
+        public override bool CanWrite => true;
+        public override long Length => 0;
+        public override long Position { get; set; }
+        public override void Flush() { }
+        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) => 0;
+        public override void SetLength(long value) { }
+        public override void Write(byte[] buffer, int offset, int count) { }
     }
 }
