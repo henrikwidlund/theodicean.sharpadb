@@ -85,7 +85,9 @@ internal static class PropertiesParser
             valueStart += keyEnd + 1;
 
             var valueEnd = line.LastIndexOf(']');
-            if (valueEnd <= valueStart) continue;
+            // valueEnd == valueStart is a legitimate empty value ("[key]: []") - only a
+            // strictly-smaller valueEnd indicates a malformed/truncated line.
+            if (valueEnd < valueStart) continue;
 
             alternateLookup[key] = line[valueStart..valueEnd].ToString();
         }
