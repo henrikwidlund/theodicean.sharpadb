@@ -31,6 +31,9 @@ public sealed class AdbAuthKey : IDisposable
     private readonly bool _ownsRsa;
     private readonly string _userHost;
 
+    /// <summary>The wrapped RSA key. Used by the pairing implementation to build a BouncyCastle-compatible signer.</summary>
+    internal RSA Rsa => _rsa;
+
     /// <summary>
     /// Initializes a new instance that wraps an existing RSA instance for use as an ADB auth key.
     /// </summary>
