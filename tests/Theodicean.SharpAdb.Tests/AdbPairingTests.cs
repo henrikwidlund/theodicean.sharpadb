@@ -38,6 +38,7 @@ public class AdbPairingTests
         var hugeUserHost = new string('a', 9000);
         using var key = AdbAuthKey.Generate(hugeUserHost);
 
+        // ReSharper disable once AccessToDisposedClosure
         await Assert.That(async () => await AdbPairing.PairAsync("127.0.0.1", 1, PairingCode, key))
             .Throws<ArgumentException>();
     }
@@ -64,7 +65,8 @@ public class AdbPairingTests
 
         cts.CancelAfter(TimeSpan.FromMilliseconds(200));
 
-        await Assert.That(async () => await pairTask.WaitAsync(TimeSpan.FromSeconds(5)))
+        // ReSharper disable once AccessToDisposedClosure
+        await Assert.That(async () => await pairTask.WaitAsync(TimeSpan.FromSeconds(5), cts.Token))
             .Throws<OperationCanceledException>();
 
         using var acceptedSocket = await acceptTask;

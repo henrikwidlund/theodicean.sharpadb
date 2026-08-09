@@ -90,25 +90,19 @@ internal sealed class AdbPairingTlsClient : DefaultTlsClient
         private static SignatureAndHashAlgorithm SelectSignatureAlgorithm(
             IList<SignatureAndHashAlgorithm>? serverSupportedAlgorithms)
         {
-            if (serverSupportedAlgorithms is not null)
-            {
-                foreach (var algorithm in serverSupportedAlgorithms)
-                {
-                    // rsa_pss_rsae_* are TLS 1.3 "intrinsic" combined schemes (RFC 8446 §4.2.3):
-                    // their SignatureAndHashAlgorithm.Hash field is HashAlgorithm.Intrinsic, not a
-                    // real hash — hence matching on the ready-made static instances rather than
-                    // constructing one via SignatureAndHashAlgorithm.GetInstance(sha256, ...).
-                    if (algorithm.Equals(SignatureAndHashAlgorithm.rsa_pss_rsae_sha256)
-                        || algorithm.Equals(SignatureAndHashAlgorithm.rsa_pss_rsae_sha384)
-                        || algorithm.Equals(SignatureAndHashAlgorithm.rsa_pss_rsae_sha512))
-                        return algorithm;
-                }
-            }
-
-            // TLS 1.3 mandates rsa_pss_rsae_sha256 support for any RSA certificate (RFC 8446
-            // §9.1), so this is a safe fallback if the server's list omitted it for some reason
-            // rather than an arbitrary guess.
-            return SignatureAndHashAlgorithm.rsa_pss_rsae_sha256;
+            return serverSupportedAlgorithms
+                       ?.FirstOrDefault(static a =>
+                           // rsa_pss_rsae_* are TLS 1.3 "intrinsic" combined schemes (RFC 8446 §4.2.3):
+                           // their SignatureAndHashAlgorithm.Hash field is HashAlgorithm.Intrinsic, not a
+                           // real hash — hence matching on the ready-made static instances rather than
+                           // constructing one via SignatureAndHashAlgorithm.GetInstance(sha256, ...).
+                           Equals(a, SignatureAndHashAlgorithm.rsa_pss_rsae_sha256) ||
+                           Equals(a, SignatureAndHashAlgorithm.rsa_pss_rsae_sha384) ||
+                           Equals(a, SignatureAndHashAlgorithm.rsa_pss_rsae_sha512))
+                   // TLS 1.3 mandates rsa_pss_rsae_sha256 support for any RSA certificate (RFC 8446
+                   // §9.1), so this is a safe fallback if the server's list omitted it for some reason
+                   // rather than an arbitrary guess.
+                   ?? SignatureAndHashAlgorithm.rsa_pss_rsae_sha256;
         }
     }
 }
