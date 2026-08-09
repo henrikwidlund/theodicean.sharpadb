@@ -38,10 +38,10 @@ Working:
 - Streaming APK install via `cmd package install -S <size> -` — no `/data/local/tmp` staging
 - Helpers: reboot, package install/uninstall/list, properties, processes, logcat (raw + parsed), screencap, key events, text input, taps/swipes, app start/stop, port forward
 - Fault propagation from the read loop to open streams and to subsequent `OpenAsync` calls
+- Wireless pairing with the 6-digit PIN (Android 11+, `AdbPairing.PairAsync`): SPAKE2 over Ed25519 (BoringSSL's construction, not the RFC 9382 P-256 variant) plus TLS 1.3 via BouncyCastle (needed for the RFC 5705 exported keying material .NET's own TLS stack doesn't expose). **Implemented but not validated against a real device** — I do not have a device which uses it; verified only via a loopback test against a hand-rolled TLS 1.3 peer in this repo, which exercises the wire protocol but can't confirm bit-for-bit compatibility with real adbd/BoringSSL. Treat as unverified until someone runs it against actual hardware. `AdbKnownHosts` persists the device GUID pairing returns, for matching against `_adb-tls-connect._tcp` mDNS instance names (mDNS discovery itself is out of scope for this library — bring your own client).
 
 Not implemented:
 
-- Wireless pairing with the 6-digit PIN (Android 11+). Requires SPAKE2 over Ed25519 with BoringSSL's specific M/N constants, and a real device to validate against (which I do not have). Workaround: pair once with Google's `adb pair`, then Theodicean.SharpAdb takes over.
 - USB transport. The protocol layer is transport-agnostic (`IAdbTransport`), so a USB transport using libusb or a platform-specific API can plug in without touching the rest.
 - mDNS device discovery.
 - Sync v2 transparent compression (Brotli/LZ4/Zstd). Compression flag is sent as 0.
@@ -104,14 +104,42 @@ await using var conn = await AdbConnection.ConnectTcpAsync(host, port, [key], op
 // Throws AdbAuthenticationException if the device doesn't already trust the key.
 ```
 
-For Android 11+ devices that only support wireless debugging, do the initial pairing once with Google's binary:
+For Android 11+ devices that only support wireless debugging, pair using the 6-digit code shown under Developer Options → Wireless debugging → "Pair device with pairing code" (equivalent to `adb pair`, but **not yet validated against real hardware** — see Status above):
 
-```
-adb pair 192.168.1.42:37123 493719
-adb connect 192.168.1.42:42891
+```csharp
+using Theodicean.SharpAdb.Pairing;
+
+// host:port and the 6-digit code come from the device's pairing screen; the pairing port is
+// NOT the regular ADB debug port.
+var result = await AdbPairing.PairAsync("192.168.1.42", 37123, "493719", key);
+await AdbKnownHosts.AddAsync(result); // remembers the device GUID for later mDNS matching
+
+// Successful pairing means the device now trusts `key`. Regular connects still go through
+// ConnectTcpAsync against the (separate, frequently-changing) debug port shown on-device or
+// found via _adb-tls-connect._tcp mDNS.
+await using var conn = await AdbConnection.ConnectTcpAsync("192.168.1.42", 42891, [key]);
 ```
 
-After that, Theodicean.SharpAdb connects to the debug port (the second one, not the pairing port) using the key in `~/.android/adbkey`.
+### Finding the debug port via mDNS
+
+The debug port adbd advertises changes across reboots and each time wireless debugging is toggled, so a real app should resolve it fresh before connecting rather than hardcoding a value from setup. mDNS discovery itself is not part of this library — bring your own client (e.g. [`Theodicean.Makaretu.Dns.Multicast`](https://www.nuget.org/packages/Theodicean.Makaretu.Dns.Multicast) on NuGet) and query for the service type below. Match the mDNS *instance name* directly against the GUID `AdbKnownHosts` stored for that device — that is how real `adb` itself correlates a discovery result to an already-paired device, no other lookup involved:
+
+```csharp
+using Makaretu.Dns;
+
+// _adb-tls-connect._tcp is the ongoing debug-port service; _adb-tls-pairing._tcp is only
+// present while the device's pairing screen is open and isn't needed for regular reconnects.
+var sd = await ServiceDiscovery.CreateInstance();
+sd.ServiceInstanceDiscovered += async args =>
+{
+    var instanceName = args.ServiceInstanceName!.Labels[0]; // == the device GUID from pairing
+    if (await AdbKnownHosts.ContainsAsync(instanceName))
+    {
+        // extract host/port from args.Message's SRV + address records, then ConnectTcpAsync
+    }
+};
+await sd.QueryServiceInstances(new DomainName("_adb-tls-connect._tcp"));
+```
 
 ## File transfer
 
