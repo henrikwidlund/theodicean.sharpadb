@@ -56,8 +56,6 @@ jobs:
       - name: Publish to nuget.org
         env:
           NUGET_API_KEY: ${{ steps.nuget_login.outputs.NUGET_API_KEY }}
-        permissions:
-          id-token: write
         shell: bash
         run: |
           if [[ -z "$NUGET_API_KEY" ]]; then
