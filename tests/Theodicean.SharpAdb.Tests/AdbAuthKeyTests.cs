@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -66,6 +67,33 @@ public class AdbAuthKeyTests
     [Test]
     public async Task LoadFromPemRejectsInvalidInput() =>
         await Assert.That(static () => AdbAuthKey.LoadFromPem("not-a-pem-key")).Throws<ArgumentException>();
+
+    [Test]
+    public async Task PemRoundTripsThroughARealFileOnDisk()
+    {
+        // Regression check for a report of AdbAuthKey.LoadFromPem failing on a key file a
+        // downstream app had persisted itself — confirms the exact write/read pattern such an app
+        // would use (plain UTF-8 text file via StreamWriter, then File.ReadAllText) round-trips
+        // cleanly, i.e. the failure was file corruption, not a PEM-format mismatch.
+        var path = Path.Combine(Path.GetTempPath(), $"sharpadb-pem-roundtrip-{Guid.NewGuid():N}.pem");
+        try
+        {
+            using var original = AdbAuthKey.Generate();
+
+            await using (var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None))
+            await using (var writer = new StreamWriter(stream))
+                await writer.WriteAsync(original.ExportPrivateKeyPem());
+
+            using var reloaded = AdbAuthKey.LoadFromPem(await File.ReadAllTextAsync(path));
+
+            var token = RandomNumberGenerator.GetBytes(AdbProtocolConstants.AuthTokenSize);
+            await Assert.That(reloaded.SignToken(token)).IsEquivalentTo(original.SignToken(token));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
 
     [Test]
     public async Task EncodedPublicKeyContainsCorrectModulusWordCount()
