@@ -30,15 +30,16 @@ Working:
 - TCP transport (port 5555 after `adb tcpip`, or any IP:port the device is reachable on)
 - CNXN handshake, banner parsing, max-payload negotiation
 - RSA-2048 authentication (signature path + RSAPUBLICKEY enrollment)
-- STLS upgrade for devices that require TLS on the debug socket
-- Multiplexed `AdbStream` with the per-write OKAY ack the protocol requires
+- STLS upgrade for devices that require TLS on the debug socket. **Not supported on macOS if the device requires TLS 1.3** (see the note under wireless pairing below — the underlying cause is the same .NET/macOS limitation, and it's not specific to wireless connections; any STLS peer that mandates TLS 1.3 hits it). TLS 1.2 STLS peers are unaffected on any platform.
+- Multiplexed `AdbStream` with the per-write OKAY ack the protocol requires. Tolerates a small burst of unacked inbound WRTEs (queue depth 8, not 1) — real `adbd` was observed occasionally splitting a single logical response across two back-to-back WRTE packets during end-to-end testing against a real emulator, even without the `delayed_ack` feature negotiated
 - `shell,v2,raw:` for interactive commands with separate stdout/stderr and exit code (`AdbShellResult`)
 - `exec:` for raw byte-stream services (e.g. `screencap -p` → PNG bytes); no stdout/stderr split or exit code
 - `sync:` v2 (LST2, LIS2, SND2, RCV2) for file transfer, with 64-bit sizes and full POSIX stat fields
 - Streaming APK install via `cmd package install -S <size> -` — no `/data/local/tmp` staging
 - Helpers: reboot, package install/uninstall/list, properties, processes, logcat (raw + parsed), screencap, key events, text input, taps/swipes, app start/stop, port forward
 - Fault propagation from the read loop to open streams and to subsequent `OpenAsync` calls
-- Wireless pairing with the 6-digit PIN (Android 11+, `AdbPairing.PairAsync`): SPAKE2 over Ed25519 (BoringSSL's construction, not the RFC 9382 P-256 variant) plus TLS 1.3 via BouncyCastle (needed for the RFC 5705 exported keying material .NET's own TLS stack doesn't expose). **Implemented but not validated against a real device** — I do not have a device which uses it; verified only via a loopback test against a hand-rolled TLS 1.3 peer in this repo, which exercises the wire protocol but can't confirm bit-for-bit compatibility with real adbd/BoringSSL. Treat as unverified until someone runs it against actual hardware. `AdbKnownHosts` persists the device GUID pairing returns, for matching against `_adb-tls-connect._tcp` mDNS instance names (mDNS discovery itself is out of scope for this library — bring your own client).
+- Wireless pairing with the 6-digit PIN (Android 11+, `AdbPairing.PairAsync`): SPAKE2 over Ed25519 (BoringSSL's construction, not the RFC 9382 P-256 variant) plus TLS 1.3 via BouncyCastle (needed for the RFC 5705 exported keying material .NET's own TLS stack doesn't expose). **Validated end-to-end against a real device** on Linux (an Android emulator running genuine AOSP `adbd`/BoringSSL) — pairing, the subsequent `ConnectTcpAsync`, and running a shell command all succeeded repeatedly. `AdbKnownHosts` persists the device GUID pairing returns, for matching against `_adb-tls-connect._tcp` mDNS instance names (mDNS discovery itself is out of scope for this library — bring your own client).
+  - **Pairing succeeding does not mean you can then connect on macOS.** Pairing uses BouncyCastle directly and works fine there, but the *ongoing* connection afterward goes through the same STLS/`SslStream` path noted above, which macOS can't complete against a TLS-1.3-only device. A BouncyCastle-based fix for that path was tried and correctly negotiated TLS 1.3, but hit a separate, real limitation in BouncyCastle's own async API ([bcgit/bc-csharp#481](https://github.com/bcgit/bc-csharp/issues/481): its async `Stream` methods are sync-over-async, each wrapping a blocking call in a pooled task) that deadlocked this library's long-lived background read loop against foreground writes under .NET's thread-pool starvation behavior. For now, **use Linux or Windows to actually connect to a wirelessly-paired device**; macOS can still be used to perform the pairing step itself.
 
 Not implemented:
 
@@ -104,7 +105,7 @@ await using var conn = await AdbConnection.ConnectTcpAsync(host, port, [key], op
 // Throws AdbAuthenticationException if the device doesn't already trust the key.
 ```
 
-For Android 11+ devices that only support wireless debugging, pair using the 6-digit code shown under Developer Options → Wireless debugging → "Pair device with pairing code" (equivalent to `adb pair`, but **not yet validated against real hardware** — see Status above):
+For Android 11+ devices that only support wireless debugging, pair using the 6-digit code shown under Developer Options → Wireless debugging → "Pair device with pairing code" (equivalent to `adb pair`; validated against Android Simulator — see Status above). **On macOS, pairing works but the subsequent `ConnectTcpAsync` will not** — see the macOS note under Status; use Linux or Windows for the actual connection:
 
 ```csharp
 using Theodicean.SharpAdb.Pairing;
@@ -116,7 +117,7 @@ await AdbKnownHosts.AddAsync(result); // remembers the device GUID for later mDN
 
 // Successful pairing means the device now trusts `key`. Regular connects still go through
 // ConnectTcpAsync against the (separate, frequently-changing) debug port shown on-device or
-// found via _adb-tls-connect._tcp mDNS.
+// found via _adb-tls-connect._tcp mDNS. Not supported on macOS (see Status).
 await using var conn = await AdbConnection.ConnectTcpAsync("192.168.1.42", 42891, [key]);
 ```
 
@@ -218,6 +219,12 @@ ADB_HOST=192.168.1.42:5555 dotnet test tests/Theodicean.SharpAdb.IntegrationTest
 If `ADB_KEY_PATH` is unset, the fixture defaults to `~/.android/adbkey` (the same file Google's `adb` uses). If neither path exists, a fresh key is generated and saved; the first connect will prompt the user to tap "Allow" on the device.
 
 For one-time on-device key authorization, set `ADB_RUN_BOOTSTRAP=1` and run the `BootstrapKeyOnDevice` test.
+
+Pairing integration tests need `ADB_PAIR_HOST` and `ADB_PAIR_CODE` (from the device's pairing screen; add `ADB_CONNECT_HOST` to also verify the paired key can connect — skipped on macOS, see Status):
+
+```
+ADB_PAIR_HOST=192.168.1.42:37123 ADB_PAIR_CODE=493719 dotnet test tests/Theodicean.SharpAdb.IntegrationTests
+```
 
 ## License
 
