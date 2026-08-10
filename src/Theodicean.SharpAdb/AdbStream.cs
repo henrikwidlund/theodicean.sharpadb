@@ -20,6 +20,15 @@ namespace Theodicean.SharpAdb;
 /// </remarks>
 public sealed class AdbStream : Stream
 {
+    // Real adbd has been observed occasionally splitting a single logical response (e.g. shell
+    // v2's stdout chunk and its trailing exit-code chunk) across two back-to-back WRTE packets
+    // instead of bundling them into one, even against a peer (us) that never advertised the
+    // delayed_ack feature — confirmed via raw packet capture against an AOSP emulator. A queue
+    // depth of 1 treats that as a fatal protocol violation; a small amount of slack absorbs it
+    // without weakening the backpressure guarantee below (a genuinely stuck/slow consumer still
+    // throttles the device once this many chunks are queued).
+    private const int InboundQueueDepth = 8;
+
     private readonly AdbConnection _connection;
 
     /// <summary>
@@ -37,7 +46,7 @@ public sealed class AdbStream : Stream
     // dispatcher calls TryWrite while OnClosed/OnFaulted/Dispose may call TryComplete from a
     // different thread, and the SingleWriter contract covers Complete() too.
     private readonly Channel<InboundChunk> _inboundChannel = Channel.CreateBounded<InboundChunk>(
-        new BoundedChannelOptions(1) { SingleReader = true });
+        new BoundedChannelOptions(InboundQueueDepth) { SingleReader = true });
     private readonly SemaphoreSlim _writeAck = new(0, 1);
     private readonly TaskCompletionSource<bool> _opened = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly CancellationTokenSource _drainCts = new();
@@ -76,8 +85,8 @@ public sealed class AdbStream : Stream
     /// <paramref name="buffer"/> (must be a pooled buffer of at least <paramref name="length"/>
     /// bytes, or <see langword="null"/> for a zero-length WRTE); the drain task returns it to
     /// the pool once the bytes have been copied into the reader's pipe. The demuxer never
-    /// blocks here — if the channel rejects the chunk (bounded to one queued item, indicating
-    /// the device has sent additional WRTEs without waiting for our OKAY) the stream is
+    /// blocks here — if the channel rejects the chunk (already holding <see cref="InboundQueueDepth"/>
+    /// unconsumed chunks — a genuinely stuck consumer, not just a small burst) the stream is
     /// faulted but the connection-wide read loop keeps running for other streams.
     /// </summary>
     internal void EnqueueInboundWrite(byte[]? buffer, int length)
@@ -94,7 +103,7 @@ public sealed class AdbStream : Stream
             if (buffer is not null)
                 ArrayPool<byte>.Shared.Return(buffer);
             OnFaulted(new IOException(
-                $"ADB device sent a WRTE on stream {LocalId} before acknowledging the previous one"));
+                $"ADB device sent a WRTE on stream {LocalId} without waiting for an OKAY, and the inbound queue (depth {InboundQueueDepth}) is still full"));
         }
     }
 
