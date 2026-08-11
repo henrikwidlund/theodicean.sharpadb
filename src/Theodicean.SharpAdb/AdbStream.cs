@@ -65,7 +65,7 @@ public sealed class AdbStream : Stream
         // Pipe.Writer would never run, hanging any pending ReadAsync. The body uses
         // _drainCts.Token directly, so cancellation is observed once DrainLoopAsync starts.
 #pragma warning disable MA0040
-        _drainTask = Task.Run(DrainLoopAsync);
+        _drainTask = Task.Run(DrainLoopAsync, CancellationToken.None);
 #pragma warning restore MA0040
     }
 
@@ -289,7 +289,7 @@ public sealed class AdbStream : Stream
     /// </remarks>
     public override int Read(byte[] buffer, int offset, int count) =>
 #pragma warning disable MA0040
-        ReadAsync(buffer.AsMemory(offset, count)).AsTask().GetAwaiter().GetResult();
+        ReadAsync(buffer.AsMemory(offset, count), CancellationToken.None).AsTask().GetAwaiter().GetResult();
 #pragma warning restore MA0040
 
     /// <summary>
@@ -321,7 +321,7 @@ public sealed class AdbStream : Stream
     /// </remarks>
     public override void Write(byte[] buffer, int offset, int count) =>
 #pragma warning disable MA0040
-        WriteAsync(buffer.AsMemory(offset, count)).AsTask().GetAwaiter().GetResult();
+        WriteAsync(buffer.AsMemory(offset, count), CancellationToken.None).AsTask().GetAwaiter().GetResult();
 #pragma warning restore MA0040
 
     /// <summary>
