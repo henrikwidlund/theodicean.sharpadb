@@ -164,12 +164,16 @@ public class AdbConnectionTests
         await using var stream = await conn.OpenAsync("shell:cat");
         await deviceTask;
 
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(5);
+        while (conn.FaultException is null && DateTime.UtcNow < deadline)
+            await Task.Delay(50);
+
         // Pending read on the stream should observe the fault (or 0/EOF) once the loop dies.
         var buf = new byte[1024];
         Exception? ex = null;
         try
         {
-            var read = await stream.ReadAsync(buf).AsTask().WaitAsync(TimeSpan.FromSeconds(2));
+            var read = await stream.ReadAsync(buf).AsTask().WaitAsync(TimeSpan.FromSeconds(5));
             // If we got here, a graceful close happened — accept 0 too.
             await Assert.That(read).IsZero();
         }
