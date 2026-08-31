@@ -44,7 +44,7 @@ public readonly struct AdbHeader
     /// <summary>
     /// Initializes a new header. <see cref="Magic"/> is computed automatically.
     /// </summary>
-    public AdbHeader(in AdbCommand command, in uint arg0, in uint arg1, in uint dataLength, in uint dataChecksum)
+    public AdbHeader(AdbCommand command, uint arg0, uint arg1, uint dataLength, uint dataChecksum)
     {
         Command = command;
         Arg0 = arg0;

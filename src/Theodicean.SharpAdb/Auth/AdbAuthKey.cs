@@ -40,7 +40,7 @@ public sealed class AdbAuthKey : IDisposable
     /// <param name="rsa">RSA key. Must be 2048-bit.</param>
     /// <param name="userHost">Identity string sent alongside the public key, formatted <c>user@host</c>.</param>
     /// <param name="ownsRsa">When <see langword="true"/>, disposing this object also disposes <paramref name="rsa"/>.</param>
-    public AdbAuthKey(RSA rsa, string userHost = "sharpadb@dotnet", in bool ownsRsa = true)
+    public AdbAuthKey(RSA rsa, string userHost = "sharpadb@dotnet", bool ownsRsa = true)
     {
         ArgumentNullException.ThrowIfNull(rsa);
         ArgumentException.ThrowIfNullOrWhiteSpace(userHost);

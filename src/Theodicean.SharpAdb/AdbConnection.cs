@@ -173,7 +173,7 @@ public sealed class AdbConnection : IAsyncDisposable
     /// </summary>
     public AdbAuthenticationMethod AuthenticationMethod { get; }
 
-    private AdbConnection(IAdbTransport transport, AdbDeviceInfo info, in uint maxPayload, in bool writeChecksum, in AdbAuthenticationMethod authMethod, ILogger logger)
+    private AdbConnection(IAdbTransport transport, AdbDeviceInfo info, uint maxPayload, bool writeChecksum, AdbAuthenticationMethod authMethod, ILogger logger)
     {
         _transport = transport;
         MaxPayload = maxPayload;

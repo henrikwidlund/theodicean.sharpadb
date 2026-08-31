@@ -47,7 +47,7 @@ public sealed class StreamAdbTransport : IAdbTransport
     /// <param name="stream">Stream to read/write ADB packets on.</param>
     /// <param name="ownsStream">When <see langword="true"/>, disposing this transport disposes the inner stream.</param>
     /// <param name="verifyChecksum">When <see langword="true"/>, validate the legacy sum-of-bytes checksum on inbound payloads.</param>
-    public StreamAdbTransport(Stream stream, in bool ownsStream = true, in bool verifyChecksum = false)
+    public StreamAdbTransport(Stream stream, bool ownsStream = true, bool verifyChecksum = false)
     {
         _stream = stream ?? throw new ArgumentNullException(nameof(stream));
         _ownsStream = ownsStream;
@@ -57,7 +57,7 @@ public sealed class StreamAdbTransport : IAdbTransport
     /// <summary>
     /// Builds a transport over a connected TCP socket. Disables Nagle's algorithm.
     /// </summary>
-    public static StreamAdbTransport CreateTcp(Socket socket, in bool verifyChecksum = false)
+    public static StreamAdbTransport CreateTcp(Socket socket, bool verifyChecksum = false)
     {
         socket.NoDelay = true;
         return new StreamAdbTransport(new NetworkStream(socket, ownsSocket: true), ownsStream: true, verifyChecksum);

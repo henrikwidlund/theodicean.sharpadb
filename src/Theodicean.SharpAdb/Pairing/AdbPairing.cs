@@ -16,7 +16,7 @@ namespace Theodicean.SharpAdb.Pairing;
 /// this is the same "<c>&lt;base64 mincrypt key&gt; user@host</c>" text used in normal ADB AUTH.
 /// </param>
 // ReSharper disable once NotAccessedPositionalProperty.Global
-public sealed record AdbPairingResult(in PeerInfoType PeerInfoType, byte[] PeerInfoData);
+public sealed record AdbPairingResult(PeerInfoType PeerInfoType, byte[] PeerInfoData);
 
 /// <summary>
 /// Thrown when the wireless-pairing handshake fails for reasons specific to the pairing protocol

@@ -25,7 +25,7 @@ public sealed class AdbPortForward : IAsyncDisposable
     /// </summary>
     public int LocalPort { get; }
 
-    private AdbPortForward(AdbConnection connection, TcpListener listener, in int remotePort, ILogger logger)
+    private AdbPortForward(AdbConnection connection, TcpListener listener, int remotePort, ILogger logger)
     {
         _connection = connection;
         _listener = listener;

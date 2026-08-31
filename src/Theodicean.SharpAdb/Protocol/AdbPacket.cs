@@ -16,7 +16,7 @@ public struct AdbPacket : IDisposable
     private byte[]? _rented;
     private readonly int _payloadLength;
 
-    internal AdbPacket(in AdbHeader header, byte[]? rented, in int payloadLength)
+    internal AdbPacket(in AdbHeader header, byte[]? rented, int payloadLength)
     {
         Header = header;
         _rented = rented;

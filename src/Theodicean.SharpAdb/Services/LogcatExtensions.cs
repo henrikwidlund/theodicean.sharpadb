@@ -58,7 +58,7 @@ public enum LogcatPriority
 /// <param name="Message">The log message body (after the ":" separator).</param>
 /// <param name="Raw">The original unparsed line (kept for diagnostics).</param>
 // ReSharper disable once NotAccessedPositionalProperty.Global
-public sealed record LogcatEntry(in LogcatPriority Priority, string Tag, in int Pid, in int Tid, string Message, string Raw);
+public sealed record LogcatEntry(LogcatPriority Priority, string Tag, int Pid, int Tid, string Message, string Raw);
 
 /// <summary>
 /// Extension methods for streaming raw or parsed logcat output from a device.
@@ -145,7 +145,7 @@ internal static class LogcatParser
         return true;
     }
 
-    private static bool Skip(ref ReadOnlySpan<char> s, in int tokenCount)
+    private static bool Skip(ref ReadOnlySpan<char> s, int tokenCount)
     {
         for (var i = 0; i < tokenCount; i++)
         {
@@ -193,7 +193,7 @@ internal static class LogcatParser
         return true;
     }
 
-    private static LogcatPriority MapPriority(in char c) => c switch
+    private static LogcatPriority MapPriority(char c) => c switch
     {
         'V' => LogcatPriority.Verbose,
         'D' => LogcatPriority.Debug,

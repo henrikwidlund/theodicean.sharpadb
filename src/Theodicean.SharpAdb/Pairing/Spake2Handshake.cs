@@ -49,7 +49,7 @@ internal sealed class Spake2Handshake
     /// <summary>Our outgoing SPAKE2 message: a 32-byte compressed masked point.</summary>
     internal byte[] Message { get; }
 
-    internal Spake2Handshake(in Spake2Role role, in ReadOnlySpan<byte> password)
+    internal Spake2Handshake(Spake2Role role, in ReadOnlySpan<byte> password)
     {
         _role = role;
         _myName = role == Spake2Role.Client ? ClientName : ServerName;
