@@ -55,11 +55,25 @@ public sealed class StreamAdbTransport : IAdbTransport
     }
 
     /// <summary>
-    /// Builds a transport over a connected TCP socket. Disables Nagle's algorithm.
+    /// Builds a transport over a connected TCP socket. Disables Nagle's algorithm and enables
+    /// TCP keepalive, since this connection is held open and multiplexed for the caller's
+    /// entire session and can otherwise go silently dead behind a NAT/router idle timeout
+    /// (e.g. adb-over-wifi) without either side noticing until the next write.
     /// </summary>
     public static StreamAdbTransport CreateTcp(Socket socket, bool verifyChecksum = false)
     {
         socket.NoDelay = true;
+        try
+        {
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+            socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveTime, 30);
+            socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveInterval, 10);
+            socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveRetryCount, 3);
+        }
+        catch (Exception ex) when (ex is SocketException or PlatformNotSupportedException)
+        {
+            // Best-effort: not every OS/runtime exposes tunable TCP keepalive. Connection still works without it.
+        }
         return new StreamAdbTransport(new NetworkStream(socket, ownsSocket: true), ownsStream: true, verifyChecksum);
     }
 
