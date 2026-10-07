@@ -63,7 +63,7 @@ public readonly struct AdbHeader
     /// Sum-of-bytes checksum used by ADB for payload verification (legacy; protocol v2 sets it to 0).
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static uint ComputeChecksum(in ReadOnlySpan<byte> payload)
+    public static uint ComputeChecksum(ReadOnlySpan<byte> payload)
     {
         uint sum = 0;
         ref var p = ref MemoryMarshal.GetReference(payload);
@@ -77,7 +77,7 @@ public readonly struct AdbHeader
     /// Serializes this header into <paramref name="destination"/>. Buffer must be at least 24 bytes.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteTo(in Span<byte> destination)
+    public void WriteTo(Span<byte> destination)
     {
         if (destination.Length < AdbProtocolConstants.HeaderSize)
             throw new ArgumentException("Buffer too small for ADB header", nameof(destination));
@@ -95,7 +95,7 @@ public readonly struct AdbHeader
     /// </summary>
     /// <exception cref="InvalidDataException">Thrown if magic does not match.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static AdbHeader Read(in ReadOnlySpan<byte> source)
+    public static AdbHeader Read(ReadOnlySpan<byte> source)
     {
         if (source.Length < AdbProtocolConstants.HeaderSize)
             throw new ArgumentException("Buffer too small for ADB header", nameof(source));

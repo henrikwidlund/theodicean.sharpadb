@@ -129,9 +129,9 @@ public sealed class StreamAdbTransport : IAdbTransport
         {
             await _stream.ReadExactlyAsync(_readHeaderBuffer.AsMemory(0, AdbProtocolConstants.HeaderSize), cancellationToken);
         }
-        catch (EndOfStreamException)
+        catch (EndOfStreamException ex)
         {
-            throw new EndOfStreamException("ADB peer closed before header completed");
+            throw new EndOfStreamException("ADB peer closed before header completed", ex);
         }
 
         var header = AdbHeader.Read(_readHeaderBuffer);
@@ -163,10 +163,10 @@ public sealed class StreamAdbTransport : IAdbTransport
                     throw new InvalidDataException($"ADB payload checksum mismatch: expected {header.DataChecksum}, got {actual}");
             }
         }
-        catch (EndOfStreamException)
+        catch (EndOfStreamException ex)
         {
             ArrayPool<byte>.Shared.Return(rented);
-            throw new EndOfStreamException("ADB peer closed during payload");
+            throw new EndOfStreamException("ADB peer closed during payload", ex);
         }
         catch
         {

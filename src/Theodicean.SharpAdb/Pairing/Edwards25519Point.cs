@@ -96,7 +96,7 @@ internal readonly struct Edwards25519Point
     /// for a point not on the curve instead of throwing, since a malicious/buggy peer message is an
     /// expected failure mode of the wire protocol, not a programming error.
     /// </summary>
-    internal static bool TryDecode(in ReadOnlySpan<byte> encoded, out Edwards25519Point point)
+    internal static bool TryDecode(ReadOnlySpan<byte> encoded, out Edwards25519Point point)
     {
         point = default;
         if (encoded.Length != 32)
@@ -135,7 +135,7 @@ internal readonly struct Edwards25519Point
     /// Reduces a 64-byte little-endian integer (e.g. a SHA-512 digest or 64 random bytes) modulo
     /// <see cref="Order"/>, matching BoringSSL's <c>x25519_sc_reduce</c>.
     /// </summary>
-    internal static BigInteger ReduceModOrder(in ReadOnlySpan<byte> bytes64)
+    internal static BigInteger ReduceModOrder(ReadOnlySpan<byte> bytes64)
     {
         if (bytes64.Length != 64)
             throw new ArgumentException("Expected 64 bytes", nameof(bytes64));
@@ -178,7 +178,7 @@ internal readonly struct Edwards25519Point
         return BigInteger.ModPow(Mod(value, modulus), modulus - 2, modulus);
     }
 
-    private static BigInteger FromLittleEndian(in ReadOnlySpan<byte> bytes) =>
+    private static BigInteger FromLittleEndian(ReadOnlySpan<byte> bytes) =>
         new(bytes, isUnsigned: true, isBigEndian: false);
 
     private static byte[] ToLittleEndian32(in BigInteger value)

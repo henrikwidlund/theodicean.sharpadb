@@ -31,7 +31,7 @@ internal static class PairingPacketHeader
     internal const int Size = 6;
     private const byte CurrentVersion = 1;
 
-    internal static void Write(in Span<byte> destination, PairingPacketType type, int payloadLength)
+    internal static void Write(Span<byte> destination, PairingPacketType type, int payloadLength)
     {
         destination[0] = CurrentVersion;
         destination[1] = (byte)type;
@@ -39,7 +39,7 @@ internal static class PairingPacketHeader
     }
 
     /// <summary>Parses a header, validating the version and a caller-supplied maximum payload size.</summary>
-    internal static bool TryRead(in ReadOnlySpan<byte> source, int maxPayloadSize, out PairingPacketType type, out int payloadLength)
+    internal static bool TryRead(ReadOnlySpan<byte> source, int maxPayloadSize, out PairingPacketType type, out int payloadLength)
     {
         type = default;
         payloadLength = 0;
@@ -70,7 +70,7 @@ public static class PeerInfo
     private const int DataSize = EncodedSize - 1;
 
     /// <summary>Encodes <paramref name="data"/> (at most 8191 bytes) into a full 8192-byte, zero-padded <c>PeerInfo</c> buffer.</summary>
-    internal static byte[] Encode(PeerInfoType type, in ReadOnlySpan<byte> data)
+    internal static byte[] Encode(PeerInfoType type, ReadOnlySpan<byte> data)
     {
         if (data.Length > DataSize)
             throw new ArgumentException($"PeerInfo data must be at most {DataSize} bytes", nameof(data));
@@ -86,7 +86,7 @@ public static class PeerInfo
     /// data section (safe because every defined payload — the AUTH-style pubkey line — is itself
     /// NUL-terminated, so trailing zero bytes are never meaningful content).
     /// </summary>
-    internal static (PeerInfoType Type, byte[] Data) Decode(in ReadOnlySpan<byte> buffer)
+    internal static (PeerInfoType Type, byte[] Data) Decode(ReadOnlySpan<byte> buffer)
     {
         if (buffer.Length != EncodedSize)
             throw new ArgumentException($"PeerInfo buffer must be exactly {EncodedSize} bytes", nameof(buffer));
