@@ -134,7 +134,8 @@ public class AdbPairingTests
         using var hostKey = AdbAuthKey.Generate("host@client");
         var pairTask = AdbPairing.PairAsync("127.0.0.1", port, PairingCode, hostKey);
 
-        await Task.WhenAll(pairTask, serverTask).WaitAsync(TimeSpan.FromSeconds(5));
+        // Only guards against a hung handshake; the TLS and SPAKE2 work is CPU-bound and slow on shared CI runners
+        await Task.WhenAll(pairTask, serverTask).WaitAsync(TimeSpan.FromSeconds(30));
 
         var result = await pairTask;
         await Assert.That(result.PeerInfoType).IsEqualTo(PeerInfoType.AdbRsaPublicKey);

@@ -33,4 +33,5 @@ jobs:
 
       - name: Run Unit Tests
         # Absolute path: the .NET 11 SDK resolves a relative --project against the project folder for multi-targeted projects
-        run: dotnet test --project ${{ github.workspace }}/tests/Theodicean.SharpAdb.Tests/Theodicean.SharpAdb.Tests.csproj --no-build --no-restore --verbosity normal --coverage --coverage-output-format cobertura
+        # One test module at a time: running net10.0 and net11.0 in parallel starves the CPU-heavy pairing test on the 2-core runners
+        run: dotnet test --project ${{ github.workspace }}/tests/Theodicean.SharpAdb.Tests/Theodicean.SharpAdb.Tests.csproj --no-build --no-restore --verbosity normal --coverage --coverage-output-format cobertura --max-parallel-test-modules 1
