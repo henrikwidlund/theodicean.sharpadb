@@ -56,7 +56,7 @@ internal static class AndroidPublicKey
         return result;
     }
 
-    private static uint ReadBigEndianExponent(in ReadOnlySpan<byte> exp)
+    private static uint ReadBigEndianExponent(ReadOnlySpan<byte> exp)
     {
         if (exp.Length > 4)
             throw new NotSupportedException("ADB public-key format only supports exponents up to 32 bits");
@@ -68,7 +68,7 @@ internal static class AndroidPublicKey
         return v;
     }
 
-    private static void WriteWordsLittleEndian(in BigInteger value, in Span<byte> dest)
+    private static void WriteWordsLittleEndian(in BigInteger value, Span<byte> dest)
     {
         // Each 4-byte word is little-endian, words are also in little-endian order
         // (i.e. least-significant word first), exactly matching mincrypt's layout.

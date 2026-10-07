@@ -118,7 +118,7 @@ public sealed class AdbAuthKey : IDisposable
     /// Signs the 20-byte AUTH token. adbd treats the token as a SHA-1 digest and verifies with
     /// PKCS#1 v1.5; .NET's <c>SignHash</c> handles prefixing the DigestInfo wrapper internally.
     /// </summary>
-    public byte[] SignToken(in ReadOnlySpan<byte> token)
+    public byte[] SignToken(ReadOnlySpan<byte> token)
     {
         if (token.Length != Protocol.AdbProtocolConstants.AuthTokenSize)
             throw new ArgumentException($"Token must be {Protocol.AdbProtocolConstants.AuthTokenSize} bytes", nameof(token));

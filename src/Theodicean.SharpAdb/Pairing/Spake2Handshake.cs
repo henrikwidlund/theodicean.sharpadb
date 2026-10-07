@@ -49,7 +49,7 @@ internal sealed class Spake2Handshake
     /// <summary>Our outgoing SPAKE2 message: a 32-byte compressed masked point.</summary>
     internal byte[] Message { get; }
 
-    internal Spake2Handshake(Spake2Role role, in ReadOnlySpan<byte> password)
+    internal Spake2Handshake(Spake2Role role, ReadOnlySpan<byte> password)
     {
         _role = role;
         _myName = role == Spake2Role.Client ? ClientName : ServerName;
@@ -89,7 +89,7 @@ internal sealed class Spake2Handshake
     /// be called once. Returns <see langword="null"/> if <paramref name="theirMessage"/> is not a
     /// valid point on the curve.
     /// </summary>
-    internal byte[]? ProcessPeerMessage(in ReadOnlySpan<byte> theirMessage)
+    internal byte[]? ProcessPeerMessage(ReadOnlySpan<byte> theirMessage)
     {
         if (_consumed)
             throw new InvalidOperationException("ProcessPeerMessage can only be called once.");
@@ -126,7 +126,7 @@ internal sealed class Spake2Handshake
         return sha.GetHashAndReset();
     }
 
-    private static void AppendWithLength(IncrementalHash sha, in ReadOnlySpan<byte> data)
+    private static void AppendWithLength(IncrementalHash sha, ReadOnlySpan<byte> data)
     {
         Span<byte> lengthLe = stackalloc byte[8];
         System.Buffers.Binary.BinaryPrimitives.WriteUInt64LittleEndian(lengthLe, (ulong)data.Length);

@@ -22,7 +22,7 @@ internal sealed class PairingCipher
     private ulong _encryptSequence;
     private ulong _decryptSequence;
 
-    internal PairingCipher(in ReadOnlySpan<byte> keyMaterial)
+    internal PairingCipher(ReadOnlySpan<byte> keyMaterial)
     {
         Span<byte> key = stackalloc byte[KeySizeBytes];
         HKDF.Expand(HashAlgorithmName.SHA256, ExtractPrk(keyMaterial), key, HkdfInfo);
@@ -30,7 +30,7 @@ internal sealed class PairingCipher
     }
 
     /// <summary>Encrypts <paramref name="plaintext"/>, returning ciphertext with the 16-byte tag appended.</summary>
-    internal byte[] Encrypt(in ReadOnlySpan<byte> plaintext)
+    internal byte[] Encrypt(ReadOnlySpan<byte> plaintext)
     {
         var output = new byte[plaintext.Length + TagSizeBytes];
         Span<byte> nonce = stackalloc byte[NonceSizeBytes];
@@ -46,7 +46,7 @@ internal sealed class PairingCipher
 
     /// <summary>Decrypts a ciphertext produced by <see cref="Encrypt"/> (ciphertext with trailing 16-byte tag).</summary>
     /// <returns>The plaintext, or <see langword="null"/> if authentication failed.</returns>
-    internal byte[]? Decrypt(in ReadOnlySpan<byte> ciphertextWithTag)
+    internal byte[]? Decrypt(ReadOnlySpan<byte> ciphertextWithTag)
     {
         if (ciphertextWithTag.Length < TagSizeBytes)
             return null;
@@ -69,7 +69,7 @@ internal sealed class PairingCipher
 
     // HKDF-Extract with an all-zero salt (BoringSSL's HKDF() with salt=nullptr,0 uses a
     // zero-filled hash-length salt per RFC 5869), producing the pseudorandom key HKDF.Expand needs.
-    private static byte[] ExtractPrk(in ReadOnlySpan<byte> keyMaterial)
+    private static byte[] ExtractPrk(ReadOnlySpan<byte> keyMaterial)
     {
         var prk = new byte[32];
         HKDF.Extract(HashAlgorithmName.SHA256, keyMaterial, stackalloc byte[32], prk);
