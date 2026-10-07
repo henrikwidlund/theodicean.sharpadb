@@ -21,7 +21,9 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: |
+            10.0.x
+            11.0.x
 
       - name: Restore Dependencies
         run: dotnet restore --locked-mode
@@ -30,4 +32,5 @@ jobs:
         run: dotnet build --no-restore
 
       - name: Run Unit Tests
-        run: dotnet test --project tests/Theodicean.SharpAdb.Tests/Theodicean.SharpAdb.Tests.csproj --no-build --no-restore --verbosity normal --coverage --coverage-output-format cobertura
+        # Absolute path: the .NET 11 SDK resolves a relative --project against the project folder for multi-targeted projects
+        run: dotnet test --project ${{ github.workspace }}/tests/Theodicean.SharpAdb.Tests/Theodicean.SharpAdb.Tests.csproj --no-build --no-restore --verbosity normal --coverage --coverage-output-format cobertura
