@@ -1,14 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
+        <!-- Runtime async only exists on .NET 11 -->
+        <Features Condition="'$(TargetFramework)' == 'net11.0'">runtime-async=on</Features>
+        <!-- Not needed to run the tests, and the net10.0 apphost isn't available when building with the .NET 11 SDK in Qodana -->
+        <UseAppHost>false</UseAppHost>
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
         <IsPackable>false</IsPackable>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="TUnit" Version="1.72.10" />
+        <PackageReference Include="TUnit" Version="1.73.0" />
     </ItemGroup>
 
     <ItemGroup>
