@@ -7,6 +7,7 @@ indent_style = space
 # Xml files
 [*.xml]
 indent_size = 2
+end_of_line = lf
 
 # C# files
 [*.cs]
@@ -18,7 +19,6 @@ indent_size = 4
 tab_width = 4
 
 # New line preferences
-end_of_line = crlf
 insert_final_newline = true
 
 #### .NET Coding Conventions ####
