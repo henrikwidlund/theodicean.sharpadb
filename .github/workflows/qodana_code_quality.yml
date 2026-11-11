@@ -25,17 +25,13 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}  # to check out the actual pull request commit, not the merge commit
           fetch-depth: 0
           persist-credentials: false
-      - name: Setup .NET
-        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
-        with:
-          global-json-file: global.json
       - name: 'Qodana Scan'
         uses: JetBrains/qodana-action@3e8d76ff0e0241618abd808682f426afe84bab3f # v2026.2.2
         with:
           pr-mode: true
           args: |
             --baseline qodana.sarif.json
-            --ide QDNETC
+            --linter "jetbrains/qodana-cdnet:2026.2"
             --within-docker false
           use-caches: true
         env:
